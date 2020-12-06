@@ -20,16 +20,16 @@ bl_info = {
     "name": "Mode Pie: 'Right Mouse'",
     "description": "Mode Selection Pie Menu",
     "author": "Bastian L Strube, Frederik Storm",
-    "version": (0, 1, 2),
     "blender": (2, 80, 0),
     "location": "3D View",
-    "category": "Pie Menu"}
+    "category": "Interface"}
 
 import bpy
 from bpy.types import (
     Header,
     Menu,
     Panel,
+    Operator,
 )
 from bpy.app.translations import contexts as i18n_contexts
 
@@ -153,10 +153,42 @@ class VIEW3D_PIE_MT_mode(Menu):
             dropdown_menu.scale_y=1
             
             dropdown_menu.menu("VIEW3D_MT_edit_curve_context_menu", text="curve menu", icon="COLLAPSEMENU")
-                    
+
+        if bpy.context.mode == 'SCULPT':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.separator()
+            # EAST
+            pie.separator()
+            # SOUTH
+            pie.popover("VIEW3D_PT_sculpt_context_menu")#, text='Brushoptions', icon='GIZMO')
+            # NORTH
+            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.separator()
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
+            '''
+            obj = context.object
+            
+            if obj is not None and obj.type in {'MESH', 'CURVE', 'SURFACE'}:
+                pie.operator_enum("OBJECT_OT_mode_set", "mode")
+                pie.menu("VIEW3D_PIE_object_context_menu", text="Object Menu")
+            '''
+
+
+        
 classes = [
     SUBPIE_meshSelect,
-    VIEW3D_PIE_MT_mode]
+    VIEW3D_PIE_MT_mode,]
 
 addon_keymaps = []
 
@@ -177,6 +209,11 @@ def register():
         addon_keymaps.append((km, kmi))
 
         km = wm.keyconfigs.addon.keymaps.new(name='Curve')#, space_type='EMPTY')
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
+        kmi.properties.name = "VIEW3D_PIE_MT_mode"
+        addon_keymaps.append((km, kmi))
+
+        km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))

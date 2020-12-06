@@ -20,10 +20,9 @@ bl_info = {
     "name": "UV Context Pie: 'Shift + Right Mouse'",
     "description": "UV Context Pie Menu",
     "author": "Bastian L Strube, Frederik Storm",
-    "version": (0, 1, 2),
     "blender": (2, 80, 0),
     "location": "UV Editor",
-    "category": "Pie Menu"}
+    "category": "Interface"}
 
 import bpy
 from bpy.types import (
