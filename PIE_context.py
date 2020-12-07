@@ -474,99 +474,13 @@ class VIEW3D_PIE_MT_context(Menu):
         # Straight from Blenders Pie Addon Sculpt 'W' Menu
         if context.mode == 'SCULPT':
 
-            global brush_icons
+            #global brush_icons
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
             pie = layout.menu_pie()
-            pie.scale_y = 1.2
-            # 4 - LEFT
-            pie.operator("paint.brush_select",
-                        text="    Crease", icon_value=brush_icons["crease"]).sculpt_tool = 'CREASE'
-            # 6 - RIGHT
-            pie.operator("paint.brush_select",
-                        text="    Blob", icon_value=brush_icons["blob"]).sculpt_tool = 'BLOB'
-            # 2 - BOTTOM
-            pie.menu(SUBMENU_Sculpttwo.bl_idname, text="More Brushes")
-            # 8 - TOP
-            pie.operator("sculpt.sculptraw",
-                        text="    Draw", icon_value=brush_icons["draw"])
-            # 7 - TOP - LEFT
-            pie.operator("paint.brush_select",
-                        text="    Clay", icon_value=brush_icons["clay"]).sculpt_tool = 'CLAY'
-            # 9 - TOP - RIGHT
-            pie.operator("paint.brush_select",
-                        text="    Clay Strips", icon_value=brush_icons["clay_strips"]).sculpt_tool = 'CLAY_STRIPS'
-            # 1 - BOTTOM - LEFT
-            pie.operator("paint.brush_select",
-                        text="    Inflate/Deflate", icon_value=brush_icons["inflate"]).sculpt_tool = 'INFLATE'
-            # 3 - BOTTOM - RIGHT
-            pie.menu(SUBMENU_Sculptthree.bl_idname, text="     Grab Brushes", icon_value=brush_icons["grab"])
 
-# Straight from Blenders Pie Addon Sculpt 'W' Menu           
-brush_icons = {}
+            pie.menu_contents("PIE_MT_sculpt")
 
-def create_icons():
-    global brush_icons
-    icons_directory = bpy.utils.system_resource('DATAFILES', "icons")
-    brushes = ["crease", "blob", "smooth", "draw", "clay", "clay_strips", "inflate", "grab",
-        "nudge", "thumb", "snake_hook", "rotate", "flatten", "scrape", "fill", "pinch",
-        "layer", "mask"]
-    for brush in brushes:
-        filename = os.path.join(icons_directory, f"brush.sculpt.{brush}.dat")
-        icon_value = bpy.app.icons.new_triangles_from_file(filename)
-        brush_icons[brush] = icon_value
-
-
-def release_icons():
-    global brush_icons
-    for value in brush_icons.values():
-        bpy.app.icons.release(value)
-
-# Sub Menu 1 for Sculpt Mode
-class SUBMENU_Sculpttwo(Menu):
-    bl_idname = "SUBMENU_Sculpttwo"
-    bl_label  = ""
-
-    def draw(self, context):
-        global brush_icons
-        layout = self.layout
-        layout.scale_y = 1.5
-
-        layout.operator("paint.brush_select", text='    Smooth',
-                        icon_value=brush_icons["smooth"]).sculpt_tool = 'SMOOTH'
-        layout.operator("paint.brush_select", text='    Flatten',
-                        icon_value=brush_icons["flatten"]).sculpt_tool = 'FLATTEN'
-        layout.operator("paint.brush_select", text='    Scrape/Peaks',
-                        icon_value=brush_icons["scrape"]).sculpt_tool = 'SCRAPE'
-        layout.operator("paint.brush_select", text='    Fill/Deepen',
-                        icon_value=brush_icons["fill"]).sculpt_tool = 'FILL'
-        layout.operator("paint.brush_select", text='    Pinch/Magnify',
-                        icon_value=brush_icons["pinch"]).sculpt_tool = 'PINCH'
-        layout.operator("paint.brush_select", text='    Layer',
-                        icon_value=brush_icons["layer"]).sculpt_tool = 'LAYER'
-        layout.operator("paint.brush_select", text='    Mask',
-                        icon_value=brush_icons["mask"]).sculpt_tool = 'MASK'
-# Sub Menu 2 for Sculpt Mode
-class SUBMENU_Sculptthree(Menu):
-    bl_idname = "SUBMENU_Sculptthree"
-    bl_label  = ""
-
-    def draw(self, context):
-        global brush_icons
-        layout = self.layout
-        layout.scale_y = 1.5
-
-        layout.operator("paint.brush_select",
-                        text='    Grab', icon_value=brush_icons["grab"]).sculpt_tool = 'GRAB'
-        layout.operator("paint.brush_select",
-                        text='    Nudge', icon_value=brush_icons["nudge"]).sculpt_tool = 'NUDGE'
-        layout.operator("paint.brush_select",
-                        text='    Thumb', icon_value=brush_icons["thumb"]).sculpt_tool = 'THUMB'
-        layout.operator("paint.brush_select",
-                        text='    Snakehook', icon_value=brush_icons["snake_hook"]).sculpt_tool = 'SNAKE_HOOK'
-        layout.operator("paint.brush_select",
-                        text='    Rotate', icon_value=brush_icons["rotate"]).sculpt_tool = 'ROTATE'
-#  End of sculpt menu from Blenders Pie Addon, except the create_icons()/release_icons() in register/unregister
 
 classes = [
     SUBPIE_merge, 
@@ -576,13 +490,11 @@ classes = [
     SUBPIE_divide,
     SUBPIE_smoothCurve,
     VIEW3D_PIE_MT_context,
-    SUBMENU_Sculpttwo,
-    SUBMENU_Sculptthree,
 ]
+
 addon_keymaps = []
 
 def register():
-    create_icons()
 
     for cls in classes:
         bpy.utils.register_class(cls)
@@ -601,7 +513,6 @@ def register():
       [("name", 'VIEW3D_PIE_context'),
 """
 def unregister():
-    release_icons()
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

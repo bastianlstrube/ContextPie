@@ -165,7 +165,12 @@ class VIEW3D_PIE_MT_mode(Menu):
             # EAST
             pie.separator()
             # SOUTH
-            pie.popover("VIEW3D_PT_sculpt_context_menu")#, text='Brushoptions', icon='GIZMO')
+            pie.popover("VIEW3D_PT_sculpt_context_menu")
+
+            #box = pie.box()
+            #show the colour picker directly
+            #box.popover("VIEW3D_PT_sculpt_context_menu")
+
             # NORTH
             pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
             # NORTH-WEST
