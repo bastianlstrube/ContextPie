@@ -33,6 +33,7 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
+# Sub Pie Menu for mesh merge  operators
 class SUBPIE_merge(Menu):
     bl_label = "Merge"
     def draw(self, context):
@@ -82,6 +83,7 @@ class SUBPIE_merge(Menu):
             pie.separator()
             pie.separator()
 
+# Sub Pie for mesh connect operators
 class SUBPIE_connect(Menu):
     bl_label = "Connect"
     def draw(self, context):
@@ -106,6 +108,7 @@ class SUBPIE_connect(Menu):
         # SOUTH-EAST
         pie.operator("mesh.fill", text="Fill Loop")
 
+# Sub Pie for mesh face split/separate operators
 class SUBPIE_separate(Menu):
     bl_label = "Split/Separate"
     def draw(self, context):
@@ -132,6 +135,7 @@ class SUBPIE_separate(Menu):
         # SOUTH-EAST
         pie.operator("mesh.separate", text='Selection').type = 'SELECTED'
 
+# Sub Pie for mesh face/edge divisions
 class SUBPIE_divide(Menu):
     bl_label = "Divide"
     def draw(self, context):
@@ -158,6 +162,7 @@ class SUBPIE_divide(Menu):
         # SOUTH-EAST
         pie.separator()
 
+# Sub Pie for mesh face extrusions
 class SUBPIE_extrudeFaces(Menu):
     bl_label = "Extrude Faces"
     def draw(self, context):
@@ -184,6 +189,7 @@ class SUBPIE_extrudeFaces(Menu):
         # SOUTH-EAST
         pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude")
 
+# Sub Pie for curve operators
 class SUBPIE_smoothCurve(Menu):
     bl_label = "Smooth"
     def draw(self, context):
@@ -200,6 +206,7 @@ class SUBPIE_smoothCurve(Menu):
         # NORTH
         pie.operator("curve.smooth_tilt")
 
+# Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
     bl_label    = "Context Pie"
 
@@ -495,7 +502,6 @@ classes = [
 addon_keymaps = []
 
 def register():
-
     for cls in classes:
         bpy.utils.register_class(cls)
 
@@ -513,7 +519,6 @@ def register():
       [("name", 'VIEW3D_PIE_context'),
 """
 def unregister():
-
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

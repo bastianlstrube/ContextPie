@@ -29,9 +29,9 @@ bl_info = {
 # Blender imports
 import bpy
 
-from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode
+from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar)
 
 addon_keymaps = []
 
