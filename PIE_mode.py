@@ -33,6 +33,37 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
+class SUBPIE_objectSelect(Menu):
+    bl_label = "Select"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        pie.operator_enum("object.select_grouped", "type")
+        '''
+        # WEST
+        pie.separator()
+        # EAST
+        op = pie.operator("mesh.object.select_hierarchy", text='Parent')
+        op.direction = 'PARENT'
+        op.extend = False
+        # SOUTH
+        op = pie.operator("mesh.object.select_hierarchy", text='Child')
+        op.direction = 'CHILD'
+        op.extend = False
+        # NORTH
+        pie.operator("mesh.select_nth", text='Checker Deselect')
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.operator("mesh.select_mirror", text='Mirror')
+        # SOUTH-WEST
+        pie.operator("mesh.loop_to_region", text='Inside')        
+        # SOUTH-EAST
+        pie.operator("mesh.select_linked", text='Linked')
+        '''
+
 class SUBPIE_meshSelect(Menu):
     bl_label = "Select"
     def draw(self, context):
@@ -71,9 +102,14 @@ class VIEW3D_PIE_MT_mode(Menu):
             obj = context.object
             
             if obj is not None and obj.type in {'MESH', 'CURVE', 'SURFACE'}:
+
+                # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
                 pie.operator_enum("OBJECT_OT_mode_set", "mode")
-                pie.menu("VIEW3D_PIE_object_context_menu", text="Object Menu")
-                
+                # SOUTH-WEST
+                pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+                # SOUTH-EAST
+                subPie = pie.operator("wm.call_menu_pie", text='Select...')
+                subPie.name = "SUBPIE_objectSelect" 
                 
         if context.mode == 'EDIT_MESH':
 
@@ -190,8 +226,8 @@ class VIEW3D_PIE_MT_mode(Menu):
             '''
 
 
-        
 classes = [
+    SUBPIE_objectSelect,
     SUBPIE_meshSelect,
     VIEW3D_PIE_MT_mode,]
 
