@@ -33,7 +33,7 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
-# Sub Pie Menu for mesh merge  operators
+# Sub Pie Menu for mesh merge operators
 class SUBPIE_merge(Menu):
     bl_label = "Merge"
     def draw(self, context):
@@ -205,6 +205,38 @@ class SUBPIE_smoothCurve(Menu):
         pie.operator("curve.smooth_radius")
         # NORTH
         pie.operator("curve.smooth_tilt")
+
+# Sub Pie for curve operators
+class SUBPIE_applyTransform(Menu):
+    bl_label = "Apply"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        op =  pie.operator("object.transform_apply", text="Location")
+        op.location = True
+        op.rotation = False
+        op.scale = False
+        
+        # EAST
+        op =  pie.operator("object.transform_apply", text="Scale")
+        op.scale = True
+        op.location = False
+        op.rotation = False
+        # SOUTH
+        op =  pie.operator("object.transform_apply", text="Rotation")
+        op.rotation = True
+        op.location = False
+        op.scale = False
+
+        # NORTH
+        op = pie.operator("object.transform_apply", text="All Trasnforms")
+        op.location = True
+        op.rotation = True
+        op.scale = True
+
 
 # Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
@@ -397,7 +429,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # WEST
             pie.separator()
             # EAST
-            pie.operator("wm.call_menu_pie", text='Smooth').name = "subpie_smoothCurve"
+            pie.operator("wm.call_menu_pie", text='Smooth...').name = "subpie_smoothCurve"
             # SOUTH
             pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
             # NORTH
@@ -427,14 +459,10 @@ class VIEW3D_PIE_MT_context(Menu):
                     pie.operator("object.shade_flat")
 
                 # SOUTH
-                props = pie.operator("object.select_hierarchy", text="Select Child")
-                props.extend = False
-                props.direction = 'CHILD'
+                pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_applyTransform"
 
                 # NORTH
-                props = pie.operator("object.select_hierarchy", text="Select Parent")
-                props.extend = False
-                props.direction = 'PARENT'
+                pie.operator("object.join")
                 
                 # NORTH-WEST
                 pie.operator("object.parent_set")
@@ -443,7 +471,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("object.parent_clear")
 
                 # SOUTH-WEST
-                pie.operator("object.join")
+                pie.separator()
 
                 # SOUTH-EAST
                 pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
@@ -496,6 +524,7 @@ classes = [
     SUBPIE_separate,
     SUBPIE_divide,
     SUBPIE_smoothCurve,
+    SUBPIE_applyTransform,
     VIEW3D_PIE_MT_context,
 ]
 
