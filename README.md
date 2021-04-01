@@ -7,6 +7,8 @@ SHIFT + RIGHT MOUSE:
 RIGHT MOUSE:
     Mode selection
 
+Recommended use with Blender's industry compatible keymap!
+
 INSTALL:
 
 1   Download ContextPie addon as .zip
