@@ -7,6 +7,13 @@ SHIFT + RIGHT MOUSE:
 RIGHT MOUSE:
     Mode selection
 
+INSTALL:
+
+![install01](https://github.com/bastianlstrube/ContextPie/blob/main/docs/ContextPie_Tutorial01.png?raw=true)
+![install01](https://github.com/bastianlstrube/ContextPie/blob/main/docs/ContextPie_Tutorial02.png?raw=true)
+![install01](https://github.com/bastianlstrube/ContextPie/blob/main/docs/ContextPie_Tutorial03.png?raw=true)
+![install01](https://github.com/bastianlstrube/ContextPie/blob/main/docs/ContextPie_Tutorial04.png?raw=true)
+
 
 
 authors:		Bastian L Strube, Frederik Storm
