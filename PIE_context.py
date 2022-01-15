@@ -516,6 +516,46 @@ class VIEW3D_PIE_MT_context(Menu):
 
             pie.menu_contents("PIE_MT_sculpt")
 
+        if context.mode == 'POSE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            obj = context.object
+
+            # WEST & EAST
+            pie.operator("object.shade_smooth")
+            pie.operator("object.shade_flat")
+
+            # SOUTH
+            pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_applyTransform"
+
+            # NORTH
+            pie.operator("object.join")
+            
+            # NORTH-WEST
+            pie.operator("object.parent_set")
+
+            # NORTH-EAST
+            pie.operator("object.parent_clear")
+
+            # SOUTH-WEST
+            pie.separator()
+
+            # SOUTH-EAST
+            pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
+
+            # Static non pie menu
+            pie.separator()
+            pie.separator()
+            dropdown = pie.column()
+            gap = dropdown.column()
+            gap.separator()
+            gap.scale_y = 8
+            dropdown_menu = dropdown.box().column()
+            dropdown_menu.scale_y=1
+
 
 classes = [
     SUBPIE_merge, 
@@ -588,6 +628,9 @@ EMPTY PIE MENU
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST
+        pie.separator()
+
+        # Static non pie menu
         pie.separator()
 
 """
