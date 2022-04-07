@@ -431,7 +431,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # EAST
             pie.operator("wm.call_menu_pie", text='Smooth...').name = "subpie_smoothCurve"
             # SOUTH
-            pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
+            pie.operator("curve.extrude_move")
             # NORTH
             pie.operator("transform.tilt")
             # NORTH-WEST
@@ -439,7 +439,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # NORTH-EAST
             pie.operator("curve.subdivide")
             # SOUTH-WEST
-            pie.separator()
+            pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
             # SOUTH-EAST
             pie.operator("curve.separate")
 
@@ -450,8 +450,9 @@ class VIEW3D_PIE_MT_context(Menu):
             pie = layout.menu_pie()
 
             obj = context.object
+            sel = context.selected_objects
 
-            if obj is not None:
+            if obj is not None and sel:
                 # WEST & EAST
                 if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
 
@@ -491,20 +492,34 @@ class VIEW3D_PIE_MT_context(Menu):
                 # WEST
                 pie.operator("mesh.primitive_cube_add")
                 # EAST
-                pie.separator()
+                pie.operator("mesh.primitive_plane_add")
                 # SOUTH
-                pie.separator()
+                pie.operator("mesh.primitive_uv_sphere_add")
                 # NORTH
-                pie.separator()
+                pie.operator("mesh.primitive_cylinder_add")
                 
                 # NORTH-WEST
-                pie.separator()
+                pie.operator("mesh.primitive_torus_add")
                 # NORTH-EAST
-                pie.separator()
+                pie.operator("mesh.primitive_circle_add")
                 # SOUTH-WEST
-                pie.separator()
+                pie.operator("mesh.primitive_cone_add")
                 # SOUTH-EAST
+                pie.operator("mesh.primitive_ico_sphere_add")
+                '''
+                PUT MENU WITH CURVES
+                # Static face menu
                 pie.separator()
+                pie.separator()
+                dropdown = pie.column()
+                gap = dropdown.column()
+                gap.separator()
+                gap.scale_y = 8
+                dropdown_menu = dropdown.box().column()
+                dropdown_menu.scale_y=1
+                dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
+                dropdown_menu.operator("mesh.edge_split")
+                '''
 
         # Straight from Blenders Pie Addon Sculpt 'W' Menu
         if context.mode == 'SCULPT':
@@ -515,6 +530,46 @@ class VIEW3D_PIE_MT_context(Menu):
             pie = layout.menu_pie()
 
             pie.menu_contents("PIE_MT_sculpt")
+
+        if context.mode == 'POSE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            obj = context.object
+
+            # WEST & EAST
+            pie.operator("object.shade_smooth")
+            pie.operator("object.shade_flat")
+
+            # SOUTH
+            pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_applyTransform"
+
+            # NORTH
+            pie.operator("object.join")
+            
+            # NORTH-WEST
+            pie.operator("object.parent_set")
+
+            # NORTH-EAST
+            pie.operator("object.parent_clear")
+
+            # SOUTH-WEST
+            pie.separator()
+
+            # SOUTH-EAST
+            pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
+
+            # Static non pie menu
+            pie.separator()
+            pie.separator()
+            dropdown = pie.column()
+            gap = dropdown.column()
+            gap.separator()
+            gap.scale_y = 8
+            dropdown_menu = dropdown.box().column()
+            dropdown_menu.scale_y=1
 
 
 classes = [
@@ -588,6 +643,9 @@ EMPTY PIE MENU
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST
+        pie.separator()
+
+        # Static non pie menu
         pie.separator()
 
 """
