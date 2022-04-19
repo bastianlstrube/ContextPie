@@ -293,7 +293,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                pie.operator("mesh.bevel", text="Bevel Vertices")#.vertex_only = True
+                pie.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
                 subPie.name = "PIE_MT_delete"
@@ -342,7 +342,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 
                 # NORTH-EAST
-                pie.operator("mesh.bevel", text="Bevel Edges")#.vertex_only = False
+                pie.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
 
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...')
