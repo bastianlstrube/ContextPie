@@ -11,7 +11,9 @@ RIGHT MOUSE:
 
 INSTALL:
     1   Download ContextPie addon as .zip
+    
     2   Enable Blenders Pie Menus in Edit>Preferences>Addons.
+    
     3   Install ContextPie addon like shown below.
 
 ![install01](https://github.com/bastianlstrube/ContextPie/blob/main/docs/ContextPie_Tutorial01.png?raw=true)
