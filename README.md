@@ -9,7 +9,7 @@ RIGHT MOUSE:
     Mode selection
 
 
-INSTALL:
+Installation:
 
     1   Download ContextPie addon as .zip
     
