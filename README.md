@@ -3,7 +3,7 @@ Context Sensitive Pie Menu for Blender, following an ancient Mayan pie recipe.
 I recommended using Blenders Industry Compatible Keymap along with this addon.
 
 SHIFT + RIGHT MOUSE:
-    Different functions for Object, Sculpt & Edit Mode based on selection
+    Different functions for Object, Pose, Edit & Sculpt Mode based on selection
 
 RIGHT MOUSE:
     Mode selection
