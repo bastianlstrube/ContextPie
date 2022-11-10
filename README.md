@@ -2,9 +2,11 @@
 Context Sensitive Pie Menu for Blender, following an ancient Mayan pie recipe.
 I recommended using Blenders Industry Compatible Keymap along with this addon.
 
-SHIFT + RIGHT MOUSE:   Functions based on selection
+SHIFT + RIGHT MOUSE:
+        Functions based on selection
 
-RIGHT MOUSE:   Mode selection
+RIGHT MOUSE:
+        Mode selection
 
 
 Installation:
