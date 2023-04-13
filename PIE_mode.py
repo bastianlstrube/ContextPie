@@ -101,7 +101,7 @@ class VIEW3D_PIE_MT_mode(Menu):
 
             obj = context.object
             
-            if obj is not None and obj.type in {'MESH', 'CURVE', 'SURFACE'}:
+            if obj is not None and obj.type in {'MESH'}:
 
                 # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
                 pie.operator_enum("OBJECT_OT_mode_set", "mode")
@@ -109,8 +109,44 @@ class VIEW3D_PIE_MT_mode(Menu):
                 pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
                 # SOUTH-EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
-                subPie.name = "SUBPIE_objectSelect" 
-                
+                subPie.name = "SUBPIE_objectSelect"
+
+
+            elif obj is not None and obj.type in {'CURVE', 'SURFACE',}:
+
+                # WEST # EAST 
+                pie.operator_enum("OBJECT_OT_mode_set", "mode")
+                # SOUTH
+                pie.separator() 
+                # NORTH 
+                pie.separator()
+                # NORTH-WEST 
+                pie.separator()
+                # NORTH-EAST
+                pie.separator()
+                # SOUTH-WEST
+                pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+                # SOUTH-EAST
+                subPie = pie.operator("wm.call_menu_pie", text='Select...')
+                subPie.name = "SUBPIE_objectSelect"
+
+            elif obj is not None and obj.type == 'ARMATURE':
+
+                # WEST # EAST # SOUTH 
+                pie.operator_enum("OBJECT_OT_mode_set", "mode")
+                # NORTH 
+                pie.separator()
+                # NORTH-WEST 
+                pie.separator()
+                # NORTH-EAST
+                pie.separator()
+                # SOUTH-WEST
+                pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+                # SOUTH-EAST
+                subPie = pie.operator("wm.call_menu_pie", text='Select...')
+                subPie.name = "SUBPIE_objectSelect"
+            
+
         if context.mode == 'EDIT_MESH':
 
             layout = self.layout
@@ -126,11 +162,6 @@ class VIEW3D_PIE_MT_mode(Menu):
             # NORTH
             pie.operator('mesh.select_mode', text="Edge", icon="EDGESEL").type = 'EDGE'
 
-
-            # WEST
-            #pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
-            # EAST & SOUTH & NORTH
-            #pie.operator_enum("mesh.select_mode", "type")
             # NORTH-WEST
             pie.menu("VIEW3D_MT_edit_mesh_edges", text="edge menu", icon="COLLAPSEMENU")
             # NORTH-EAST
@@ -225,6 +256,30 @@ class VIEW3D_PIE_MT_mode(Menu):
                 pie.menu("VIEW3D_PIE_object_context_menu", text="Object Menu")
             '''
 
+        if bpy.context.mode == 'POSE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+            # EAST
+            pie.separator()
+            # SOUTH
+            pie.menu("VIEW3D_MT_pose_context_menu", text="Pose Context Menu", icon="COLLAPSEMENU")
+
+            # NORTH
+            pie.separator()
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.separator()
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
+
 
 classes = [
     SUBPIE_objectSelect,
@@ -255,6 +310,11 @@ def register():
         addon_keymaps.append((km, kmi))
 
         km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')#, space_type='EMPTY')
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
+        kmi.properties.name = "VIEW3D_PIE_MT_mode"
+        addon_keymaps.append((km, kmi))
+
+        km = wm.keyconfigs.addon.keymaps.new(name='Pose')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))

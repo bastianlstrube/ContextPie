@@ -237,6 +237,76 @@ class SUBPIE_applyTransform(Menu):
         op.rotation = True
         op.scale = True
 
+# Sub Pie Menu for mesh merge operators
+class SUBPIE_inbetweens(Menu):
+    bl_label = "Inbetweens"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("pose.push_rest")
+
+        # EAST
+        pie.operator("pose.relax_rest")
+
+        # SOUTH
+        pie.operator("pose.blend_to_neighbor")
+
+        # NORTH
+        pie.operator("pose.breakdown")
+        
+        # NORTH-WEST
+        pie.separator()
+               
+
+        # NORTH-EAST
+        pie.separator()
+
+        # SOUTH-WEST
+        pie.operator("pose.push")
+
+        # SOUTH-EAST 
+        pie.operator("pose.relax")
+
+# Sub Pie Menu for mesh merge operators
+class SUBPIE_motionpaths(Menu):
+    bl_label = "Motion Paths"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.separator()
+
+        # EAST
+        pie.separator()
+
+        # SOUTH
+        pie.operator("pose.paths_clear")
+
+        # NORTH
+        calc = pie.operator("pose.paths_calculate")
+        calc.start_frame = context.scene.frame_start
+        calc.end_frame = context.scene.frame_end
+        calc.bake_location = 'HEADS'
+
+        
+        # NORTH-WEST
+        pie.operator("pose.paths_update_visible")
+               
+
+        # NORTH-EAST
+        pie.operator("pose.paths_update")
+
+        # SOUTH-WEST
+        pie.separator()
+
+        # SOUTH-EAST 
+        pie.separator()
+
 
 # Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
@@ -293,7 +363,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                pie.operator("mesh.bevel", text="Bevel Vertices")#.vertex_only = True
+                pie.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
                 subPie.name = "PIE_MT_delete"
@@ -342,7 +412,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 
                 # NORTH-EAST
-                pie.operator("mesh.bevel", text="Bevel Edges")#.vertex_only = False
+                pie.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
 
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...')
@@ -431,7 +501,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # EAST
             pie.operator("wm.call_menu_pie", text='Smooth...').name = "subpie_smoothCurve"
             # SOUTH
-            pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
+            pie.operator("curve.extrude_move")
             # NORTH
             pie.operator("transform.tilt")
             # NORTH-WEST
@@ -439,7 +509,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # NORTH-EAST
             pie.operator("curve.subdivide")
             # SOUTH-WEST
-            pie.separator()
+            pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
             # SOUTH-EAST
             pie.operator("curve.separate")
 
@@ -450,8 +520,9 @@ class VIEW3D_PIE_MT_context(Menu):
             pie = layout.menu_pie()
 
             obj = context.object
+            sel = context.selected_objects
 
-            if obj is not None:
+            if obj is not None and sel:
                 # WEST & EAST
                 if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
 
@@ -491,20 +562,34 @@ class VIEW3D_PIE_MT_context(Menu):
                 # WEST
                 pie.operator("mesh.primitive_cube_add")
                 # EAST
-                pie.separator()
+                pie.operator("mesh.primitive_plane_add")
                 # SOUTH
-                pie.separator()
+                pie.operator("mesh.primitive_uv_sphere_add")
                 # NORTH
-                pie.separator()
+                pie.operator("mesh.primitive_cylinder_add")
                 
                 # NORTH-WEST
-                pie.separator()
+                pie.operator("mesh.primitive_torus_add")
                 # NORTH-EAST
-                pie.separator()
+                pie.operator("mesh.primitive_circle_add")
                 # SOUTH-WEST
-                pie.separator()
+                pie.operator("mesh.primitive_cone_add")
                 # SOUTH-EAST
+                pie.operator("mesh.primitive_ico_sphere_add")
+                '''
+                PUT MENU WITH CURVES
+                # Static face menu
                 pie.separator()
+                pie.separator()
+                dropdown = pie.column()
+                gap = dropdown.column()
+                gap.separator()
+                gap.scale_y = 8
+                dropdown_menu = dropdown.box().column()
+                dropdown_menu.scale_y=1
+                dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
+                dropdown_menu.operator("mesh.edge_split")
+                '''
 
         # Straight from Blenders Pie Addon Sculpt 'W' Menu
         if context.mode == 'SCULPT':
@@ -524,37 +609,33 @@ class VIEW3D_PIE_MT_context(Menu):
 
             obj = context.object
 
-            # WEST & EAST
-            pie.operator("object.shade_smooth")
-            pie.operator("object.shade_flat")
+            # WEST
+            pie.operator("pose.copy")
+
+            # EAST
+            pie.operator("pose.paste").flipped = False
 
             # SOUTH
-            pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_applyTransform"
+            pie.operator("wm.call_menu_pie", text='Inbetweens...').name = "SUBPIE_inbetweens"
 
             # NORTH
-            pie.operator("object.join")
+            pie.operator("wm.call_menu_pie", text='Motion Paths...').name = "SUBPIE_motionpaths"
             
             # NORTH-WEST
-            pie.operator("object.parent_set")
+            pie.separator()
 
             # NORTH-EAST
-            pie.operator("object.parent_clear")
+            pie.operator("pose.paste", text='Paste Flipped').flipped = True
+            pie.separator()
 
             # SOUTH-WEST
             pie.separator()
 
             # SOUTH-EAST
-            pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
+            pie.separator()
 
             # Static non pie menu
             pie.separator()
-            pie.separator()
-            dropdown = pie.column()
-            gap = dropdown.column()
-            gap.separator()
-            gap.scale_y = 8
-            dropdown_menu = dropdown.box().column()
-            dropdown_menu.scale_y=1
 
 
 classes = [
@@ -565,6 +646,8 @@ classes = [
     SUBPIE_divide,
     SUBPIE_smoothCurve,
     SUBPIE_applyTransform,
+    SUBPIE_inbetweens,
+    SUBPIE_motionpaths,
     VIEW3D_PIE_MT_context,
 ]
 
