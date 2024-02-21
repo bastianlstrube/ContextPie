@@ -147,7 +147,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 subPie.name = "SUBPIE_objectSelect"
             
 
-        if context.mode == 'EDIT_MESH':
+        elif context.mode == 'EDIT_MESH':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -183,7 +183,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             dropdown_menu.scale_y=1
             dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
 
-        if context.mode == 'EDIT_CURVE':
+        elif context.mode == 'EDIT_CURVE':
 
             # Else something is selected
             layout = self.layout
@@ -221,7 +221,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             
             dropdown_menu.menu("VIEW3D_MT_edit_curve_context_menu", text="curve menu", icon="COLLAPSEMENU")
 
-        if bpy.context.mode == 'SCULPT':
+        elif bpy.context.mode == 'SCULPT':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -256,7 +256,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 pie.menu("VIEW3D_PIE_object_context_menu", text="Object Menu")
             '''
 
-        if bpy.context.mode == 'POSE':
+        elif bpy.context.mode == 'POSE':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -280,6 +280,28 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-EAST
             pie.separator()
 
+        elif bpy.context.mode == 'EDIT_LATTICE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+            # EAST
+            pie.separator()
+            # SOUTH
+            pie.separator()
+            # NORTH
+            pie.separator()
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.separator()
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
 
 classes = [
     SUBPIE_objectSelect,
