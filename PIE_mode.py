@@ -80,7 +80,7 @@ class SUBPIE_meshSelect(Menu):
         # NORTH
         pie.operator("mesh.select_nth", text='Checker Deselect')
         # NORTH-WEST
-        pie.separator()
+        pie.operator("mesh.select_all", text='Invert').action = 'INVERT'
         # NORTH-EAST
         pie.operator("mesh.select_mirror", text='Mirror')
         # SOUTH-WEST
@@ -110,7 +110,6 @@ class VIEW3D_PIE_MT_mode(Menu):
                 # SOUTH-EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
                 subPie.name = "SUBPIE_objectSelect"
-
 
             elif obj is not None and obj.type in {'CURVE', 'SURFACE',}:
 
