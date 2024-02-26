@@ -20,7 +20,7 @@ bl_info = {
     "name": "UV Context Pie: 'Shift + Right Mouse'",
     "description": "UV Context Pie Menu",
     "author": "Bastian L Strube, Frederik Storm",
-    "blender": (2, 80, 0),
+    "blender": (4, 0, 0),
     "location": "UV Editor",
     "category": "Interface"}
 
