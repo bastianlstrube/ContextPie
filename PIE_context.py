@@ -34,7 +34,7 @@ from bpy.types import (
 from bpy.app.translations import contexts as i18n_contexts
 
 # Sub Pie Menu for mesh merge operators
-class SUBPIE_merge(Menu):
+class SUBPIE_MT_merge(Menu):
     bl_label = "Merge"
     def draw(self, context):
         layout = self.layout
@@ -84,7 +84,7 @@ class SUBPIE_merge(Menu):
             pie.separator()
 
 # Sub Pie for mesh connect operators
-class SUBPIE_connect(Menu):
+class SUBPIE_MT_connect(Menu):
     bl_label = "Connect"
     def draw(self, context):
         layout = self.layout
@@ -109,7 +109,7 @@ class SUBPIE_connect(Menu):
         pie.operator("mesh.fill", text="Fill Loop")
 
 # Sub Pie for mesh face split/separate operators
-class SUBPIE_separate(Menu):
+class SUBPIE_MT_separate(Menu):
     bl_label = "Split/Separate"
     def draw(self, context):
         layout = self.layout
@@ -136,7 +136,7 @@ class SUBPIE_separate(Menu):
         pie.operator("mesh.separate", text='Selection').type = 'SELECTED'
 
 # Sub Pie for mesh face/edge divisions
-class SUBPIE_divide(Menu):
+class SUBPIE_MT_divide(Menu):
     bl_label = "Divide"
     def draw(self, context):
         layout = self.layout
@@ -163,7 +163,7 @@ class SUBPIE_divide(Menu):
         pie.separator()
 
 # Sub Pie for mesh face extrusions
-class SUBPIE_extrudeFaces(Menu):
+class SUBPIE_MT_extrudeFaces(Menu):
     bl_label = "Extrude Faces"
     def draw(self, context):
         layout = self.layout
@@ -190,7 +190,7 @@ class SUBPIE_extrudeFaces(Menu):
         pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude")
 
 # Sub Pie for curve operators
-class SUBPIE_smoothCurve(Menu):
+class SUBPIE_MT_smoothCurve(Menu):
     bl_label = "Smooth"
     def draw(self, context):
         layout = self.layout
@@ -207,7 +207,7 @@ class SUBPIE_smoothCurve(Menu):
         pie.operator("curve.smooth_tilt")
 
 # Sub Pie for curve operators
-class SUBPIE_applyTransform(Menu):
+class SUBPIE_MT_applyTransform(Menu):
     bl_label = "Apply"
     def draw(self, context):
         layout = self.layout
@@ -238,7 +238,7 @@ class SUBPIE_applyTransform(Menu):
         op.scale = True
 
 # Sub Pie Menu for mesh merge operators
-class SUBPIE_inbetweens(Menu):
+class SUBPIE_MT_inbetweens(Menu):
     bl_label = "Inbetweens"
     def draw(self, context):
         layout = self.layout
@@ -271,7 +271,7 @@ class SUBPIE_inbetweens(Menu):
         pie.operator("pose.relax")
 
 # Sub Pie Menu for mesh merge operators
-class SUBPIE_motionpaths(Menu):
+class SUBPIE_MT_motionpaths(Menu):
     bl_label = "Motion Paths"
     def draw(self, context):
         layout = self.layout
@@ -353,12 +353,12 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Connect...', icon = "RIGHTARROW_THIN")
-                subPie.name = "SUBPIE_connect"
+                subPie.name = "SUBPIE_MT_connect"
                 # SOUTH
                 pie.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Merge...', icon = "RIGHTARROW_THIN")
-                subPie.name = "SUBPIE_merge"                
+                subPie.name = "SUBPIE_MT_merge"                
                 
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
@@ -382,7 +382,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
                 dropdown_menu.operator("mesh.bisect", text = "Bisect")
                 dropdown_menu.operator("transform.edge_crease", text = "Crease Tool")
-                separatePie = dropdown_menu.operator("wm.call_menu_pie", text='Separate...').name = "SUBPIE_separate"
+                separatePie = dropdown_menu.operator("wm.call_menu_pie", text='Separate...').name = "SUBPIE_MT_separate"
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Crease Tool", icon="ops.generic.select")
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Connect Components")
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Circularize Component")
@@ -397,14 +397,14 @@ class VIEW3D_PIE_MT_context(Menu):
             
                 # EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Connect...')
-                subPie.name = "SUBPIE_connect"
+                subPie.name = "SUBPIE_MT_connect"
 
                 # SOUTH
                 pie.operator("mesh.extrude_edges_move", text="Extrude Edges")
 
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Merge...')
-                subPie.name = "SUBPIE_merge"
+                subPie.name = "SUBPIE_MT_merge"
                 #pie.operator("mesh.merge", text="Merge")
                 
                 
@@ -440,7 +440,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 dropdown_menu.operator("mesh.edge_rotate").use_ccw=True
                 dropdown_menu.operator("mesh.rip_move", text = "Detach Components")
                 subPie = dropdown_menu.operator("wm.call_menu_pie", text='Separate')
-                subPie.name = "SUBPIE_separate"
+                subPie.name = "SUBPIE_MT_separate"
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Circularize Component")
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Edit Edge Flow")
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Offset Edge Loop Tool")
@@ -457,24 +457,24 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.unsubdivide")
                 # SOUTH
                 subPie = pie.operator("wm.call_menu_pie", text='Extrude Faces...')
-                subPie.name = "SUBPIE_extrudeFaces"
+                subPie.name = "SUBPIE_MT_extrudeFaces"
                 #pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces")
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Merge...')
-                subPie.name = "SUBPIE_merge"
+                subPie.name = "SUBPIE_MT_merge"
                 #pie.operator("mesh.merge", text="Merge")
                 
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Divide...')
-                subPie.name = "SUBPIE_divide"
+                subPie.name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
                 deletePie = pie.operator("wm.call_menu_pie", text='Delete...')
                 deletePie.name = "PIE_MT_delete"
                 # SOUTH-EAST
                 separatePie = pie.operator("wm.call_menu_pie", text='Split/Separate...')
-                separatePie.name = "SUBPIE_separate"
+                separatePie.name = "SUBPIE_MT_separate"
 
                 # Static face menu
                 pie.separator()
@@ -499,7 +499,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # WEST
             pie.separator()
             # EAST
-            pie.operator("wm.call_menu_pie", text='Smooth...').name = "subpie_smoothCurve"
+            pie.operator("wm.call_menu_pie", text='Smooth...').name = "SUBPIE_MT_smoothCurve"
             # SOUTH
             pie.operator("curve.extrude_move")
             # NORTH
@@ -530,7 +530,7 @@ class VIEW3D_PIE_MT_context(Menu):
                     pie.operator("object.shade_flat")
 
                 # SOUTH
-                pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_applyTransform"
+                pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
 
                 # NORTH
                 pie.operator("object.join")
@@ -616,10 +616,10 @@ class VIEW3D_PIE_MT_context(Menu):
             pie.operator("pose.paste").flipped = False
 
             # SOUTH
-            pie.operator("wm.call_menu_pie", text='Inbetweens...').name = "SUBPIE_inbetweens"
+            pie.operator("wm.call_menu_pie", text='Inbetweens...').name = "SUBPIE_MT_inbetweens"
 
             # NORTH
-            pie.operator("wm.call_menu_pie", text='Motion Paths...').name = "SUBPIE_motionpaths"
+            pie.operator("wm.call_menu_pie", text='Motion Paths...').name = "SUBPIE_MT_motionpaths"
             
             # NORTH-WEST
             pie.separator()
@@ -639,15 +639,15 @@ class VIEW3D_PIE_MT_context(Menu):
 
 
 classes = [
-    SUBPIE_merge, 
-    SUBPIE_connect, 
-    SUBPIE_extrudeFaces,
-    SUBPIE_separate,
-    SUBPIE_divide,
-    SUBPIE_smoothCurve,
-    SUBPIE_applyTransform,
-    SUBPIE_inbetweens,
-    SUBPIE_motionpaths,
+    SUBPIE_MT_merge, 
+    SUBPIE_MT_connect, 
+    SUBPIE_MT_extrudeFaces,
+    SUBPIE_MT_separate,
+    SUBPIE_MT_divide,
+    SUBPIE_MT_smoothCurve,
+    SUBPIE_MT_applyTransform,
+    SUBPIE_MT_inbetweens,
+    SUBPIE_MT_motionpaths,
     VIEW3D_PIE_MT_context,
 ]
 

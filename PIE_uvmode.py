@@ -32,7 +32,7 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
-class SUBPIE_uvSelect(Menu):
+class SUBPIE_MT_uvSelect(Menu):
     bl_label = "Select"
     def draw(self, context):
         layout = self.layout
@@ -56,7 +56,7 @@ class SUBPIE_uvSelect(Menu):
         # SOUTH-EAST
         pie.operator("uv.select_linked", text="Island")
 
-class SUBPIE_uvSticky(Menu):
+class SUBPIE_MT_uvSticky(Menu):
     bl_label = "Sticky"
     def draw(self, context):
         layout = self.layout
@@ -86,7 +86,7 @@ class SUBPIE_uvSticky(Menu):
         # SOUTH-EAST
         pie.separator()
 
-class SUBPIE_uvTools(Menu):
+class SUBPIE_MT_uvTools(Menu):
     bl_label = "UV Tools"
     def draw(self, context):
         layout = self.layout
@@ -143,17 +143,17 @@ class IMAGE_PIE_MT_uvMode(Menu):
         o.value = 'EDGE'
         # NORTH-WEST
         subPie = pie.operator("wm.call_menu_pie", text='Tools...')
-        subPie.name = "SUBPIE_uvTools" 
+        subPie.name = "SUBPIE_MT_uvTools" 
         # NORTH-EAST
         o = pie.operator('wm.context_set_string', text="Islands", icon="UV_ISLANDSEL")
         o.data_path = 'tool_settings.uv_select_mode'
         o.value = 'ISLAND'
         # SOUTH-WEST
         subPie = pie.operator("wm.call_menu_pie", text='Sticky...')
-        subPie.name = "SUBPIE_uvSticky"  
+        subPie.name = "SUBPIE_MT_uvSticky"  
         # SOUTH-EAST
         subPie = pie.operator("wm.call_menu_pie", text='Select...')
-        subPie.name = "SUBPIE_uvSelect"  
+        subPie.name = "SUBPIE_MT_uvSelect"  
 
         # Static menu
         pie.separator()
@@ -171,9 +171,9 @@ class IMAGE_PIE_MT_uvMode(Menu):
 
 
 classes = [
-    SUBPIE_uvSelect,
-    SUBPIE_uvSticky,
-    SUBPIE_uvTools,
+    SUBPIE_MT_uvSelect,
+    SUBPIE_MT_uvSticky,
+    SUBPIE_MT_uvTools,
     IMAGE_PIE_MT_uvMode]
 
 addon_keymaps = []
