@@ -5,7 +5,7 @@ schema_version = "1.0.0"
 id = "my_example_extension"
 version = "0.8.0"
 name = "Context Pie"
-tagline = "Context Sensitive Pie Menu for Blender, following an ancient Mayan pie recipe"
+tagline = "Context sensitive pie menu from an ancient Mayan pie recipe"
 maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
 # Supported types: "add-on", "theme"
 type = "add-on"
@@ -22,7 +22,7 @@ type = "add-on"
 
 # Optional list defined by Blender and server, see:
 # https://docs.blender.org/manual/en/dev/extensions/tags.html
-tags = ["3D View", "UV Editor"]
+tags = ["3D View", "UV"]
 
 blender_version_min = "4.2.0"
 # Optional: maximum supported Blender version
