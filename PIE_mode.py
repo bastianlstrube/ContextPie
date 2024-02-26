@@ -33,7 +33,7 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
-class SUBPIE_objectSelect(Menu):
+class SUBPIE_MT_objectSelect(Menu):
     bl_label = "Select"
     def draw(self, context):
         layout = self.layout
@@ -64,7 +64,7 @@ class SUBPIE_objectSelect(Menu):
         pie.operator("mesh.select_linked", text='Linked')
         '''
 
-class SUBPIE_meshSelect(Menu):
+class SUBPIE_MT_meshSelect(Menu):
     bl_label = "Select"
     def draw(self, context):
         layout = self.layout
@@ -109,7 +109,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
                 # SOUTH-EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
-                subPie.name = "SUBPIE_objectSelect"
+                subPie.name = "SUBPIE_MT_objectSelect"
 
             elif obj is not None and obj.type in {'CURVE', 'SURFACE',}:
 
@@ -127,7 +127,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
                 # SOUTH-EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
-                subPie.name = "SUBPIE_objectSelect"
+                subPie.name = "SUBPIE_MT_objectSelect"
 
             elif obj is not None and obj.type == 'ARMATURE':
 
@@ -143,7 +143,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
                 # SOUTH-EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
-                subPie.name = "SUBPIE_objectSelect"
+                subPie.name = "SUBPIE_MT_objectSelect"
             
 
         elif context.mode == 'EDIT_MESH':
@@ -169,7 +169,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.menu("VIEW3D_MT_edit_mesh_faces", text="face menu", icon="COLLAPSEMENU")
             # SOUTH-EAST
             subPie = pie.operator("wm.call_menu_pie", text='Select...')
-            subPie.name = "SUBPIE_meshSelect"  
+            subPie.name = "SUBPIE_MT_meshSelect"  
 
             # Static edge menu
             pie.separator()
@@ -303,8 +303,8 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.separator()
 
 classes = [
-    SUBPIE_objectSelect,
-    SUBPIE_meshSelect,
+    SUBPIE_MT_objectSelect,
+    SUBPIE_MT_meshSelect,
     VIEW3D_PIE_MT_mode,]
 
 addon_keymaps = []
