@@ -16,14 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-bl_info = {
-    "name": "Context Pie: 'Shift + Right Mouse'",
-    "description": "Context Sensitive Pie Menu",
-    "author": "Bastian L Strube, Frederik Storm",
-    "blender": (4, 0, 0),
-    "location": "3D View",
-    "category": "Interface"}
-
 import os
 import bpy
 from bpy.types import (
@@ -664,12 +656,7 @@ def register():
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=True)
         kmi.properties.name = "VIEW3D_PIE_MT_context"
         addon_keymaps.append((km, kmi))
-""" This is from Keymap
-    ("wm.call_menu_pie",
-     {"type": 'RIGHTMOUSE', "value": 'PRESS', "shift": True},
-     {"properties":
-      [("name", 'VIEW3D_PIE_context'),
-"""
+
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
