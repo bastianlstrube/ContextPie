@@ -45,7 +45,7 @@ class ParentingSubMenu(bpy.types.Menu):
         layout.operator("object.parent_clear", text = "un-parent")
 '''
 # Sub Pie View Mode 
-class VIEW3D_PIE_views(Menu):
+class VIEW3D_MT_PIE_views(Menu):
     bl_label = "Views"
 
     def draw(self, context):
@@ -70,7 +70,7 @@ class VIEW3D_PIE_MT_spaceMaster(Menu):
         # for the type enum of the operator on the pie
         pie.operator("wm.toolbar", text = "handy tools", icon="TOOL_SETTINGS")    #W
         pie.operator("object.modifier_add", text = "modifier", icon="MODIFIER_ON") #E
-        pie.operator("wm.call_menu_pie", text="views", icon='VIEW_CAMERA').name = "VIEW3D_PIE_views" #S
+        pie.operator("wm.call_menu_pie", text="views", icon='VIEW_CAMERA').name = "VIEW3D_MT_PIE_views" #S
         pie.operator("wm.search_menu", text = "search", icon="VIEWZOOM") #N
         pie.operator("mesh.select_less", text = "shrink selection", icon="REMOVE") #NE
         pie.operator("mesh.select_more", text = "grow selection", icon="ADD")   #NW
@@ -95,7 +95,7 @@ class VIEW3D_PIE_MT_spaceMaster(Menu):
 
 classes = [
     VIEW3D_PIE_MT_spaceMaster, 
-    VIEW3D_PIE_views,
+    VIEW3D_MT_PIE_views,
 ]
 
 addon_keymaps = []
