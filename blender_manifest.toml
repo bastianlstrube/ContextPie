@@ -35,7 +35,7 @@ license = [
 ]
 
 
-'''
+longdescription = """
 DESCRIPTION FOR EXTENSIONS.BLENDER.ORG:
 Context sensitive pie menu.
 Meant to work in conjunction with Blender's official pie-menu add-on.
@@ -60,4 +60,4 @@ Context menu functions in these contexts:
  * Pose Mode
  * Edit Armature
  * Sculpt Mode.
-'''
+"""
