@@ -16,13 +16,22 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+bl_info = {
+    "name": "Context Pie",
+    "blender": (4, 0, 0),
+    "category": "Interface",
+    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "author": "Bastian L Strube, Frederik Storm  + liberal lendings from Official Blender Menus",
+    "version": (0, 8, 4, 0),
+    "location": "View3D (Object, Mesh, Curve), UV Editor",
+}
 
 # Blender imports
 import bpy
 
-from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar
+from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_addons
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_addons)
 
 addon_keymaps = []
 
