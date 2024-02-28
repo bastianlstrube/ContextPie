@@ -16,14 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-bl_info = {
-    "name": "Mode Pie: 'Right Mouse'",
-    "description": "Mode Selection Pie Menu",
-    "author": "Bastian L Strube, Frederik Storm",
-    "blender": (4, 0, 0),
-    "location": "3D View",
-    "category": "Interface"}
-
 import bpy
 from bpy.types import (
     Header,

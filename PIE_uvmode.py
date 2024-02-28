@@ -16,14 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-bl_info = {
-    "name": "UV Mode Pie: 'Right Mouse'",
-    "description": "UV Mode Selection Pie Menu",
-    "author": "Bastian L Strube, Frederik Storm",
-    "blender": (4, 0, 0),
-    "location": "UV Editor",
-    "category": "Interface"}
-
 import bpy
 from bpy.types import (
     Header,

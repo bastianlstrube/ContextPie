@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "my_example_extension"
-version = "0.8.0"
+version = "0.8.4"
 name = "Context Pie"
 tagline = "Context sensitive pie menu from an ancient Mayan pie recipe"
 maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
@@ -22,7 +22,7 @@ type = "add-on"
 
 # Optional list defined by Blender and server, see:
 # https://docs.blender.org/manual/en/dev/extensions/tags.html
-tags = ["3D View", "UV"]
+tags = ["User Interface", "3D View", "UV"]
 
 blender_version_min = "4.2.0"
 # Optional: maximum supported Blender version
@@ -36,18 +36,17 @@ license = [
 
 
 longdescription = """
-DESCRIPTION FOR EXTENSIONS.BLENDER.ORG:
-Context sensitive pie menu.
+## Context sensitive pie menu
 Meant to work in conjunction with Blender's official pie-menu add-on.
 Brings pie menus to poly modeling, curve editing, uv mapping and animation.
 Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus also lets muscle memory navigate the menus much faster than reading through a long list will. 
 
-Right Mouse :                    Mode selection pie menu
+## Shortcuts
+**Right Mouse** :                    Mode selection pie menu
 
-Shift + Right Mouse:        Context sensitive pie menu
+**Shift + Right Mouse**:        Context sensitive pie menu
 
 Made following an ancient Mayan pie recipe and works well with the industry compatible keymap.
-
 
 RELEASE NOTES:
 First test version using the extensions website.
