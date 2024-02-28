@@ -16,6 +16,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+bl_info = {
+    "name": "Addon Pie: 'Ctrl + Right Mouse'",
+    "description": "Context Sensitive Pie Menu",
+    "author": "Bastian L Strube, Frederik Storm",
+    "blender": (4, 0, 0),
+    "location": "3D View",
+    "category": "Interface"}
+
 import os
 import bpy
 import addon_utils

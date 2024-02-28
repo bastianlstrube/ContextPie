@@ -18,20 +18,20 @@
 
 bl_info = {
     "name": "Context Pie",
-    "blender": (2, 80, 0),
+    "blender": (4, 0, 0),
     "category": "Interface",
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
     "author": "Bastian L Strube, Frederik Storm  + liberal lendings from Official Blender Menus",
-    "version": (0, 1, 0, 0),
+    "version": (0, 8, 4, 0),
     "location": "UV Editor, View3D (Object, Mesh, Curve)",
 }
 
 # Blender imports
 import bpy
 
-from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar
+from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_addons
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_addons)
 
 addon_keymaps = []
 
