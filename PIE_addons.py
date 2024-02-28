@@ -84,10 +84,10 @@ class VIEW3D_PIE_MT_addons(Menu):
             pie = layout.menu_pie()
 
             # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_orientations_pie"
             # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
             pie.separator()
