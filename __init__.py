@@ -23,7 +23,7 @@ bl_info = {
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
     "author": "Bastian L Strube, Frederik Storm  + liberal lendings from Official Blender Menus",
     "version": (0, 8, 4, 0),
-    "location": "UV Editor, View3D (Object, Mesh, Curve)",
+    "location": "View3D (Object, Mesh, Curve), UV Editor",
 }
 
 # Blender imports

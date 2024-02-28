@@ -34,6 +34,7 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
+'''
 # Checking if addons exists
 addon_list = [
     'EdgeFlow',
@@ -42,7 +43,7 @@ addon_dict = []
 for addon in addon_list:
     addon_dict[addon] = addon_utils.enable(addon)
 
-'''
+
 if addon_dict['EdgeFlow']:
     class VIEW3D_MT_edit_mesh_set_flow_pie(Menu):
         bl_label = "EdgeFlow"
