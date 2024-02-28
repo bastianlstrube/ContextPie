@@ -497,7 +497,7 @@ class VIEW3D_PIE_MT_context(Menu):
             pie = layout.menu_pie()
 
             # WEST
-            pie.separator()
+            pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
             # EAST
             pie.operator("wm.call_menu_pie", text='Smooth...').name = "SUBPIE_MT_smoothCurve"
             # SOUTH
@@ -509,7 +509,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # NORTH-EAST
             pie.operator("curve.subdivide")
             # SOUTH-WEST
-            pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
+            pie.separator()
             # SOUTH-EAST
             pie.operator("curve.separate")
 
