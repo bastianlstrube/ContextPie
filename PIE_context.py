@@ -503,15 +503,20 @@ class VIEW3D_PIE_MT_context(Menu):
             # SOUTH
             pie.operator("curve.extrude_move")
             # NORTH
-            pie.operator("transform.tilt")
+            pie.operator("curve.make_segment")
             # NORTH-WEST
-            pie.operator("curve.tilt_clear")
+            pie.operator("transform.tilt")
             # NORTH-EAST
             pie.operator("curve.subdivide")
             # SOUTH-WEST
-            pie.separator()
+            deletePie = pie.operator("wm.call_menu", text='Delete...', icon = "RIGHTARROW_THIN")
+            deletePie.name = "VIEW3D_MT_edit_curve_delete"
             # SOUTH-EAST
             pie.operator("curve.separate")
+
+            # Static non pie menu
+            pie.separator()
+            pie.operator("curve.tilt_clear")
 
         if context.mode == 'OBJECT':
 
