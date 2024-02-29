@@ -27,11 +27,16 @@ bl_info = {
 }
 
 # Blender imports
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
+if "bpy" in locals():
+    import importlib
+
+    for module in modules:
+        importlib.reload(module)
+else:
+    from . import modules
 import bpy
 
-from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots
-
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
 
 addon_keymaps = []
 
