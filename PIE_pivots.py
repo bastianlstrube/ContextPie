@@ -57,7 +57,7 @@ if addon_dict['EdgeFlow']:
 
 # Context Sensitive Add-ons Pie Menu
 class VIEW3D_PIE_MT_addons(Menu):
-    bl_label    = "Context Pie"
+    bl_label    = "Pivots Pie"
 
     def draw(self, context):
 

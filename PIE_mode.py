@@ -111,7 +111,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
                 subPie.name = "SUBPIE_MT_objectSelect"
 
-            elif obj is not None and obj.type in {'CURVE', 'SURFACE',}:
+            elif obj is not None and obj.type in {'CURVE', 'SURFACE', 'LATTICE'}:
 
                 # WEST # EAST 
                 pie.operator_enum("OBJECT_OT_mode_set", "mode")
@@ -336,6 +336,11 @@ def register():
         addon_keymaps.append((km, kmi))
 
         km = wm.keyconfigs.addon.keymaps.new(name='Pose')#, space_type='EMPTY')
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
+        kmi.properties.name = "VIEW3D_PIE_MT_mode"
+        addon_keymaps.append((km, kmi))
+
+        km = wm.keyconfigs.addon.keymaps.new(name='Lattice')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))
