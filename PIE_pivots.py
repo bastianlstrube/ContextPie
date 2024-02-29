@@ -26,6 +26,7 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
+'''
 # Checking if addons exists
 addon_list = [
     'EdgeFlow',
@@ -34,7 +35,7 @@ addon_dict = []
 for addon in addon_list:
     addon_dict[addon] = addon_utils.enable(addon)
 
-'''
+
 if addon_dict['EdgeFlow']:
     class VIEW3D_MT_edit_mesh_set_flow_pie(Menu):
         bl_label = "EdgeFlow"
@@ -47,8 +48,8 @@ if addon_dict['EdgeFlow']:
 '''
 
 # Context Sensitive Add-ons Pie Menu
-class VIEW3D_PIE_MT_addons(Menu):
-    bl_label    = "Context Pie"
+class VIEW3D_PIE_MT_pivots(Menu):
+    bl_label    = "Pivots & Addons Pie"
 
     def draw(self, context):
 
@@ -75,10 +76,10 @@ class VIEW3D_PIE_MT_addons(Menu):
             pie = layout.menu_pie()
 
             # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_orientations_pie"
             # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
             pie.separator()
@@ -188,10 +189,10 @@ class VIEW3D_PIE_MT_addons(Menu):
             pie = layout.menu_pie()
 
             # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_orientations_pie"
             # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
             pie.separator()
@@ -217,10 +218,10 @@ class VIEW3D_PIE_MT_addons(Menu):
 
             if obj is not None and sel:
                 # WEST
-                subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+                subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
                 subPie.name = "VIEW3D_MT_orientations_pie"
                 # EAST
-                subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+                subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
                 subPie.name = "VIEW3D_MT_pivot_pie"
                 # SOUTH
                 pie.separator()
@@ -237,10 +238,10 @@ class VIEW3D_PIE_MT_addons(Menu):
 
             else:
                 # WEST
-                subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+                subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
                 subPie.name = "VIEW3D_MT_orientations_pie"
                 # EAST
-                subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+                subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
                 subPie.name = "VIEW3D_MT_pivot_pie"
                 # SOUTH
                 pie.separator()
@@ -289,10 +290,10 @@ class VIEW3D_PIE_MT_addons(Menu):
             obj = context.object
 
             # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_orientations_pie"
             # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
             pie.separator()
@@ -309,7 +310,7 @@ class VIEW3D_PIE_MT_addons(Menu):
 
 
 classes = [
-    VIEW3D_PIE_MT_addons,
+    VIEW3D_PIE_MT_pivots,
 ]
 
 addon_keymaps = []
@@ -323,7 +324,7 @@ def register():
     if wm.keyconfigs.addon:
         km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', ctrl=True)
-        kmi.properties.name = "VIEW3D_PIE_MT_addons"
+        kmi.properties.name = "VIEW3D_PIE_MT_pivots"
         addon_keymaps.append((km, kmi))
 
 def unregister():
@@ -340,8 +341,6 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-
-    #bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_context")
 
 
 """
