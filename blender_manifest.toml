@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
-id = "Context Pie Menu"
+id = "Context Pie"
 version = "0.8.4"
 name = "Context Pie"
 tagline = "Context sensitive pie menu from an ancient Mayan pie recipe"
