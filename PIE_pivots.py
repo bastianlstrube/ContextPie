@@ -33,7 +33,7 @@ addon_list = [
 ]
 addon_dict = []
 for addon in addon_list:
-    addon_dict[addon] = addon_utils.enable(addon)
+    addon_dict[addon] = addon_utils.check(addon)
 
 
 if addon_dict['EdgeFlow']:
