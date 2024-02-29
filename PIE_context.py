@@ -207,6 +207,31 @@ class SUBPIE_MT_smoothCurve(Menu):
         pie.operator("curve.smooth_tilt")
 
 # Sub Pie for curve operators
+class SUBPIE_MT_curveDelete(Menu):
+    bl_label = "Delete/Clear"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("curve.dissolve_verts")
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.operator("curve.delete").type = 'SEGMENT'
+        # NORTH
+        pie.operator("curve.tilt_clear")
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("curve.delete").type = 'VERT'
+        # SOUTH-EAST
+        pie.separator()
+
+# Sub Pie for curve operators
 class SUBPIE_MT_applyTransform(Menu):
     bl_label = "Apply"
     def draw(self, context):
@@ -510,21 +535,9 @@ class VIEW3D_PIE_MT_context(Menu):
             pie.operator("curve.subdivide")
             # SOUTH-WEST
             deletePie = pie.operator("wm.call_menu", text='Delete...', icon = "RIGHTARROW_THIN")
-            deletePie.name = "VIEW3D_MT_edit_curve_delete"
+            deletePie.name = "SUBPIE_MT_curveDelete"
             # SOUTH-EAST
             pie.operator("curve.separate")
-
-            # Static non pie menu
-            pie.separator()
-            pie.separator()
-            dropdown = pie.column()
-            gap = dropdown.column()
-            gap.separator()
-            gap.scale_y = 8
-            
-            dropdown_menu = dropdown.box().column()
-            dropdown_menu.scale_y=1
-            pie.operator("curve.tilt_clear")
 
         if context.mode == 'OBJECT':
 
@@ -658,6 +671,7 @@ classes = [
     SUBPIE_MT_separate,
     SUBPIE_MT_divide,
     SUBPIE_MT_smoothCurve,
+    SUBPIE_MT_curveDelete,
     SUBPIE_MT_applyTransform,
     SUBPIE_MT_inbetweens,
     SUBPIE_MT_motionpaths,
