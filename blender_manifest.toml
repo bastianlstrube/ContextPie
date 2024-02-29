@@ -2,8 +2,8 @@ schema_version = "1.0.0"
 
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
-id = "my_example_extension"
-version = "0.8.0"
+id = "ContextPie"
+version = "0.8.5"
 name = "Context Pie"
 tagline = "Context sensitive pie menu from an ancient Mayan pie recipe"
 maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
@@ -22,7 +22,7 @@ type = "add-on"
 
 # Optional list defined by Blender and server, see:
 # https://docs.blender.org/manual/en/dev/extensions/tags.html
-tags = ["3D View", "UV"]
+tags = ["User Interface", "3D View", "UV"]
 
 blender_version_min = "4.2.0"
 # Optional: maximum supported Blender version
