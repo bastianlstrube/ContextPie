@@ -516,6 +516,14 @@ class VIEW3D_PIE_MT_context(Menu):
 
             # Static non pie menu
             pie.separator()
+            pie.separator()
+            dropdown = pie.column()
+            gap = dropdown.column()
+            gap.separator()
+            gap.scale_y = 8
+            
+            dropdown_menu = dropdown.box().column()
+            dropdown_menu.scale_y=1
             pie.operator("curve.tilt_clear")
 
         if context.mode == 'OBJECT':
@@ -720,5 +728,13 @@ EMPTY PIE MENU
 
         # Static non pie menu
         pie.separator()
+        pie.separator()
+        dropdown = pie.column()
+        gap = dropdown.column()
+        gap.separator()
+        gap.scale_y = 8
+        
+        dropdown_menu = dropdown.box().column()
+        dropdown_menu.scale_y=1
 
 """
