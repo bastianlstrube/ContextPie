@@ -48,8 +48,8 @@ if addon_dict['EdgeFlow']:
 '''
 
 # Context Sensitive Add-ons Pie Menu
-class VIEW3D_PIE_MT_pivots(Menu):
-    bl_label    = "Pivots & Addons Pie"
+class VIEW3D_PIE_MT_addons(Menu):
+    bl_label    = "Pivots Pie"
 
     def draw(self, context):
 
@@ -310,7 +310,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
 
 
 classes = [
-    VIEW3D_PIE_MT_pivots,
+    VIEW3D_PIE_MT_addons,
 ]
 
 addon_keymaps = []
@@ -324,7 +324,7 @@ def register():
     if wm.keyconfigs.addon:
         km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', ctrl=True)
-        kmi.properties.name = "VIEW3D_PIE_MT_pivots"
+        kmi.properties.name = "VIEW3D_PIE_MT_addons"
         addon_keymaps.append((km, kmi))
 
 def unregister():
@@ -341,6 +341,8 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+
+    #bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_context")
 
 
 """

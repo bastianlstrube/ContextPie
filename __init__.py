@@ -16,11 +16,21 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
 # Blender imports
+if "bpy" in locals():
+    import importlib
+
+    importlib.reload(PIE_context)
+    importlib.reload(PIE_mode)
+    importlib.reload(edgeloop)
+    importlib.reload(PIE_uvcontext)
+    importlib.reload(PIE_uvmode)
+    importlib.reload(PIE_spacebar)
+    importlib.reload(PIE_pivots)
+else:
+    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
 import bpy
 
-from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots
 
 modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
 
