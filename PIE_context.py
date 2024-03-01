@@ -207,7 +207,7 @@ class SUBPIE_MT_smoothCurve(Menu):
 
 # Sub Pie for curve operators
 class SUBPIE_MT_curveDelete(Menu):
-    bl_label = "Delete"
+    bl_label = "Delete/Clear"
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
@@ -218,7 +218,7 @@ class SUBPIE_MT_curveDelete(Menu):
         # EAST
         pie.separator()
         # SOUTH
-        pie.operator("curve.delete").type = 'SEGMENT'
+        pie.operator("curve.delete", text="Delete Segment").type = 'SEGMENT'
         # NORTH
         pie.operator("curve.tilt_clear")
         
@@ -227,7 +227,7 @@ class SUBPIE_MT_curveDelete(Menu):
         # NORTH-EAST
         pie.separator()
         # SOUTH-WEST
-        pie.operator("curve.delete").type = 'VERT'
+        pie.operator("curve.delete", text="Delete Vert").type = 'VERT'
         # SOUTH-EAST
         pie.separator()
 
