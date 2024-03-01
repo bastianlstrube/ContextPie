@@ -179,7 +179,6 @@ class SUBPIE_MT_extrudeFaces(Menu):
         # NORTH
         pie.operator("mesh.solidify")
         
-
         # NORTH-WEST
         pie.operator("mesh.inset", text="Inset Individual").use_individual = True
         # NORTH-EAST
@@ -208,7 +207,7 @@ class SUBPIE_MT_smoothCurve(Menu):
 
 # Sub Pie for curve operators
 class SUBPIE_MT_curveDelete(Menu):
-    bl_label = "Delete/Clear"
+    bl_label = "Delete"
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
@@ -222,6 +221,7 @@ class SUBPIE_MT_curveDelete(Menu):
         pie.operator("curve.delete").type = 'SEGMENT'
         # NORTH
         pie.operator("curve.tilt_clear")
+        
         # NORTH-WEST
         pie.separator()
         # NORTH-EAST
@@ -231,7 +231,7 @@ class SUBPIE_MT_curveDelete(Menu):
         # SOUTH-EAST
         pie.separator()
 
-# Sub Pie for curve operators
+# Sub Pie for object applying transform
 class SUBPIE_MT_applyTransform(Menu):
     bl_label = "Apply"
     def draw(self, context):
@@ -262,7 +262,7 @@ class SUBPIE_MT_applyTransform(Menu):
         op.rotation = True
         op.scale = True
 
-# Sub Pie Menu for mesh merge operators
+# Sub Pie Menu for animation inbetween ops
 class SUBPIE_MT_inbetweens(Menu):
     bl_label = "Inbetweens"
     def draw(self, context):
@@ -534,7 +534,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # NORTH-EAST
             pie.operator("curve.subdivide")
             # SOUTH-WEST
-            deletePie = pie.operator("wm.call_menu", text='Delete...', icon = "RIGHTARROW_THIN")
+            deletePie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
             deletePie.name = "SUBPIE_MT_curveDelete"
             # SOUTH-EAST
             pie.operator("curve.separate")
