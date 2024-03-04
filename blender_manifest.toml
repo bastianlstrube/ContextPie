@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "ContextPie"
-version = "0.8.5"
+version = "0.8.6"
 name = "Context Pie"
 tagline = "Context sensitive pie menus for more workflows"
 maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
