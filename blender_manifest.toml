@@ -37,7 +37,7 @@ license = [
 
 longdescription = """
 ## Context sensitive pie menu
-Meant to work in conjunction with Blender's official pie-menu add-on. Brings pie menus to poly modeling, curve editing, uv mapping and animation. Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus lets muscle memory remember where operations are much faster than reading through a long listed menu will. Operations are sensibly placed across contexts. The top option in Edit Mesh will "Merge". In Object mode it will "Join". And in Edit Curve it will "Make Segment".
+Meant to work in conjunction with Blender's official pie-menu add-on. Brings pie menus to poly modeling, curve editing, uv mapping and animation. Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus lets muscle memory remember where operations are much faster than reading through a long listed menu will. Operations are sensibly placed across contexts. The top option in Edit Mesh will "Merge". In Object mode it will "Join" and in Edit Curve it will "Make Segment" between selected points.
 
 ## Shortcuts
 **Right Mouse** :                    Mode selection pie menu
