@@ -5,7 +5,7 @@ schema_version = "1.0.0"
 id = "ContextPie"
 version = "0.8.5"
 name = "Context Pie"
-tagline = "Context sensitive pie menu from an ancient Mayan pie recipe"
+tagline = "Context sensitive pie menus for more workflows"
 maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
 # Supported types: "add-on", "theme"
 type = "add-on"
@@ -37,16 +37,14 @@ license = [
 
 longdescription = """
 ## Context sensitive pie menu
-Meant to work in conjunction with Blender's official pie-menu add-on.
-Brings pie menus to poly modeling, curve editing, uv mapping and animation.
-Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus also lets muscle memory navigate the menus much faster than reading through a long list will. 
+Meant to work in conjunction with Blender's official pie-menu add-on. Brings pie menus to poly modeling, curve editing, uv mapping and animation. Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus lets muscle memory remember where operations are much faster than reading through a long listed menu will. Operations are sensibly placed across contexts. The top option in Edit Mesh will "Merge". In Object mode it will "Join". And in Edit Curve it will "Make Segment".
 
 ## Shortcuts
 **Right Mouse** :                    Mode selection pie menu
 
 **Shift + Right Mouse**:        Context sensitive pie menu
 
-Made following an ancient Mayan pie recipe and works well with the industry compatible keymap.
+Made with inspiration from an ancient Mayan pie recipe and works well with the industry compatible keymap.
 
 RELEASE NOTES:
 First test version using the extensions website.
