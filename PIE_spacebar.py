@@ -37,7 +37,7 @@ class ParentingSubMenu(bpy.types.Menu):
         layout.operator("object.parent_clear", text = "un-parent")
 '''
 # Sub Pie View Mode 
-class VIEW3D_MT_PIE_views(Menu):
+class VIEW3D_PIE_MT_views(Menu):
     bl_label = "Views"
 
     def draw(self, context):
@@ -50,7 +50,7 @@ class VIEW3D_MT_PIE_views(Menu):
         pie.operator("view3d.view_camera", text="Camera")
 
 # Pie Master Mode 
-class VIEW3D_PIE_MT_spaceMaster(Menu):
+class VIEW3D_PIE_MT_spaceMain(Menu):
     # label is displayed at the center of the pie menu.
     bl_label = ""
     
@@ -62,7 +62,7 @@ class VIEW3D_PIE_MT_spaceMaster(Menu):
         # for the type enum of the operator on the pie
         pie.operator("wm.toolbar", text = "handy tools", icon="TOOL_SETTINGS")    #W
         pie.operator("object.modifier_add", text = "modifier", icon="MODIFIER_ON") #E
-        pie.operator("wm.call_menu_pie", text="views", icon='VIEW_CAMERA').name = "VIEW3D_MT_PIE_views" #S
+        pie.operator("wm.call_menu_pie", text="views", icon='VIEW_CAMERA').name = "VIEW3D_PIE_MT_views" #S
         pie.operator("wm.search_menu", text = "search", icon="VIEWZOOM") #N
         pie.operator("mesh.select_less", text = "shrink selection", icon="REMOVE") #NE
         pie.operator("mesh.select_more", text = "grow selection", icon="ADD")   #NW
@@ -86,8 +86,8 @@ class VIEW3D_PIE_MT_spaceMaster(Menu):
 
 
 classes = [
-    VIEW3D_PIE_MT_spaceMaster, 
-    VIEW3D_MT_PIE_views,
+    VIEW3D_PIE_MT_spaceMain, 
+    VIEW3D_PIE_MT_views,
 ]
 
 addon_keymaps = []
@@ -100,7 +100,7 @@ def register():
     if wm.keyconfigs.addon:
         km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'SPACE', 'PRESS')
-        kmi.properties.name = "VIEW3D_PIE_MT_spaceMaster"
+        kmi.properties.name = "VIEW3D_PIE_MT_spaceMain"
         addon_keymaps.append((km, kmi))
 
 def unregister():
@@ -117,5 +117,5 @@ def unregister():
 if __name__ == "__main__":
     register()
 
-    bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_spaceMain")
+    bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_MT_spaceMain")
   
