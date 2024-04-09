@@ -123,7 +123,7 @@ class SUBPIE_MT_separate(Menu):
         # NORTH-EAST
         pie.operator("mesh.separate", text='By Material').type = 'MATERIAL'
         # SOUTH-WEST
-        pie.operator("mesh.edge_split", text='Split By Vertice').type = 'VERT'
+        pie.operator("mesh.edge_split", text='Split By Vertex').type = 'VERT'
         # SOUTH-EAST
         pie.operator("mesh.separate", text='Selection').type = 'SELECTED'
 
@@ -177,7 +177,7 @@ class SUBPIE_MT_extrudeFaces(Menu):
         # NORTH-EAST
         pie.operator("mesh.wireframe")
         # SOUTH-WEST
-        pie.operator("wm.tool_set_by_id", text="Extrud To Cursor Tool").name = "builtin.extrude_to_cursor"
+        pie.operator("wm.tool_set_by_id", text="Extrude To Cursor Tool").name = "builtin.extrude_to_cursor"
         # SOUTH-EAST
         pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude")
 
@@ -224,7 +224,7 @@ class SUBPIE_MT_applyTransform(Menu):
         op.scale = False
 
         # NORTH
-        op = pie.operator("object.transform_apply", text="All Trasnforms")
+        op = pie.operator("object.transform_apply", text="All Transforms")
         op.location = True
         op.rotation = True
         op.scale = True
