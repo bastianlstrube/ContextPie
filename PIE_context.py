@@ -554,6 +554,9 @@ class VIEW3D_PIE_MT_context(Menu):
 
                     pie.operator("object.shade_smooth")
                     pie.operator("object.shade_flat")
+                else:
+                    pie.separator()
+                    pie.separator()
 
                 # SOUTH
                 pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
@@ -573,17 +576,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # SOUTH-EAST
                 pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
 
-                # Static non pie menu
-                pie.separator()
-                pie.separator()
-                dropdown = pie.column()
-                gap = dropdown.column()
-                gap.separator()
-                gap.scale_y = 8
-                dropdown_menu = dropdown.box().column()
-                dropdown_menu.scale_y=1
                 
-
             else:
                 # WEST
                 pie.operator("mesh.primitive_cube_add")
@@ -637,31 +630,21 @@ class VIEW3D_PIE_MT_context(Menu):
 
             # WEST
             pie.operator("pose.copy")
-
             # EAST
             pie.operator("pose.paste").flipped = False
-
             # SOUTH
             pie.operator("wm.call_menu_pie", text='Inbetweens...').name = "SUBPIE_MT_inbetweens"
-
             # NORTH
             pie.operator("wm.call_menu_pie", text='Motion Paths...').name = "SUBPIE_MT_motionpaths"
-            
             # NORTH-WEST
             pie.separator()
-
             # NORTH-EAST
             pie.operator("pose.paste", text='Paste Flipped').flipped = True
-            pie.separator()
-
             # SOUTH-WEST
             pie.separator()
-
             # SOUTH-EAST
             pie.separator()
 
-            # Static non pie menu
-            pie.separator()
 
 
 classes = [

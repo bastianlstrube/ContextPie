@@ -56,156 +56,28 @@ if addon_dict['EdgeFlow']:
 '''
 
 # Context Sensitive Add-ons Pie Menu
-class VIEW3D_PIE_MT_addons(Menu):
+class VIEW3D_PIE_MT_pivots(Menu):
     bl_label    = "Pivots Pie"
 
     def draw(self, context):
 
-        if context.mode == 'EDIT_MESH':
-
-            def count_selected_items_for_objects_in_mode():
-                selected_verts_len = 0
-                selected_edges_len = 0
-                selected_faces_len = 0
-                for ob in context.objects_in_mode_unique_data:
-                    v, e, f = ob.data.count_selected_items()
-                    selected_verts_len += v
-                    selected_edges_len += e
-                    selected_faces_len += f
-                return (selected_verts_len, selected_edges_len, selected_faces_len)
-
-            is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
-            selected_verts_len, selected_edges_len, selected_faces_len = count_selected_items_for_objects_in_mode()
-
-            del count_selected_items_for_objects_in_mode
+        if context.mode in ('EDIT_MESH', 'EDIT_CURVE', 'EDIT_LATTICE'):
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
             pie = layout.menu_pie()
 
             # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation...', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_orientations_pie"
             # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot...', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
             pie.separator()
             # NORTH
-            pie.separator()
-            # NORTH-WEST
-            pie.separator()
-            # NORTH-EAST
-            pie.separator()
-            # SOUTH-WEST
-            pie.separator()
-            # SOUTH-EAST
-            pie.separator()
-
-            '''
-            if is_vert_mode:
-                
-                # WEST
-                pie.separator()
-                # EAST
-                pie.separator()
-                # SOUTH
-                pie.separator()
-                # NORTH
-                pie.separator()
-                # NORTH-WEST
-                pie.separator()
-                # NORTH-EAST
-                pie.separator()
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
-
-                # Static non pie menu
-                pie.separator()
-                dropdown = pie.column()
-                gap = dropdown.column()
-                gap.separator()
-                gap.scale_y = 8
-                dropdown_menu = dropdown.box().column()
-                dropdown_menu.scale_y=1
-                gap.separator()
-
-            elif is_edge_mode:
-
-                # WEST
-                pie.separator()
-                # EAST
-                pie.separator()
-                # SOUTH
-                pie.separator()
-                # NORTH
-                pie.separator()
-                # NORTH-WEST
-                pie.separator()
-                # NORTH-EAST
-                pie.separator()
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
-
-                # Static non pie menu
-                pie.separator()
-                dropdown = pie.column()
-                gap = dropdown.column()
-                gap.separator()
-                gap.scale_y = 8
-                dropdown_menu = dropdown.box().column()
-                dropdown_menu.scale_y=1
-                gap.separator()
-
-            elif is_face_mode:
-
-                # WEST
-                pie.separator()
-                # EAST
-                pie.separator()
-                # SOUTH
-                pie.separator()
-                # NORTH
-                pie.separator()
-                # NORTH-WEST
-                pie.separator()
-                # NORTH-EAST
-                pie.separator()
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
-
-                # Static non pie menu
-                pie.separator()
-                dropdown = pie.column()
-                gap = dropdown.column()
-                gap.separator()
-                gap.scale_y = 8
-                dropdown_menu = dropdown.box().column()
-                dropdown_menu.scale_y=1
-                gap.separator()
-            '''
-        if context.mode == 'EDIT_CURVE':
-
-            layout = self.layout
-            layout.operator_context = 'INVOKE_REGION_WIN'
-            pie = layout.menu_pie()
-
-            # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
-            subPie.name = "VIEW3D_MT_orientations_pie"
-            # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
-            subPie.name = "VIEW3D_MT_pivot_pie"
-            # SOUTH
-            pie.separator()
-            # NORTH
-            pie.separator()
+            subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
+            subPie.name = "PIE_MT_proportional_edt"
             # NORTH-WEST
             pie.separator()
             # NORTH-EAST
@@ -234,7 +106,8 @@ class VIEW3D_PIE_MT_addons(Menu):
                 # SOUTH
                 pie.separator()
                 # NORTH
-                pie.separator()
+                subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
+                subPie.name = "PIE_MT_proportional_obj"
                 # NORTH-WEST
                 pie.separator()
                 # NORTH-EAST
@@ -254,7 +127,8 @@ class VIEW3D_PIE_MT_addons(Menu):
                 # SOUTH
                 pie.separator()
                 # NORTH
-                pie.separator()
+                subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
+                subPie.name = "PIE_MT_proportional_obj"
                 # NORTH-WEST
                 pie.separator()
                 # NORTH-EAST
@@ -318,7 +192,7 @@ class VIEW3D_PIE_MT_addons(Menu):
 
 
 classes = [
-    VIEW3D_PIE_MT_addons,
+    VIEW3D_PIE_MT_pivots,
 ]
 
 addon_keymaps = []
@@ -332,7 +206,7 @@ def register():
     if wm.keyconfigs.addon:
         km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', ctrl=True)
-        kmi.properties.name = "VIEW3D_PIE_MT_addons"
+        kmi.properties.name = "VIEW3D_PIE_MT_pivots"
         addon_keymaps.append((km, kmi))
 
 def unregister():

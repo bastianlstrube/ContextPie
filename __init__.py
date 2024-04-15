@@ -18,12 +18,12 @@
 
 bl_info = {
     "name": "Context Pie",
-    "blender": (4, 0, 0),
+    "blender": (4, 1, 0),
     "category": "Interface",
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
-    "author": "Bastian L Strube, Frederik Storm  + liberal lendings from Official Blender Menus",
+    "author": "Bastian L Strube, Frederik Storm",
     "version": (0, 8, 4, 0),
-    "location": "View3D (Object, Mesh, Curve), UV Editor",
+    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
 # Blender imports
@@ -41,10 +41,12 @@ else:
     from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
 import bpy
 
-
 modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
 
-addon_keymaps = []
+import addon_utils
+if not addon_utils.check("space_view3d_pie_menus")[1]:
+    from . import pie_proportional_menu
+    modules = modules + (pie_proportional_menu,)
 
 def register():
     for m in modules:
