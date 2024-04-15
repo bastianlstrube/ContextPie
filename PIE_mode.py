@@ -103,7 +103,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
                 subPie.name = "SUBPIE_MT_objectSelect"
 
-            elif obj is not None and obj.type in {'CURVE', 'SURFACE',}:
+            elif obj is not None and obj.type in {'CURVE', 'SURFACE', 'LATTICE'}:
 
                 # WEST # EAST 
                 pie.operator_enum("OBJECT_OT_mode_set", "mode")
@@ -163,17 +163,6 @@ class VIEW3D_PIE_MT_mode(Menu):
             subPie = pie.operator("wm.call_menu_pie", text='Select...')
             subPie.name = "SUBPIE_MT_meshSelect"  
 
-            # Static edge menu
-            pie.separator()
-            pie.separator()
-            dropdown = pie.column()
-            gap = dropdown.column()
-            gap.separator()
-            gap.scale_y = 8
-            dropdown_menu = dropdown.box().column()
-            dropdown_menu.scale_y=1
-            dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
-
         elif context.mode == 'EDIT_CURVE':
 
             # Else something is selected
@@ -184,7 +173,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # WEST
             pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
             # EAST
-            pie.separator()
+            pie.menu("VIEW3D_MT_edit_curve_context_menu", text="curve menu", icon="COLLAPSEMENU")
             # SOUTH
             pie.operator("curve.spline_type_set", text='Set Type Bezier').type = 'BEZIER'
             # NORTH
@@ -198,19 +187,6 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.operator("curve.spline_type_set", text='Set Type Poly').type = 'POLY'
             # SOUTH-EAST
             pie.operator("curve.spline_type_set", text='Set Type NURBS').type = 'NURBS'
-
-            # Static menu
-            pie.separator()
-            pie.separator()
-            dropdown = pie.column()
-            gap = dropdown.column()
-            gap.separator()
-            gap.scale_y = 8
-            
-            dropdown_menu = dropdown.box().column()
-            dropdown_menu.scale_y=1
-            
-            dropdown_menu.menu("VIEW3D_MT_edit_curve_context_menu", text="curve menu", icon="COLLAPSEMENU")
 
         elif bpy.context.mode == 'SCULPT':
 
@@ -328,6 +304,11 @@ def register():
         addon_keymaps.append((km, kmi))
 
         km = wm.keyconfigs.addon.keymaps.new(name='Pose')#, space_type='EMPTY')
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
+        kmi.properties.name = "VIEW3D_PIE_MT_mode"
+        addon_keymaps.append((km, kmi))
+
+        km = wm.keyconfigs.addon.keymaps.new(name='Lattice')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))
