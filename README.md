@@ -1,15 +1,17 @@
-# ContextPie
-Context Sensitive Pie Menu for Blender, following an ancient Mayan pie recipe.
-I recommended using Blenders Industry Compatible Keymap along with this addon.
+# Context Sensitive Pie Menu
+Meant to work in conjunction with Blender's official pie-menu add-on.
+Brings pie menus to poly modeling, curve editing, uv mapping and animation.
+Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus also lets muscle memory navigate the menus much faster than reading through a long list will. 
 
-SHIFT + RIGHT MOUSE:
-        Functions based on selection
+## Shortcuts
+**Right Mouse** :                    Mode selection pie menu
 
-RIGHT MOUSE:
-        Mode selection
+**Shift + Right Mouse**:        Context sensitive pie menu
+
+Made following an ancient Mayan pie recipe and works well with the industry compatible keymap.
 
 
-Installation:
+## Installation:
 
     1   Download ContextPie addon as .zip
     
