@@ -16,14 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-bl_info = {
-    "name": "General Pie: 'Spacebar'",
-    "description": "General Functionality Pie Menu",
-    "author": "Bastian L Strube, Frederik Storm",
-    "blender": (4, 0, 0),
-    "location": "3D View",
-    "category": "Interface"}
-
 import bpy
 from bpy.types import (
     Header,
@@ -46,6 +38,7 @@ class ParentingSubMenu(bpy.types.Menu):
 '''
 # Sub Pie View Mode 
 class VIEW3D_PIE_MT_views(Menu):
+
     bl_label = "Views"
 
     def draw(self, context):
@@ -96,6 +89,7 @@ class VIEW3D_PIE_MT_spaceMain(Menu):
 classes = [
     VIEW3D_PIE_MT_spaceMain, 
     VIEW3D_PIE_MT_views,
+
 ]
 
 addon_keymaps = []
