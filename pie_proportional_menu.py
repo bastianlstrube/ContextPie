@@ -22,8 +22,8 @@ from bpy.types import (
 
 
 # Proportional Edit Object
-class PIE_OT_ProportionalEditObj(Operator):
-    bl_idname = "proportional_obj.active"
+class SUBPIE_OT_ProportionalEditObj(Operator):
+    bl_idname = "cpie_proportional_obj.active"
     bl_label = "Proportional Edit Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -39,8 +39,8 @@ class PIE_OT_ProportionalEditObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalSmoothObj(Operator):
-    bl_idname = "proportional_obj.smooth"
+class SUBPIE_OT_ProportionalSmoothObj(Operator):
+    bl_idname = "cpie_proportional_obj.smooth"
     bl_label = "Proportional Smooth Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -55,8 +55,8 @@ class PIE_OT_ProportionalSmoothObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalSphereObj(Operator):
-    bl_idname = "proportional_obj.sphere"
+class SUBPIE_OT_ProportionalSphereObj(Operator):
+    bl_idname = "cpie_proportional_obj.sphere"
     bl_label = "Proportional Sphere Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -71,8 +71,8 @@ class PIE_OT_ProportionalSphereObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalRootObj(Operator):
-    bl_idname = "proportional_obj.root"
+class SUBPIE_OT_ProportionalRootObj(Operator):
+    bl_idname = "cpie_proportional_obj.root"
     bl_label = "Proportional Root Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -87,8 +87,8 @@ class PIE_OT_ProportionalRootObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalSharpObj(Operator):
-    bl_idname = "proportional_obj.sharp"
+class SUBPIE_OT_ProportionalSharpObj(Operator):
+    bl_idname = "cpie_proportional_obj.sharp"
     bl_label = "Proportional Sharp Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -103,8 +103,8 @@ class PIE_OT_ProportionalSharpObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalLinearObj(Operator):
-    bl_idname = "proportional_obj.linear"
+class SUBPIE_OT_ProportionalLinearObj(Operator):
+    bl_idname = "cpie_proportional_obj.linear"
     bl_label = "Proportional Linear Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -119,8 +119,8 @@ class PIE_OT_ProportionalLinearObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalConstantObj(Operator):
-    bl_idname = "proportional_obj.constant"
+class SUBPIE_OT_ProportionalConstantObj(Operator):
+    bl_idname = "cpie_proportional_obj.constant"
     bl_label = "Proportional Constant Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -135,8 +135,8 @@ class PIE_OT_ProportionalConstantObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalRandomObj(Operator):
-    bl_idname = "proportional_obj.random"
+class SUBPIE_OT_ProportionalRandomObj(Operator):
+    bl_idname = "cpie_proportional_obj.random"
     bl_label = "Proportional Random Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -151,8 +151,8 @@ class PIE_OT_ProportionalRandomObj(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalInverseSquareObj(Operator):
-    bl_idname = "proportional_obj.inversesquare"
+class SUBPIE_OT_ProportionalInverseSquareObj(Operator):
+    bl_idname = "cpie_proportional_obj.inversesquare"
     bl_label = "Proportional Random Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -168,8 +168,8 @@ class PIE_OT_ProportionalInverseSquareObj(Operator):
 
 
 # Proportional Edit Edit Mode
-class PIE_OT_ProportionalEditEdt(Operator):
-    bl_idname = "proportional_edt.active"
+class SUBPIE_OT_ProportionalEditEdt(Operator):
+    bl_idname = "cpie_proportional_edt.active"
     bl_label = "Proportional Edit EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -179,8 +179,8 @@ class PIE_OT_ProportionalEditEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalConnectedEdt(Operator):
-    bl_idname = "proportional_edt.connected"
+class SUBPIE_OT_ProportionalConnectedEdt(Operator):
+    bl_idname = "cpie_proportional_edt.connected"
     bl_label = "Proportional Connected EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -190,8 +190,8 @@ class PIE_OT_ProportionalConnectedEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalProjectedEdt(Operator):
-    bl_idname = "proportional_edt.projected"
+class SUBPIE_OT_ProportionalProjectedEdt(Operator):
+    bl_idname = "cpie_proportional_edt.projected"
     bl_label = "Proportional projected EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -201,8 +201,8 @@ class PIE_OT_ProportionalProjectedEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalSmoothEdt(Operator):
-    bl_idname = "proportional_edt.smooth"
+class SUBPIE_OT_ProportionalSmoothEdt(Operator):
+    bl_idname = "cpie_proportional_edt.smooth"
     bl_label = "Proportional Smooth EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -213,8 +213,8 @@ class PIE_OT_ProportionalSmoothEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalSphereEdt(Operator):
-    bl_idname = "proportional_edt.sphere"
+class SUBPIE_OT_ProportionalSphereEdt(Operator):
+    bl_idname = "cpie_proportional_edt.sphere"
     bl_label = "Proportional Sphere EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -225,8 +225,8 @@ class PIE_OT_ProportionalSphereEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalRootEdt(Operator):
-    bl_idname = "proportional_edt.root"
+class SUBPIE_OT_ProportionalRootEdt(Operator):
+    bl_idname = "cpie_proportional_edt.root"
     bl_label = "Proportional Root EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -237,8 +237,8 @@ class PIE_OT_ProportionalRootEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalSharpEdt(Operator):
-    bl_idname = "proportional_edt.sharp"
+class SUBPIE_OT_ProportionalSharpEdt(Operator):
+    bl_idname = "cpie_proportional_edt.sharp"
     bl_label = "Proportional Sharp EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -249,8 +249,8 @@ class PIE_OT_ProportionalSharpEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalLinearEdt(Operator):
-    bl_idname = "proportional_edt.linear"
+class SUBPIE_OT_ProportionalLinearEdt(Operator):
+    bl_idname = "cpie_proportional_edt.linear"
     bl_label = "Proportional Linear EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -261,8 +261,8 @@ class PIE_OT_ProportionalLinearEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalConstantEdt(Operator):
-    bl_idname = "proportional_edt.constant"
+class SUBPIE_OT_ProportionalConstantEdt(Operator):
+    bl_idname = "cpie_proportional_edt.constant"
     bl_label = "Proportional Constant EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -273,8 +273,8 @@ class PIE_OT_ProportionalConstantEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalRandomEdt(Operator):
-    bl_idname = "proportional_edt.random"
+class SUBPIE_OT_ProportionalRandomEdt(Operator):
+    bl_idname = "cpie_proportional_edt.random"
     bl_label = "Proportional Random EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -285,8 +285,8 @@ class PIE_OT_ProportionalRandomEdt(Operator):
         return {'FINISHED'}
 
 
-class PIE_OT_ProportionalInverseSquareEdt(Operator):
-    bl_idname = "proportional_edt.inversesquare"
+class SUBPIE_OT_ProportionalInverseSquareEdt(Operator):
+    bl_idname = "cpie_proportional_edt.inversesquare"
     bl_label = "Proportional Inverese Square EditMode"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -298,8 +298,8 @@ class PIE_OT_ProportionalInverseSquareEdt(Operator):
 
 
 # Pie ProportionalEditObj - O
-class PIE_MT_ProportionalObj(Menu):
-    bl_idname = "PIE_MT_proportional_obj"
+class SUBPIE_MT_ProportionalObj(Menu):
+    bl_idname = "SUBPIE_MT_proportional_obj"
     bl_label = "Pie Proportional Obj"
 
     def draw(self, context):
@@ -320,12 +320,12 @@ class PIE_MT_ProportionalObj(Menu):
         # 1 - BOTTOM - LEFT
         pie.operator("proportional_obj.sharp", text="Sharp", icon='SHARPCURVE')
         # 3 - BOTTOM - RIGHT
-        pie.menu("PIE_MT_proportional_moreob", text="More", icon='LINCURVE')
+        pie.menu("SUBPIE_MT_proportional_moreob", text="More", icon='LINCURVE')
 
 
 # Pie ProportionalEditEdt - O
-class PIE_MT_ProportionalEdt(Menu):
-    bl_idname = "PIE_MT_proportional_edt"
+class SUBPIE_MT_ProportionalEdt(Menu):
+    bl_idname = "SUBPIE_MT_proportional_edt"
     bl_label = "Pie Proportional Edit"
 
     def draw(self, context):
@@ -346,12 +346,12 @@ class PIE_MT_ProportionalEdt(Menu):
         # 1 - BOTTOM - LEFT
         pie.operator("proportional_edt.root", text="Root", icon='ROOTCURVE')
         # 3 - BOTTOM - RIGHT
-        pie.menu("PIE_MT_proportional_more", text="More", icon='LINCURVE')
+        pie.menu("SUBPIE_MT_proportional_more", text="More", icon='LINCURVE')
 
 
 # Pie ProportionalEditEdt - O
-class PIE_MT_ProportionalMore(Menu):
-    bl_idname = "PIE_MT_proportional_more"
+class SUBPIE_MT_ProportionalMore(Menu):
+    bl_idname = "SUBPIE_MT_proportional_more"
     bl_label = "Pie Proportional More"
 
     def draw(self, context):
@@ -365,8 +365,8 @@ class PIE_MT_ProportionalMore(Menu):
 
 
 # Pie ProportionalEditEdt2
-class PIE_MT_proportionalmoreob(Menu):
-    bl_idname = "PIE_MT_proportional_moreob"
+class SUBPIE_MT_proportionalmoreob(Menu):
+    bl_idname = "SUBPIE_MT_proportional_moreob"
     bl_label = "Pie Proportional More"
 
     def draw(self, context):
@@ -378,30 +378,30 @@ class PIE_MT_proportionalmoreob(Menu):
 
 
 classes = (
-    PIE_OT_ProportionalEditObj,
-    PIE_OT_ProportionalSmoothObj,
-    PIE_OT_ProportionalSphereObj,
-    PIE_OT_ProportionalRootObj,
-    PIE_OT_ProportionalSharpObj,
-    PIE_OT_ProportionalLinearObj,
-    PIE_OT_ProportionalConstantObj,
-    PIE_OT_ProportionalRandomObj,
-    PIE_OT_ProportionalInverseSquareObj,
-    PIE_OT_ProportionalEditEdt,
-    PIE_OT_ProportionalConnectedEdt,
-    PIE_OT_ProportionalProjectedEdt,
-    PIE_OT_ProportionalSmoothEdt,
-    PIE_OT_ProportionalSphereEdt,
-    PIE_OT_ProportionalRootEdt,
-    PIE_OT_ProportionalSharpEdt,
-    PIE_OT_ProportionalLinearEdt,
-    PIE_OT_ProportionalConstantEdt,
-    PIE_OT_ProportionalRandomEdt,
-    PIE_OT_ProportionalInverseSquareEdt,
-    PIE_MT_ProportionalObj,
-    PIE_MT_ProportionalEdt,
-    PIE_MT_ProportionalMore,
-    PIE_MT_proportionalmoreob
+    SUBPIE_OT_ProportionalEditObj,
+    SUBPIE_OT_ProportionalSmoothObj,
+    SUBPIE_OT_ProportionalSphereObj,
+    SUBPIE_OT_ProportionalRootObj,
+    SUBPIE_OT_ProportionalSharpObj,
+    SUBPIE_OT_ProportionalLinearObj,
+    SUBPIE_OT_ProportionalConstantObj,
+    SUBPIE_OT_ProportionalRandomObj,
+    SUBPIE_OT_ProportionalInverseSquareObj,
+    SUBPIE_OT_ProportionalEditEdt,
+    SUBPIE_OT_ProportionalConnectedEdt,
+    SUBPIE_OT_ProportionalProjectedEdt,
+    SUBPIE_OT_ProportionalSmoothEdt,
+    SUBPIE_OT_ProportionalSphereEdt,
+    SUBPIE_OT_ProportionalRootEdt,
+    SUBPIE_OT_ProportionalSharpEdt,
+    SUBPIE_OT_ProportionalLinearEdt,
+    SUBPIE_OT_ProportionalConstantEdt,
+    SUBPIE_OT_ProportionalRandomEdt,
+    SUBPIE_OT_ProportionalInverseSquareEdt,
+    SUBPIE_MT_ProportionalObj,
+    SUBPIE_MT_ProportionalEdt,
+    SUBPIE_MT_ProportionalMore,
+    SUBPIE_MT_proportionalmoreob
 )
 
 

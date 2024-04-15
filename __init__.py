@@ -37,16 +37,16 @@ if "bpy" in locals():
     importlib.reload(PIE_uvmode)
     importlib.reload(PIE_spacebar)
     importlib.reload(PIE_pivots)
+
+    # Copies of blenders buildin Pie Addon
+    importlib.reload(PIE_proportional_menu)
+
 else:
-    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
+    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, PIE_proportional_menu)
 import bpy
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, PIE_proportional_menu)
 
-import addon_utils
-if not addon_utils.check("space_view3d_pie_menus")[1]:
-    from . import pie_proportional_menu
-    modules = modules + (pie_proportional_menu,)
 
 def register():
     for m in modules:
