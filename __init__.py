@@ -16,15 +16,37 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+bl_info = {
+    "name": "Context Pie",
+    "blender": (4, 1, 0),
+    "category": "Interface",
+    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "author": "Bastian L Strube, Frederik Storm",
+    "version": (0, 8, 4, 0),
+    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
+}
 
 # Blender imports
+if "bpy" in locals():
+    import importlib
+
+    importlib.reload(PIE_context)
+    importlib.reload(PIE_mode)
+    importlib.reload(edgeloop)
+    importlib.reload(PIE_uvcontext)
+    importlib.reload(PIE_uvmode)
+    importlib.reload(PIE_spacebar)
+    importlib.reload(PIE_pivots)
+else:
+    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
 import bpy
 
-from . import PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots)
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar)
-
-addon_keymaps = []
+import addon_utils
+if not addon_utils.check("space_view3d_pie_menus")[1]:
+    from . import pie_proportional_menu
+    modules = modules + (pie_proportional_menu,)
 
 def register():
     for m in modules:

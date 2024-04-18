@@ -24,6 +24,32 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
+# Sub Pie Menu for UV Unwrap
+class SUBPIE_MT_uvUnwrap(Menu):
+    bl_label = "Unwrap"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("uv.smart_project")
+        # EAST
+        pie.operator("uv.follow_active_quads")
+        # SOUTH
+        pie.operator("uv.cylinder_project")
+        # NORTH
+        pie.operator("uv.unwrap")
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        o = pie.operator('wm.context_toggle', text="Live Unwrap")
+        o.data_path = 'tool_settings.use_live_unwrap'
+        # SOUTH-WEST
+        pie.operator("uv.sphere_project")
+        # SOUTH-EAST
+        pie.operator("uv.cube_project")
+
 # Reference context menu: IMAGE_MT_uvs_context_menu
 class IMAGE_PIE_MT_uvContext(Menu):
     bl_label    = ""
@@ -40,7 +66,7 @@ class IMAGE_PIE_MT_uvContext(Menu):
         # SOUTH
         pie.operator("uv.minimize_stretch")
         # NORTH
-        pie.operator("uv.unwrap")
+        pie.operator("wm.call_menu_pie", text='Unwrap...').name = "SUBPIE_MT_uvUnwrap"
         # NORTH-WEST
         pie.operator("uv.pack_islands")
         # NORTH-EAST
@@ -68,7 +94,9 @@ class IMAGE_PIE_MT_uvContext(Menu):
 
 
 classes = [
-    IMAGE_PIE_MT_uvContext]
+    SUBPIE_MT_uvUnwrap,
+    IMAGE_PIE_MT_uvContext,
+]
 
 addon_keymaps = []
 
