@@ -22,7 +22,6 @@ bl_info = {
     "category": "Interface",
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
     "author": "Bastian L Strube, Frederik Storm",
-    "version": (0, 8, 4, 0),
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
@@ -39,13 +38,13 @@ if "bpy" in locals():
     importlib.reload(PIE_pivots)
 
     # Copies of blenders buildin Pie Addon
-    importlib.reload(PIE_proportional_menu)
+    importlib.reload(SUBPIE_proportional_menu)
 
 else:
-    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, PIE_proportional_menu)
+    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu)
 import bpy
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, PIE_proportional_menu)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu)
 
 
 def register():

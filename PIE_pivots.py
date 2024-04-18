@@ -17,7 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_info = {
-    "name": "Addon Pie: 'Ctrl + Right Mouse'",
+    "name": "Pivot Pie: 'Ctrl + Right Mouse'",
     "description": "Context Sensitive Pie Menu",
     "author": "Bastian L Strube, Frederik Storm",
     "blender": (4, 0, 0),
@@ -77,7 +77,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
             pie.separator()
             # NORTH
             subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
-            subPie.name = "PIE_MT_proportional_edt"
+            subPie.name = "SUBPIE_MT_proportional_edt"
             # NORTH-WEST
             pie.separator()
             # NORTH-EAST
@@ -107,7 +107,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
                 pie.separator()
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
-                subPie.name = "PIE_MT_proportional_obj"
+                subPie.name = "SUBPIE_MT_proportional_obj"
                 # NORTH-WEST
                 pie.separator()
                 # NORTH-EAST
@@ -128,7 +128,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
                 pie.separator()
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
-                subPie.name = "PIE_MT_proportional_obj"
+                subPie.name = "SUBPIE_MT_proportional_obj"
                 # NORTH-WEST
                 pie.separator()
                 # NORTH-EAST
