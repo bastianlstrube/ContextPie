@@ -39,12 +39,13 @@ if "bpy" in locals():
 
     # Copies of blenders buildin Pie Addon
     importlib.reload(SUBPIE_proportional_menu)
+    importlib.reload(SUBPIE_snap_menu)
 
 else:
-    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu)
+    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu)
 import bpy
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu)
 
 
 def register():

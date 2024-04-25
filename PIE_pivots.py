@@ -74,7 +74,8 @@ class VIEW3D_PIE_MT_pivots(Menu):
             subPie = pie.operator("wm.call_menu_pie", text='Pivot...', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
-            pie.separator()
+            subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")
+            subPie.name = "SUBPIE_MT_snap_edt"
             # NORTH
             subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
             subPie.name = "SUBPIE_MT_proportional_edt"
@@ -104,7 +105,8 @@ class VIEW3D_PIE_MT_pivots(Menu):
                 subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
                 subPie.name = "VIEW3D_MT_pivot_pie"
                 # SOUTH
-                pie.separator()
+                subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")
+                subPie.name = "SUBPIE_MT_snap_obj"
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
                 subPie.name = "SUBPIE_MT_proportional_obj"
@@ -125,7 +127,8 @@ class VIEW3D_PIE_MT_pivots(Menu):
                 subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
                 subPie.name = "VIEW3D_MT_pivot_pie"
                 # SOUTH
-                pie.separator()
+                subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")
+                subPie.name = "SUBPIE_MT_snap_obj"
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
                 subPie.name = "SUBPIE_MT_proportional_obj"
@@ -137,6 +140,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
                 pie.separator()
                 # SOUTH-EAST
                 pie.separator()
+
 
         # Straight from Blenders Pie Addon Sculpt 'W' Menu
         if context.mode == 'SCULPT':
