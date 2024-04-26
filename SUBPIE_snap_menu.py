@@ -62,101 +62,161 @@ class SUBPIE_OT_ProportionalEditEdt(Operator):
         ts.use_proportional_edit ^= 1
         return {'FINISHED'}
 
-class SUBPIE_OT_ProportionalConnectedEdt(Operator):
-    bl_idname = "pie_proportional_edt.connected"
+class SUBPIE_OT_SwapSnapElementsBase(Operator):
+    bl_idname = "pie_snap.elements"
     bl_label = "Proportional Connected EditMode"
     bl_options = {'REGISTER', 'UNDO'}
+
+    elementsbase = ({'INCREMENT'}, {'VERTEX'}, {'EDGE'}, {'FACE'}, {'VOLUME'}, {'EDGE_MIDPOINT'}, {'EDGE_PERPENDICULAR'})
 
     def execute(self, context):
         ts = context.tool_settings
         ts.use_proportional_connected ^= 1
         return {'FINISHED'}
 """
+#    elementsbase = ({'INCREMENT'}, {'VERTEX'}, {'EDGE'}, {'FACE'}, {'VOLUME'}, {'EDGE_MIDPOINT'}, {'EDGE_PERPENDICULAR'})
 
+class SUBPIE_OT_SnapIncrement(Operator):
+    bl_idname = "pie_snap.increment"
+    bl_label = "Snap Increment"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'INCREMENT'}
+
+        if not ts.snap_elements_base == {'INCREMENT'}:
+            ts.snap_elements_base = {'INCREMENT'}
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapVertex(Operator):
+    bl_idname = "pie_snap.vertex"
+    bl_label = "Snap Vertex"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'VERTEX'}
+
+        if not ts.snap_elements_base == {'VERTEX'}:
+            ts.snap_elements_base = {'VERTEX'}
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapEdge(Operator):
+    bl_idname = "pie_snap.edge"
+    bl_label = "Snap Edge"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'EDGE'}
+
+        if not ts.snap_elements_base == {'EDGE'}:
+            ts.snap_elements_base = {'EDGE'}
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapFace(Operator):
+    bl_idname = "pie_snap.face"
+    bl_label = "Snap Face"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'FACE'}
+
+        if not ts.snap_elements_base == {'FACE'}:
+            ts.snap_elements_base = {'FACE'}
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapVolume(Operator):
+    bl_idname = "pie_snap.volume"
+    bl_label = "Snap Volume"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'VOLUME'}
+
+        if not ts.snap_elements_base == {'VOLUME'}:
+            ts.snap_elements_base = {'VOLUME'}
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapEdgeMidpoint(Operator):
+    bl_idname = "pie_snap.edgemidpoint"
+    bl_label = "Snap Edge Midpoint"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'EDGE_MIDPOINT'}
+
+        if not ts.snap_elements_base == {'EDGE_MIDPOINT'}:
+            ts.snap_elements_base = {'EDGE_MIDPOINT'}
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapEdgePerpendicular(Operator):
+    bl_idname = "pie_snap.edgeperpendicular"
+    bl_label = "Snap Edge Perpendicular"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'EDGE_PERPENDICULAR'}
+
+        if not ts.snap_elements_base == {'EDGE_PERPENDICULAR'}:
+            ts.snap_elements_base = {'EDGE_PERPENDICULAR'}
+        return {'FINISHED'}
 
 # Sub Pie SnapEditObj
-class SUBPIE_MT_SnapObj(Menu):
-    bl_idname = "SUBPIE_MT_snap_obj"
-    bl_label = "Pie Snap Obj"
+class SUBPIE_MT_Snap(Menu):
+    bl_idname = "SUBPIE_MT_snap"
+    bl_label = "Pie Snap"
 
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
+        ts = context.tool_settings
         # 4 - LEFT
-        pie.separator() #pie.operator("pie_proportional_obj.smooth", text="Smooth", icon='SMOOTHCURVE')
+        pie.operator("pie_snap.volume", text="Volume", icon='SNAP_VOLUME')
         # 6 - RIGHT
-        pie.separator() #pie.operator("pie_proportional_obj.sphere", text="Sphere", icon='SPHERECURVE')
+        pie.operator("pie_snap.vertex", text="Vertex", icon='SNAP_VERTEX')
         # 2 - BOTTOM
-        pie.prop(context.tool_settings, "use_snap", text="Snap On/Off")
+        pie.prop(ts, "use_snap", text="Snap On/Off")
         # 8 - TOP
-        pie.separator() #pie.operator("pie_proportional_obj.linear", text="Linear", icon='LINCURVE')
+        pie.operator("pie_snap.edge", text="Edge", icon='SNAP_EDGE')
         # 7 - TOP - LEFT
-        pie.separator() #pie.operator("pie_proportional_obj.root", text="Root", icon='ROOTCURVE')
+        pie.operator("pie_snap.edgemidpoint", text="Edge Midpoint", icon='SNAP_MIDPOINT')
         # 9 - TOP - RIGHT
-        pie.separator() #pie.operator("pie_proportional_obj.inversesquare", text="Inverse Square", icon='INVERSESQUARECURVE')
+        pie.operator("pie_snap.edgeperpendicular", text="Edge Perpendicular", icon='SNAP_PERPENDICULAR')
         # 1 - BOTTOM - LEFT
-        pie.separator() #pie.operator("pie_proportional_obj.sharp", text="Sharp", icon='SHARPCURVE')
+        pie.operator("pie_snap.increment", text="Increment", icon='SNAP_INCREMENT')
         # 3 - BOTTOM - RIGHT
-        pie.separator() #pie.menu("SUBPIE_MT_proportional_moreob", text="More", icon='LINCURVE')
+        pie.operator("pie_snap.face", text="Face", icon='SNAP_FACE')
 
-
-# Sub Pie SnapEditEdt
-class SUBPIE_MT_SnapEdt(Menu):
-    bl_idname = "SUBPIE_MT_snap_edt"
-    bl_label = "Pie Snap Edit"
-
-    def draw(self, context):
-        layout = self.layout
-        pie = layout.menu_pie()
-        # 4 - LEFT
-        pie.separator() #pie.operator("pie_proportional_edt.smooth", text="Smooth", icon='SMOOTHCURVE')
-        # 6 - RIGHT
-        pie.separator() #pie.operator("pie_proportional_edt.sphere", text="Sphere", icon='SPHERECURVE')
-        # 2 - BOTTOM
-        pie.prop(context.tool_settings, "use_snap", text="Snap On/Off")
-        # 8 - TOP
-        pie.separator() #pie.operator("pie_proportional_edt.inversesquare", text="Inverse Square", icon='INVERSESQUARECURVE')
-        # 7 - TOP - LEFT
-        pie.separator() #pie.operator("pie_proportional_edt.connected", text="Connected", icon='PROP_CON')
-        # 9 - TOP - RIGHT
-        pie.separator() #pie.operator("pie_proportional_edt.projected", text="Projected", icon='PROP_PROJECTED')
-        # 1 - BOTTOM - LEFT
-        pie.separator() #pie.operator("pie_proportional_edt.root", text="Root", icon='ROOTCURVE')
-        # 3 - BOTTOM - RIGHT
-        pie.separator() #pie.menu("SUBPIE_MT_proportional_more", text="More", icon='LINCURVE')
-
-"""
-# Pie ProportionalEditEdt - O
-class SUBPIE_MT_ProportionalMore(Menu):
-    bl_idname = "SUBPIE_MT_proportional_more"
-    bl_label = "Pie Proportional More"
-
-    def draw(self, context):
-        layout = self.layout
-        pie = layout.menu_pie()
-        box = pie.split().column()
-        box.operator("pie_proportional_edt.sharp", text="Sharp", icon='SHARPCURVE')
-        box.operator("pie_proportional_edt.linear", text="Linear", icon='LINCURVE')
-        box.operator("pie_proportional_edt.constant", text="Constant", icon='NOCURVE')
-        box.operator("pie_proportional_edt.random", text="Random", icon='RNDCURVE')
-
-
-# Pie ProportionalEditEdt2
-class SUBPIE_MT_proportionalmoreob(Menu):
-    bl_idname = "SUBPIE_MT_proportional_moreob"
-    bl_label = "Pie Proportional More"
-
-    def draw(self, context):
-        layout = self.layout
-        pie = layout.menu_pie()
-        box = pie.split().column()
-        box.operator("pie_proportional_obj.constant", text="Constant", icon='NOCURVE')
-        box.operator("pie_proportional_obj.random", text="Random", icon='RNDCURVE')
-"""
 
 classes = (
-    SUBPIE_MT_SnapEdt,
-    SUBPIE_MT_SnapObj,
+    SUBPIE_OT_SnapIncrement,
+    SUBPIE_OT_SnapVertex,
+    SUBPIE_OT_SnapEdge,
+    SUBPIE_OT_SnapFace,
+    SUBPIE_OT_SnapVolume,
+    SUBPIE_OT_SnapEdgeMidpoint,
+    SUBPIE_OT_SnapEdgePerpendicular,
+    SUBPIE_MT_Snap,
 )
 
 

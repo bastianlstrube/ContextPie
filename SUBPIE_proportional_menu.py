@@ -318,7 +318,7 @@ class SUBPIE_MT_ProportionalObj(Menu):
         # 1 - BOTTOM - LEFT
         pie.operator("pie_proportional_obj.sharp", text="Sharp", icon='SHARPCURVE')
         # 3 - BOTTOM - RIGHT
-        pie.menu("SUBPIE_MT_proportional_moreob", text="More", icon='LINCURVE')
+        pie.menu("SUBPIE_MT_proportional_moreob", text="More...", icon='LINCURVE')
 
 
 # Pie ProportionalEditEdt - O
@@ -344,7 +344,7 @@ class SUBPIE_MT_ProportionalEdt(Menu):
         # 1 - BOTTOM - LEFT
         pie.operator("pie_proportional_edt.root", text="Root", icon='ROOTCURVE')
         # 3 - BOTTOM - RIGHT
-        pie.menu("SUBPIE_MT_proportional_more", text="More", icon='LINCURVE')
+        pie.menu("SUBPIE_MT_proportional_more", text="More...", icon='LINCURVE')
 
 
 # Pie ProportionalEditEdt - O
