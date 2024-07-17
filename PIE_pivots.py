@@ -18,11 +18,12 @@
 
 bl_info = {
     "name": "Pivot Pie: 'Ctrl + Right Mouse'",
-    "description": "Context Sensitive Pie Menu",
-    "author": "Bastian L Strube, Frederik Storm",
     "blender": (4, 2, 0),
-    "location": "3D View",
-    "category": "Interface"}
+    "category": "Interface",
+    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "author": "Bastian L Strube, Frederik Storm",
+    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
+}
 
 import os
 import bpy

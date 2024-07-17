@@ -18,7 +18,7 @@
 
 bl_info = {
     "name": "Context Pie",
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
     "author": "Bastian L Strube, Frederik Storm",
@@ -31,7 +31,6 @@ if "bpy" in locals():
 
     importlib.reload(PIE_context)
     importlib.reload(PIE_mode)
-    importlib.reload(edgeloop)
     importlib.reload(PIE_uvcontext)
     importlib.reload(PIE_uvmode)
     importlib.reload(PIE_spacebar)
