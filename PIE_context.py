@@ -15,9 +15,10 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+
 bl_info = {
     "name": "Context Pie: 'Shift + Right Mouse'",
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
     "author": "Bastian L Strube, Frederik Storm",

@@ -16,6 +16,16 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+bl_info = {
+    "name": "Context Pie: 'Shift + Right Mouse'",
+    "blender": (4, 2, 0),
+    "category": "Interface",
+    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "author": "Bastian L Strube, Frederik Storm",
+    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
+}
+
+
 import bpy
 from bpy.types import (
     Header,

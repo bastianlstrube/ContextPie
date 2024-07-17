@@ -15,9 +15,10 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+
 bl_info = {
     "name": "Context Pie: Mode Selection 'Right Mouse'",
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
     "author": "Bastian L Strube, Frederik Storm",
@@ -303,11 +304,6 @@ def register():
         addon_keymaps.append((km, kmi))
 
         km = wm.keyconfigs.addon.keymaps.new(name='Curve')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))

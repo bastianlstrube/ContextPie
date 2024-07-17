@@ -18,7 +18,7 @@
 
 bl_info = {
     "name": "Context Pie",
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
     "author": "Bastian L Strube, Frederik Storm",
@@ -31,7 +31,6 @@ if "bpy" in locals():
 
     importlib.reload(PIE_context)
     importlib.reload(PIE_mode)
-    importlib.reload(edgeloop)
     importlib.reload(PIE_uvcontext)
     importlib.reload(PIE_uvmode)
     importlib.reload(PIE_spacebar)
@@ -39,12 +38,13 @@ if "bpy" in locals():
 
     # Copies of blenders buildin Pie Addon
     importlib.reload(SUBPIE_proportional_menu)
+    importlib.reload(SUBPIE_snap_menu)
 
 else:
-    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu)
+    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu)
 import bpy
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu)
 
 
 def register():
