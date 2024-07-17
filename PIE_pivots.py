@@ -20,7 +20,7 @@ bl_info = {
     "name": "Pivot Pie: 'Ctrl + Right Mouse'",
     "description": "Context Sensitive Pie Menu",
     "author": "Bastian L Strube, Frederik Storm",
-    "blender": (4, 0, 0),
+    "blender": (4, 2, 0),
     "location": "3D View",
     "category": "Interface"}
 
