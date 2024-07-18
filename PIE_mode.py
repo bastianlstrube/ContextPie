@@ -209,11 +209,9 @@ class VIEW3D_PIE_MT_mode(Menu):
             # EAST
             pie.separator()
             # SOUTH
-            pie.popover("VIEW3D_PT_sculpt_context_menu")
-
-            #box = pie.box()
+            box = pie.box()
             #show the colour picker directly
-            #box.popover("VIEW3D_PT_sculpt_context_menu")
+            box.menu_contents("VIEW3D_PT_sculpt_context_menu")
 
             # NORTH
             pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
@@ -225,7 +223,10 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.separator()
             # SOUTH-EAST
             pie.separator()
+            
             '''
+            VIEW3D_PT_sculpt_context_menu
+
             obj = context.object
             
             if obj is not None and obj.type in {'MESH', 'CURVE', 'SURFACE'}:
@@ -304,6 +305,11 @@ def register():
         addon_keymaps.append((km, kmi))
 
         km = wm.keyconfigs.addon.keymaps.new(name='Curve')#, space_type='EMPTY')
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
+        kmi.properties.name = "VIEW3D_PIE_MT_mode"
+        addon_keymaps.append((km, kmi))
+
+        km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))
