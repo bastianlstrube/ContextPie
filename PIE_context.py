@@ -428,6 +428,7 @@ class SUBPIE_MT_SculptGrab(Menu):
 
 
 
+
 # Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
     bl_label    = "Context Pie"
@@ -724,8 +725,8 @@ class VIEW3D_PIE_MT_context(Menu):
             subPie.name = "SUBPIE_MT_SculptMoreBrushes"
 
             # 8 - TOP
-            pie.operator("sculpt.sculptraw",
-                        text="    Draw", icon_value=brush_icons["draw"])
+            pie.operator("paint.brush_select",
+                        text="    Draw", icon_value=brush_icons["draw"]).sculpt_tool = 'DRAW'
             # 7 - TOP - LEFT
             pie.operator("paint.brush_select",
                         text="    Clay", icon_value=brush_icons["clay"]).sculpt_tool = 'CLAY'

@@ -309,10 +309,12 @@ def register():
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))
 
+        '''
         km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))
+        '''
 
         km = wm.keyconfigs.addon.keymaps.new(name='Pose')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
