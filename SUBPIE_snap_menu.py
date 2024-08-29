@@ -6,7 +6,7 @@ bl_info = {
     "name": "Context Pie: Proportional Sub Pie Menu",
     "blender": (4, 2, 0),
     "category": "Interface",
-    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "description": "Context sensitive pie menu for a simple, fast workflow",
     "author": "Bastian L Strube, Frederik Storm",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
@@ -184,7 +184,7 @@ class SUBPIE_OT_SnapEdgePerpendicular(Operator):
 # Sub Pie SnapEditObj
 class SUBPIE_MT_Snap(Menu):
     bl_idname = "SUBPIE_MT_snap"
-    bl_label = "Pie Snap"
+    bl_label = "Snap"
 
     def draw(self, context):
         layout = self.layout

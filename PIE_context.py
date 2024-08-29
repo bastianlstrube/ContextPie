@@ -20,7 +20,7 @@ bl_info = {
     "name": "Context Pie: 'Shift + Right Mouse'",
     "blender": (4, 2, 0),
     "category": "Interface",
-    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "description": "Context sensitive pie menu for a simple, fast workflow",
     "author": "Bastian L Strube, Frederik Storm",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }

@@ -20,7 +20,7 @@ bl_info = {
     "name": "Context Pie: Mode Selection 'Right Mouse'",
     "blender": (4, 2, 0),
     "category": "Interface",
-    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "description": "Context sensitive pie menu for a simple, fast workflow",
     "author": "Bastian L Strube, Frederik Storm",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
@@ -91,7 +91,7 @@ class SUBPIE_MT_meshSelect(Menu):
         pie.operator("mesh.select_linked", text='Linked')
 
 class VIEW3D_PIE_MT_mode(Menu):
-    bl_label  = "Mode Selection Pie"
+    bl_label  = "Mode Selection"
 
     def draw(self, context):
         

@@ -33,6 +33,7 @@ if "bpy" in locals():
     importlib.reload(PIE_mode)
     importlib.reload(PIE_uvcontext)
     importlib.reload(PIE_uvmode)
+    importlib.reload(PIE_uvpivots)
     importlib.reload(PIE_spacebar)
     importlib.reload(PIE_pivots)
 
@@ -41,10 +42,10 @@ if "bpy" in locals():
     importlib.reload(SUBPIE_snap_menu)
 
 else:
-    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu)
+    from . import (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_uvpivots, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu, )
 import bpy
 
-modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu)
+modules = (PIE_context, PIE_mode , PIE_uvcontext, PIE_uvmode, PIE_uvpivots, PIE_spacebar, PIE_pivots, SUBPIE_proportional_menu, SUBPIE_snap_menu)
 
 
 def register():
