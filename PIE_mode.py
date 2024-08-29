@@ -15,11 +15,12 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+
 bl_info = {
     "name": "Context Pie: Mode Selection 'Right Mouse'",
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "category": "Interface",
-    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "description": "Context sensitive pie menu for a simple, fast workflow",
     "author": "Bastian L Strube, Frederik Storm",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
@@ -90,7 +91,7 @@ class SUBPIE_MT_meshSelect(Menu):
         pie.operator("mesh.select_linked", text='Linked')
 
 class VIEW3D_PIE_MT_mode(Menu):
-    bl_label  = "Mode Selection Pie"
+    bl_label  = "Mode Selection"
 
     def draw(self, context):
         
@@ -217,11 +218,9 @@ class VIEW3D_PIE_MT_mode(Menu):
             # EAST
             pie.separator()
             # SOUTH
-            pie.popover("VIEW3D_PT_sculpt_context_menu")
-
-            #box = pie.box()
+            box = pie.box()
             #show the colour picker directly
-            #box.popover("VIEW3D_PT_sculpt_context_menu")
+            box.menu_contents("VIEW3D_PT_sculpt_context_menu")
 
             # NORTH
             pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
@@ -233,7 +232,10 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.separator()
             # SOUTH-EAST
             pie.separator()
+            
             '''
+            VIEW3D_PT_sculpt_context_menu
+
             obj = context.object
             
             if obj is not None and obj.type in {'MESH', 'CURVE', 'SURFACE'}:

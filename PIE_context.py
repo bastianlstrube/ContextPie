@@ -15,11 +15,12 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+
 bl_info = {
     "name": "Context Pie: 'Shift + Right Mouse'",
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "category": "Interface",
-    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "description": "Context sensitive pie menu for a simple, fast workflow",
     "author": "Bastian L Strube, Frederik Storm",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
@@ -27,9 +28,7 @@ bl_info = {
 import os
 import bpy
 from bpy.types import (
-    Header,
     Menu,
-    Panel,
 )
 from bpy.app.translations import contexts as i18n_contexts
 
@@ -332,6 +331,103 @@ class SUBPIE_MT_motionpaths(Menu):
         # SOUTH-EAST 
         pie.separator()
 
+# Sub Pie Menu for Delete, ripped directly from 3D Viewport Pie Menus
+class SUBPIE_MT_PieDelete(Menu):
+    bl_label = "Pie Delete"
+
+    def draw(self, context):
+        layout = self.layout
+        pie = layout.menu_pie()
+        # 4 - LEFT
+        box = pie.split().column()
+        box.operator("mesh.dissolve_limited", text="Limited Dissolve", icon='STICKY_UVS_LOC')
+        box.operator("mesh.delete_edgeloop", text="Delete Edge Loops", icon='NONE')
+        box.operator("mesh.edge_collapse", text="Edge Collapse", icon='UV_EDGESEL')
+        # 6 - RIGHT
+        box = pie.split().column()
+        box.operator("mesh.remove_doubles", text="Merge By Distance", icon='NONE')
+        box.operator("mesh.delete", text="Only Edge & Faces", icon='NONE').type = 'EDGE_FACE'
+        box.operator("mesh.delete", text="Only Faces", icon='UV_FACESEL').type = 'ONLY_FACE'
+        # 2 - BOTTOM
+        pie.operator("mesh.dissolve_edges", text="Dissolve Edges", icon='SNAP_EDGE')
+        # 8 - TOP
+        pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
+        # 7 - TOP - LEFT
+        pie.operator("mesh.delete", text="Delete Vertices", icon='VERTEXSEL').type = 'VERT'
+        # 9 - TOP - RIGHT
+        pie.operator("mesh.delete", text="Delete Faces", icon='FACESEL').type = 'FACE'
+        # 1 - BOTTOM - LEFT
+        pie.operator("mesh.dissolve_verts", text="Dissolve Vertices", icon='SNAP_VERTEX')
+        # 3 - BOTTOM - RIGHT
+        pie.operator("mesh.dissolve_faces", text="Dissolve Faces", icon='SNAP_FACE')
+
+# Pie Sculpt More Brushes
+class SUBPIE_MT_SculptMoreBrushes(Menu):
+    bl_label = "More Brushes"
+
+    def draw(self, context):
+        global brush_icons
+        layout = self.layout
+        pie = layout.menu_pie()
+        pie.scale_y = 1.2
+
+        # WEST
+        pie.operator("paint.brush_select", text='    Mask',
+                        icon_value=brush_icons["mask"]).sculpt_tool = 'MASK'
+        # EAST
+        pie.operator("paint.brush_select", text='    Fill/Deepen',
+                        icon_value=brush_icons["fill"]).sculpt_tool = 'FILL'
+        # SOUTH
+        pie.operator("paint.brush_select", text='    Smooth',
+                        icon_value=brush_icons["smooth"]).sculpt_tool = 'SMOOTH'
+        # NORTH
+        pie.operator("paint.brush_select", text='    Layer',
+                        icon_value=brush_icons["layer"]).sculpt_tool = 'LAYER'
+        # NORTH-WEST
+        pie.operator("paint.brush_select", text='    Pinch/Magnify',
+                        icon_value=brush_icons["pinch"]).sculpt_tool = 'PINCH'
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("paint.brush_select", text='    Flatten',
+                        icon_value=brush_icons["flatten"]).sculpt_tool = 'FLATTEN'
+        # SOUTH-EAST
+        pie.operator("paint.brush_select", text='    Scrape/Peaks',
+                        icon_value=brush_icons["scrape"]).sculpt_tool = 'SCRAPE'
+
+# Pie Sculpt Grab Bruhes
+class SUBPIE_MT_SculptGrab(Menu):
+    bl_label = "Grab Brushes"
+
+    def draw(self, context):
+        global brush_icons
+        layout = self.layout
+        pie = layout.menu_pie()
+        pie.scale_y = 1.2
+        # WEST
+        pie.operator("paint.brush_select",
+                        text='    Snakehook', icon_value=brush_icons["snake_hook"]).sculpt_tool = 'SNAKE_HOOK'
+        # EAST
+        pie.operator("paint.brush_select",
+                        text='    Nudge', icon_value=brush_icons["nudge"]).sculpt_tool = 'NUDGE'
+        # SOUTH
+        pie.operator("paint.brush_select",
+                        text='    Thumb', icon_value=brush_icons["thumb"]).sculpt_tool = 'THUMB'
+        # NORTH
+        pie.operator("paint.brush_select",
+                        text='    Rotate', icon_value=brush_icons["rotate"]).sculpt_tool = 'ROTATE'
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.operator("paint.brush_select",
+                        text='    Grab', icon_value=brush_icons["grab"]).sculpt_tool = 'GRAB'
+
+
+
 
 # Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
@@ -391,7 +487,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
-                subPie.name = "PIE_MT_delete"
+                subPie.name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
                 pie.operator("transform.vert_slide", text="Slide Vertex")
                 
@@ -441,7 +537,7 @@ class VIEW3D_PIE_MT_context(Menu):
 
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...')
-                subPie.name = "PIE_MT_delete"
+                subPie.name = "SUBPIE_MT_PieDelete"
                 
                 # SOUTH-EAST
                 pie.operator("transform.edge_slide", text="Slide Edge")
@@ -496,7 +592,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 subPie.name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
                 deletePie = pie.operator("wm.call_menu_pie", text='Delete...')
-                deletePie.name = "PIE_MT_delete"
+                deletePie.name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
                 separatePie = pie.operator("wm.call_menu_pie", text='Split/Separate...')
                 separatePie.name = "SUBPIE_MT_separate"
@@ -571,7 +667,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("object.parent_clear")
 
                 # SOUTH-WEST
-                pie.separator()
+                pie.operator("object.delete")
 
                 # SOUTH-EAST
                 pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
@@ -613,12 +709,36 @@ class VIEW3D_PIE_MT_context(Menu):
         # Straight from Blenders Pie Addon Sculpt 'W' Menu
         if context.mode == 'SCULPT':
 
-            #global brush_icons
+            global brush_icons
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
             pie = layout.menu_pie()
+            pie.scale_y = 1.2
+            # 4 - LEFT
+            pie.operator("paint.brush_select",
+                        text="    Crease", icon_value=brush_icons["crease"]).sculpt_tool = 'CREASE'
+            # 6 - RIGHT
+            pie.operator("paint.brush_select",
+                        text="    Blob", icon_value=brush_icons["blob"]).sculpt_tool = 'BLOB'
+            # 2 - BOTTOM
+            subPie = pie.operator("wm.call_menu_pie", text='More Brushes...', icon = "RIGHTARROW_THIN")
+            subPie.name = "SUBPIE_MT_SculptMoreBrushes"
 
-            pie.menu_contents("PIE_MT_sculpt")
+            # 8 - TOP
+            pie.operator("paint.brush_select",
+                        text="    Draw", icon_value=brush_icons["draw"]).sculpt_tool = 'DRAW'
+            # 7 - TOP - LEFT
+            pie.operator("paint.brush_select",
+                        text="    Clay", icon_value=brush_icons["clay"]).sculpt_tool = 'CLAY'
+            # 9 - TOP - RIGHT
+            pie.operator("paint.brush_select",
+                        text="    Clay Strips", icon_value=brush_icons["clay_strips"]).sculpt_tool = 'CLAY_STRIPS'
+            # 1 - BOTTOM - LEFT
+            pie.operator("paint.brush_select",
+                        text="    Inflate/Deflate", icon_value=brush_icons["inflate"]).sculpt_tool = 'INFLATE'
+            # 3 - BOTTOM - RIGHT
+            subPie = pie.operator("wm.call_menu_pie", text='    Grab Brushes...', icon_value=brush_icons["grab"])
+            subPie.name = "SUBPIE_MT_SculptGrab"
 
         if context.mode == 'POSE':
 
@@ -646,6 +766,28 @@ class VIEW3D_PIE_MT_context(Menu):
             pie.separator()
 
 
+# Brush Icons for Sculpt Menu
+brush_icons = {}
+
+def create_icons():
+    global brush_icons
+    icons_directory = bpy.utils.system_resource('DATAFILES', path="icons")
+    brushes = (
+        "crease", "blob", "smooth", "draw", "clay", "clay_strips", "inflate", "grab",
+        "nudge", "thumb", "snake_hook", "rotate", "flatten", "scrape", "fill", "pinch",
+        "layer", "mask",
+    )
+    for brush in brushes:
+        filename = os.path.join(icons_directory, f"brush.sculpt.{brush}.dat")
+        icon_value = bpy.app.icons.new_triangles_from_file(filename)
+        brush_icons[brush] = icon_value
+
+def release_icons():
+    global brush_icons
+    for value in brush_icons.values():
+        bpy.app.icons.release(value)
+
+
 
 classes = [
     SUBPIE_MT_merge, 
@@ -658,12 +800,17 @@ classes = [
     SUBPIE_MT_applyTransform,
     SUBPIE_MT_inbetweens,
     SUBPIE_MT_motionpaths,
+    SUBPIE_MT_PieDelete,
+    SUBPIE_MT_SculptMoreBrushes,
+    SUBPIE_MT_SculptGrab,
     VIEW3D_PIE_MT_context,
 ]
 
 addon_keymaps = []
 
 def register():
+    create_icons()
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
@@ -675,7 +822,14 @@ def register():
         kmi.properties.name = "VIEW3D_PIE_MT_context"
         addon_keymaps.append((km, kmi))
 
+        km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=True)
+        kmi.properties.name = "VIEW3D_PIE_MT_context"
+        addon_keymaps.append((km, kmi))
+
 def unregister():
+    release_icons()
+
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

@@ -17,7 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_info = {
-    "name": "Context Pie: 'Shift + Right Mouse'",
+    "name": "UV Pivots Pie: 'Ctrl + Right Mouse'",
     "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
@@ -34,91 +34,53 @@ from bpy.types import (
 )
 from bpy.app.translations import contexts as i18n_contexts
 
-# Sub Pie Menu for UV Unwrap
-class SUBPIE_MT_uvUnwrap(Menu):
-    bl_label = "Unwrap"
+class IMAGE_PIE_MT_uvPivots(Menu):
+    # label is displayed at the center of the pie menu.
+    bl_label  = "UV Pivots"
+
     def draw(self, context):
+        
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
-        pie.operator("uv.smart_project")
+        pie.separator()
         # EAST
-        pie.operator("uv.follow_active_quads")
+        subPie = pie.operator("wm.call_menu_pie", text='Pivot...', icon = "RIGHTARROW_THIN")
+        subPie.name = "IMAGE_MT_pivot_pie"
         # SOUTH
-        pie.operator("uv.cylinder_project")
+        pie.separator()
+        #subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")
+        #subPie.name = "SUBPIE_MT_snap"
         # NORTH
-        pie.operator("uv.unwrap")
+        subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
+        subPie.name = "SUBPIE_MT_proportional_edt"
         # NORTH-WEST
         pie.separator()
         # NORTH-EAST
-        o = pie.operator('wm.context_toggle', text="Live Unwrap")
-        o.data_path = 'tool_settings.use_live_unwrap'
-        # SOUTH-WEST
-        pie.operator("uv.sphere_project")
-        # SOUTH-EAST
-        pie.operator("uv.cube_project")
-
-# Reference context menu: IMAGE_MT_uvs_context_menu
-class IMAGE_PIE_MT_uvContext(Menu):
-    bl_label    = "UV Context"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-        
-        # WEST
-        pie.operator("uv.pin").clear = False
-        # EAST
-        pie.operator("uv.pin", text='Unpin').clear = True
-        # SOUTH
-        pie.operator("uv.minimize_stretch")
-        # NORTH
-        pie.operator("wm.call_menu_pie", text='Unwrap...').name = "SUBPIE_MT_uvUnwrap"
-        # NORTH-WEST
-        pie.operator("uv.pack_islands")
-        # NORTH-EAST
-        pie.operator("uv.average_islands_scale")
-        # SOUTH-WEST
-        pie.operator("mesh.mark_seam", text='Mark Seam').clear = False
-        # SOUTH-EAST
-        pie.operator("mesh.mark_seam", text='Clear Seam').clear = True
-
-        # Static face menu
         pie.separator()
+        # SOUTH-WEST
         pie.separator()
-
-        dropdown = pie.column()
-        gap = dropdown.column()
-        gap.separator()
-        gap.scale_y = 8
-
-        dropdown_menu = dropdown.box().column()
-        dropdown_menu.scale_y=1
-
-        dropdown_menu.operator("uv.stitch")
-        dropdown_menu.operator("uv.weld")
-        dropdown_menu.operator("uv.remove_doubles")
+        # SOUTH-EAST
+        pie.separator()
 
 
 classes = [
-    SUBPIE_MT_uvUnwrap,
-    IMAGE_PIE_MT_uvContext,
-]
+    IMAGE_PIE_MT_uvPivots,
+    ]
 
 addon_keymaps = []
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-
+    
     wm = bpy.context.window_manager
     if wm.keyconfigs.addon:
         km = wm.keyconfigs.addon.keymaps.new(name='UV Editor')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=True)
-        kmi.properties.name = "IMAGE_PIE_MT_uvContext"
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', ctrl=True)
+        kmi.properties.name = "IMAGE_PIE_MT_uvPivots"
         addon_keymaps.append((km, kmi))
 
 def unregister():

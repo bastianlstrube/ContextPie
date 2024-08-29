@@ -16,6 +16,16 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+bl_info = {
+    "name": "Context Pie: Mode Selection 'Right Mouse'",
+    "blender": (4, 2, 0),
+    "category": "Interface",
+    "description": "Context sensitive pie menu for a simple, fast workflow",
+    "author": "Bastian L Strube, Frederik Storm",
+    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
+}
+
+
 import bpy
 from bpy.types import (
     Header,
@@ -57,13 +67,13 @@ class SUBPIE_MT_uvSticky(Menu):
         
         # WEST
         o = pie.operator('wm.context_set_string', text="Location", icon="STICKY_UVS_LOC")
-        o.data_path = 'space_data.uv_editor.sticky_select_mode'
+        o.data_path = 'tool_settings.uv_sticky_select_mode'
         o.value = 'SHARED_LOCATION'
         # EAST
         pie.separator()
         # SOUTH
         o = pie.operator('wm.context_set_string', text="Vertex", icon="STICKY_UVS_VERT")
-        o.data_path = 'space_data.uv_editor.sticky_select_mode'
+        o.data_path = 'tool_settings.uv_sticky_select_mode'
         o.value = 'SHARED_VERTEX'
         # NORTH
         pie.separator()
@@ -73,7 +83,7 @@ class SUBPIE_MT_uvSticky(Menu):
         pie.separator()
         # SOUTH-WEST
         o = pie.operator('wm.context_set_string', text="Disabled", icon="STICKY_UVS_DISABLE")
-        o.data_path = 'space_data.uv_editor.sticky_select_mode'
+        o.data_path = 'tool_settings.uv_sticky_select_mode'
         o.value = 'DISABLED'
         # SOUTH-EAST
         pie.separator()
@@ -107,7 +117,7 @@ class SUBPIE_MT_uvTools(Menu):
 
 class IMAGE_PIE_MT_uvMode(Menu):
     # label is displayed at the center of the pie menu.
-    bl_label  = "Switch UV Mode Pie"
+    bl_label  = "Switch UV Mode"
 
     def draw(self, context):
         

@@ -4,9 +4,9 @@
 
 bl_info = {
     "name": "Context Pie: Proportional Sub Pie Menu",
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "category": "Interface",
-    "description": "Context Sensitive Pie Menu, following an ancient Mayan pie recipe",
+    "description": "Context sensitive pie menu for a simple, fast workflow",
     "author": "Bastian L Strube, Frederik Storm",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
@@ -298,7 +298,7 @@ class SUBPIE_OT_ProportionalInverseSquareEdt(Operator):
 # Pie ProportionalEditObj - O
 class SUBPIE_MT_ProportionalObj(Menu):
     bl_idname = "SUBPIE_MT_proportional_obj"
-    bl_label = "Pie Proportional Obj"
+    bl_label = "Proportional Object"
 
     def draw(self, context):
         layout = self.layout
@@ -318,13 +318,13 @@ class SUBPIE_MT_ProportionalObj(Menu):
         # 1 - BOTTOM - LEFT
         pie.operator("pie_proportional_obj.sharp", text="Sharp", icon='SHARPCURVE')
         # 3 - BOTTOM - RIGHT
-        pie.menu("SUBPIE_MT_proportional_moreob", text="More", icon='LINCURVE')
+        pie.menu("SUBPIE_MT_proportional_moreob", text="More...", icon='LINCURVE')
 
 
 # Pie ProportionalEditEdt - O
 class SUBPIE_MT_ProportionalEdt(Menu):
     bl_idname = "SUBPIE_MT_proportional_edt"
-    bl_label = "Pie Proportional Edit"
+    bl_label = "Proportional Edit"
 
     def draw(self, context):
         layout = self.layout
@@ -344,13 +344,13 @@ class SUBPIE_MT_ProportionalEdt(Menu):
         # 1 - BOTTOM - LEFT
         pie.operator("pie_proportional_edt.root", text="Root", icon='ROOTCURVE')
         # 3 - BOTTOM - RIGHT
-        pie.menu("SUBPIE_MT_proportional_more", text="More", icon='LINCURVE')
+        pie.menu("SUBPIE_MT_proportional_more", text="More...", icon='LINCURVE')
 
 
 # Pie ProportionalEditEdt - O
 class SUBPIE_MT_ProportionalMore(Menu):
     bl_idname = "SUBPIE_MT_proportional_more"
-    bl_label = "Pie Proportional More"
+    bl_label = "Proportional More"
 
     def draw(self, context):
         layout = self.layout
@@ -365,7 +365,7 @@ class SUBPIE_MT_ProportionalMore(Menu):
 # Pie ProportionalEditEdt2
 class SUBPIE_MT_proportionalmoreob(Menu):
     bl_idname = "SUBPIE_MT_proportional_moreob"
-    bl_label = "Pie Proportional More"
+    bl_label = "Proportional More"
 
     def draw(self, context):
         layout = self.layout
