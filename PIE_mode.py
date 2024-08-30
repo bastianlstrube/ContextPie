@@ -103,7 +103,7 @@ class VIEW3D_PIE_MT_mode(Menu):
 
             obj = context.object
             
-            if obj is not None and obj.type in {'MESH'}:
+            if obj is not None and obj.type in {'MESH', 'GPENCIL', 'FONT'}:
 
                 # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
                 pie.operator_enum("OBJECT_OT_mode_set", "mode")
@@ -197,6 +197,15 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.operator("curve.spline_type_set", text='Set Type Poly').type = 'POLY'
             # SOUTH-EAST
             pie.operator("curve.spline_type_set", text='Set Type NURBS').type = 'NURBS'
+
+        elif context.mode == 'EDIT_GPENCIL':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+            
+            # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
+            pie.operator_enum("OBJECT_OT_mode_set", "mode")
 
         elif bpy.context.mode == 'SCULPT':
 
@@ -309,12 +318,15 @@ def register():
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))
 
-        '''
+        km = wm.keyconfigs.addon.keymaps.new(name='Grease Pencil Edit Mode')#, space_type='EMPTY')
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
+        kmi.properties.name = "VIEW3D_PIE_MT_mode"
+        addon_keymaps.append((km, kmi))
+
         km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
         addon_keymaps.append((km, kmi))
-        '''
 
         km = wm.keyconfigs.addon.keymaps.new(name='Pose')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
