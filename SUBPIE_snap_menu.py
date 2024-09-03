@@ -7,7 +7,7 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube, Frederik Storm",
+    "author": "Bastian L Strube",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
@@ -89,6 +89,21 @@ class SUBPIE_OT_SnapIncrement(Operator):
 
         if not ts.snap_elements_base == {'INCREMENT'}:
             ts.snap_elements_base = {'INCREMENT'}
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapGrid(Operator):
+    bl_idname = "pie_snap.grid"
+    bl_label = "Snap Grid"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_proportional_edit_objects is False:
+            ts.use_proportional_edit_objects = True
+            ts.snap_elements_base = {'GRID'}
+
+        if not ts.snap_elements_base == {'GRID'}:
+            ts.snap_elements_base = {'GRID'}
         return {'FINISHED'}
 
 class SUBPIE_OT_SnapVertex(Operator):
@@ -201,15 +216,16 @@ class SUBPIE_MT_Snap(Menu):
         # 7 - TOP - LEFT
         pie.operator("pie_snap.edgemidpoint", text="Edge Midpoint", icon='SNAP_MIDPOINT')
         # 9 - TOP - RIGHT
-        pie.operator("pie_snap.edgeperpendicular", text="Edge Perpendicular", icon='SNAP_PERPENDICULAR')
+        pie.operator("pie_snap.grid", text="Grid", icon='SNAP_GRID')
         # 1 - BOTTOM - LEFT
         pie.operator("pie_snap.increment", text="Increment", icon='SNAP_INCREMENT')
         # 3 - BOTTOM - RIGHT
         pie.operator("pie_snap.face", text="Face", icon='SNAP_FACE')
 
 
-classes = (
+registry = (
     SUBPIE_OT_SnapIncrement,
+    SUBPIE_OT_SnapGrid,
     SUBPIE_OT_SnapVertex,
     SUBPIE_OT_SnapEdge,
     SUBPIE_OT_SnapFace,
@@ -218,15 +234,3 @@ classes = (
     SUBPIE_OT_SnapEdgePerpendicular,
     SUBPIE_MT_Snap,
 )
-
-
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
-if __name__ == "__main__":
-    register()

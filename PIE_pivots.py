@@ -21,18 +21,13 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube, Frederik Storm",
+    "author": "Bastian L Strube",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
-import os
 import bpy
-import addon_utils
-from bpy.types import (
-    Header,
-    Menu,
-    Panel,
-)
+from bpy.types import Menu
+from .hotkeys import register_hotkey
 from bpy.app.translations import contexts as i18n_contexts
 
 '''
@@ -198,40 +193,18 @@ class VIEW3D_PIE_MT_pivots(Menu):
             pie.separator()
 
 
-classes = [
+registry = [
     VIEW3D_PIE_MT_pivots,
 ]
 
-addon_keymaps = []
-
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
 
-    #From this forum post: https://devtalk.blender.org/t/addon-shortcuts/2410/7
-    wm = bpy.context.window_manager
-    if wm.keyconfigs.addon:
-        km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', ctrl=True)
-        kmi.properties.name = "VIEW3D_PIE_MT_pivots"
-        addon_keymaps.append((km, kmi))
-
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
-    wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
-    if kc:
-        for km, kmi in addon_keymaps:
-            km.keymap_items.remove(kmi)
-    addon_keymaps.clear()
-
-
-if __name__ == "__main__":
-    register()
-
-    #bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_context")
+    register_hotkey(
+        'wm.call_menu_pie',
+        op_kwargs={'name': 'VIEW3D_PIE_MT_pivots'},
+        hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'ctrl': True},
+        key_cat="3D View",
+    )
 
 
 """

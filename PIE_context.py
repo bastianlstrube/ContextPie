@@ -21,15 +21,15 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube, Frederik Storm",
+    "author": "Bastian L Strube",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
 import os
 import bpy
-from bpy.types import (
-    Menu,
-)
+from bpy.types import Menu
+from .hotkeys import register_hotkey
+
 from bpy.app.translations import contexts as i18n_contexts
 
 # Sub Pie Menu for mesh merge operators
@@ -789,7 +789,7 @@ def release_icons():
 
 
 
-classes = [
+registry = [
     SUBPIE_MT_merge, 
     SUBPIE_MT_connect, 
     SUBPIE_MT_extrudeFaces,
@@ -811,41 +811,18 @@ addon_keymaps = []
 def register():
     create_icons()
 
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
-    #From this forum post: https://devtalk.blender.org/t/addon-shortcuts/2410/7
-    wm = bpy.context.window_manager
-    if wm.keyconfigs.addon:
-        km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=True)
-        kmi.properties.name = "VIEW3D_PIE_MT_context"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=True)
-        kmi.properties.name = "VIEW3D_PIE_MT_context"
-        addon_keymaps.append((km, kmi))
-
-def unregister():
-    release_icons()
-
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
-    wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
-    if kc:
-        for km, kmi in addon_keymaps:
-            km.keymap_items.remove(kmi)
-    addon_keymaps.clear()
-
-
-if __name__ == "__main__":
-    register()
-
-    #bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_context")
-
+    register_hotkey(
+        'wm.call_menu_pie',
+        op_kwargs={'name': 'VIEW3D_PIE_MT_context'},
+        hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
+        key_cat="3D View",
+    )
+    register_hotkey(
+        'wm.call_menu_pie',
+        op_kwargs={'name': 'VIEW3D_PIE_MT_context'},
+        hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
+        key_cat="Sculpt",
+    )
 
 """
 EMPTY PIE MENU

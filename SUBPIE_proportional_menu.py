@@ -7,7 +7,7 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube, Frederik Storm",
+    "author": "Bastian L Strube",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
@@ -375,7 +375,7 @@ class SUBPIE_MT_proportionalmoreob(Menu):
         box.operator("pie_proportional_obj.random", text="Random", icon='RNDCURVE')
 
 
-classes = (
+registry = (
     SUBPIE_OT_ProportionalEditObj,
     SUBPIE_OT_ProportionalSmoothObj,
     SUBPIE_OT_ProportionalSphereObj,
@@ -401,15 +401,3 @@ classes = (
     SUBPIE_MT_ProportionalMore,
     SUBPIE_MT_proportionalmoreob
 )
-
-
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
-if __name__ == "__main__":
-    register()

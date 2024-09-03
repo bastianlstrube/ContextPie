@@ -21,18 +21,14 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube, Frederik Storm",
+    "author": "Bastian L Strube",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
 
 import bpy
-from bpy.types import (
-    Header,
-    Menu,
-    Panel,
-    Operator,
-)
+from bpy.types import Menu
+from .hotkeys import register_hotkey
 from bpy.app.translations import contexts as i18n_contexts
 
 class SUBPIE_MT_objectSelect(Menu):
@@ -290,18 +286,28 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-EAST
             pie.separator()
 
-classes = [
+registry = [
     SUBPIE_MT_objectSelect,
     SUBPIE_MT_meshSelect,
-    VIEW3D_PIE_MT_mode,]
+    VIEW3D_PIE_MT_mode,
+]
 
 addon_keymaps = []
 
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+
+    categories = ["Object Mode", "Mesh", "Curve", "Grease Pencil Edit Mode", "Sculpt", "Pose", "Lattice", ]
+
+    for cat in categories:
+        register_hotkey(
+            'wm.call_menu_pie',
+            op_kwargs={'name': 'VIEW3D_PIE_MT_mode'},
+            hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
+            key_cat=cat,
+        )
+
     
-    wm = bpy.context.window_manager
+    '''wm = bpy.context.window_manager
     if wm.keyconfigs.addon:
         km = wm.keyconfigs.addon.keymaps.new(name='Object Mode')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
@@ -336,10 +342,10 @@ def register():
         km = wm.keyconfigs.addon.keymaps.new(name='Lattice')#, space_type='EMPTY')
         kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
         kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
+        addon_keymaps.append((km, kmi))'''
 
-def unregister():
-    for cls in classes:
+'''def unregister():
+    for cls in registry:
         bpy.utils.unregister_class(cls)
 
     wm = bpy.context.window_manager
@@ -352,4 +358,4 @@ def unregister():
 if __name__ == "__main__":
     register()
 
-    #bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_mode")
+    #bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_mode")'''

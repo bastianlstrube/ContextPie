@@ -2,11 +2,10 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import bpy
-import json
+import bpy, json, hashlib
 from . import __package__ as base_package
 
-pie_addon_keymaps = []
+PIE_ADDON_KEYMAPS = {}
 
 def register_hotkey(
     bl_idname, hotkey_kwargs, *, key_cat='Window', op_kwargs={}
@@ -14,6 +13,7 @@ def register_hotkey(
     """This function inserts a 'hash' into the created KeyMapItems' properties,
     so they can be compared to each other, and duplicates can be avoided."""
 
+    global PIE_ADDON_KEYMAPS
     wm = bpy.context.window_manager
 
     space_type = wm.keyconfigs.default.keymaps[key_cat].space_type
@@ -22,6 +22,26 @@ def register_hotkey(
     if not addon_keyconfig:
         # This happens when running Blender in background mode.
         return
+
+    # We limit the hash to a few digits, otherwise it errors when trying to store it.
+    kmi_string = json.dumps([bl_idname, hotkey_kwargs, key_cat, space_type, op_kwargs], sort_keys=True).encode("utf-8")
+    kmi_hash = hashlib.md5(kmi_string).hexdigest()
+
+    # If it already exists, don't create it again.
+    for existing_kmi_hash, existing_kmi_tup in PIE_ADDON_KEYMAPS.items():
+        existing_addon_kc, existing_addon_km, existing_kmi = existing_kmi_tup
+        if kmi_hash == existing_kmi_hash:
+            # The hash we just calculated matches one that is in storage.
+            user_kc = wm.keyconfigs.user
+            user_km = user_kc.keymaps.get(existing_addon_km.name)
+            # NOTE: It's possible on Reload Scripts that some KeyMapItems remain in storage,
+            # but are unregistered by Blender for no reason.
+            # I noticed this particularly in the Weight Paint keymap.
+            # So it's not enough to check if a KMI with a hash is in storage, we also need to check if a corresponding user KMI exists.
+            user_kmi = find_kmi_in_km_by_hash(user_km, kmi_hash)
+            if user_kmi:
+                # print("Hotkey already exists, skipping: ", existing_kmi.name, existing_kmi.to_string(), kmi_hash)
+                return
 
     addon_keymaps = addon_keyconfig.keymaps
     addon_km = addon_keymaps.get(key_cat)
@@ -33,22 +53,30 @@ def register_hotkey(
         value = op_kwargs[key]
         setattr(addon_kmi.properties, key, value)
 
-    pie_addon_keymaps.append((addon_km, addon_kmi))
+    addon_kmi.properties['hash'] = kmi_hash
+
+    PIE_ADDON_KEYMAPS[kmi_hash] = (
+        addon_keyconfig,
+        addon_km,
+        addon_kmi,
+    )
 
 
 def draw_hotkey_list(layout, context):
     user_kc = context.window_manager.keyconfigs.user
 
-    keymap_data = sorted(pie_addon_keymaps, key=lambda tup: tup[1].properties.name)
+    keymap_data = list(PIE_ADDON_KEYMAPS.items())
+    keymap_data = sorted(keymap_data, key=lambda tup: tup[1][2].name)
 
     prev_kmi = None
-    for addon_km, addon_kmi in keymap_data:
+    for kmi_hash, kmi_tup in keymap_data:
+        addon_kc, addon_km, addon_kmi = kmi_tup
 
         user_km = user_kc.keymaps.get(addon_km.name)
         if not user_km:
             # This really shouldn't happen.
             continue
-        user_kmi = find_kmi_in_km_by_pie_name(user_km, addon_kmi.properties.name)
+        user_kmi = find_kmi_in_km_by_hash(user_km, kmi_hash)
 
         col = layout.column()
         col.context_pointer_set("keymap", user_km)
@@ -106,18 +134,32 @@ def print_kmi(kmi):
     props = str(list(kmi.properties.items()))
     print(idname, props, keys)
 
-def find_kmi_in_km_by_pie_name(keymap, pie_name):
-    """For pie menu hotkeys specifically, we can use the pie menu name as an identifier,
-    allowing us to find and draw the user keyconfig items in the preferences.
-    
-    I tried inserting a 'hash' custom property to the keymap entries instead, but
-    this caused a bug where changes to the keymap entries fail to save to or load from user preferences.
-    https://projects.blender.org/extensions/space_view3d_pie_menus/issues/2
+def find_kmi_in_km_by_hash(keymap, kmi_hash):
+    """There's no solid way to match modified user keymap items to their
+    add-on equivalent, which is necessary to draw them in the UI reliably.
+
+    To remedy this, we store a hash in the KeyMapItem's properties.
+
+    This function lets us find a KeyMapItem with a stored hash in a KeyMap.
+    Eg., we can pass a User KeyMap and an Addon KeyMapItem's hash, to find the
+    corresponding user keymap, even if it was modified.
+
+    The hash value is unfortunately exposed to the users, so we just hope they don't touch that.
     """
+
     for kmi in keymap.keymap_items:
-        if kmi.idname in {'wm.call_menu_pie', 'wm.call_menu_pie_drag_only'} and kmi.properties.name == pie_name:
+        if not kmi.properties:
+            continue
+        if 'hash' not in kmi.properties:
+            continue
+
+        if kmi.properties['hash'] == kmi_hash:
             return kmi
 
 def unregister():
-    for km, kmi in pie_addon_keymaps:
+    global PIE_ADDON_KEYMAPS
+    for kmi_hash, km_tuple in PIE_ADDON_KEYMAPS.items():
+        kc, km, kmi = km_tuple
         km.keymap_items.remove(kmi)
+
+    PIE_ADDON_KEYMAPS = {}

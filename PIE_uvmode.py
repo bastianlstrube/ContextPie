@@ -21,18 +21,15 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube, Frederik Storm",
+    "author": "Bastian L Strube",
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
-
 import bpy
-from bpy.types import (
-    Header,
-    Menu,
-    Panel,
-)
+from bpy.types import Menu
+from .hotkeys import register_hotkey
 from bpy.app.translations import contexts as i18n_contexts
+
 
 class SUBPIE_MT_uvSelect(Menu):
     bl_label = "Select"
@@ -128,34 +125,58 @@ class IMAGE_PIE_MT_uvMode(Menu):
         obj = context.object
         scn = context.scene
 
-        # WEST
-        o = pie.operator('wm.context_toggle', text="Sync Selection", icon="UV_SYNC_SELECT")
-        o.data_path = 'tool_settings.use_uv_select_sync'
-        # EAST
-        o = pie.operator('wm.context_set_string', text="Vertex", icon="UV_VERTEXSEL")
-        o.data_path = 'tool_settings.uv_select_mode'
-        o.value = 'VERTEX'
-        # SOUTH
-        o = pie.operator('wm.context_set_string', text="Face", icon="UV_FACESEL")
-        o.data_path = 'tool_settings.uv_select_mode'
-        o.value = 'FACE'
-        # NORTH
-        o = pie.operator('wm.context_set_string', text="Edge", icon="UV_EDGESEL")
-        o.data_path = 'tool_settings.uv_select_mode'
-        o.value = 'EDGE'
-        # NORTH-WEST
-        subPie = pie.operator("wm.call_menu_pie", text='Tools...')
-        subPie.name = "SUBPIE_MT_uvTools" 
-        # NORTH-EAST
-        o = pie.operator('wm.context_set_string', text="Islands", icon="UV_ISLANDSEL")
-        o.data_path = 'tool_settings.uv_select_mode'
-        o.value = 'ISLAND'
-        # SOUTH-WEST
-        subPie = pie.operator("wm.call_menu_pie", text='Sticky...')
-        subPie.name = "SUBPIE_MT_uvSticky"  
-        # SOUTH-EAST
-        subPie = pie.operator("wm.call_menu_pie", text='Select...')
-        subPie.name = "SUBPIE_MT_uvSelect"  
+        if not context.tool_settings.use_uv_select_sync:
+            # WEST
+            o = pie.operator('wm.context_toggle', text="Sync Selection", icon="UV_SYNC_SELECT")
+            o.data_path = 'tool_settings.use_uv_select_sync'
+            # EAST
+            o = pie.operator('wm.context_set_string', text="Vertex", icon="UV_VERTEXSEL")
+            o.data_path = 'tool_settings.uv_select_mode'
+            o.value = 'VERTEX'
+            # SOUTH
+            o = pie.operator('wm.context_set_string', text="Face", icon="UV_FACESEL")
+            o.data_path = 'tool_settings.uv_select_mode'
+            o.value = 'FACE'
+            # NORTH
+            o = pie.operator('wm.context_set_string', text="Edge", icon="UV_EDGESEL")
+            o.data_path = 'tool_settings.uv_select_mode'
+            o.value = 'EDGE'
+            # NORTH-WEST
+            subPie = pie.operator("wm.call_menu_pie", text='Tools...')
+            subPie.name = "SUBPIE_MT_uvTools" 
+            # NORTH-EAST
+            o = pie.operator('wm.context_set_string', text="Islands", icon="UV_ISLANDSEL")
+            o.data_path = 'tool_settings.uv_select_mode'
+            o.value = 'ISLAND'
+            # SOUTH-WEST
+            subPie = pie.operator("wm.call_menu_pie", text='Sticky...')
+            subPie.name = "SUBPIE_MT_uvSticky"  
+            # SOUTH-EAST
+            subPie = pie.operator("wm.call_menu_pie", text='Select...')
+            subPie.name = "SUBPIE_MT_uvSelect" 
+        else:
+            # WEST
+            o = pie.operator('wm.context_toggle', text="Sync Selection", icon="UV_SYNC_SELECT")
+            o.data_path = 'tool_settings.use_uv_select_sync'
+            # EAST
+            pie.operator('mesh.select_mode', text="Vertex", icon="VERTEXSEL").type = 'VERT'
+            # SOUTH
+            pie.operator('mesh.select_mode', text="Face", icon="FACESEL").type = 'FACE'
+            # NORTH
+            pie.operator('mesh.select_mode', text="Edge", icon="EDGESEL").type = 'EDGE'
+            # NORTH-WEST
+            subPie = pie.operator("wm.call_menu_pie", text='Tools...')
+            subPie.name = "SUBPIE_MT_uvTools" 
+            # NORTH-EAST
+            o = pie.operator('wm.context_set_string', text="Islands", icon="UV_ISLANDSEL")
+            o.data_path = 'tool_settings.uv_select_mode'
+            o.value = 'ISLAND'
+            # SOUTH-WEST
+            subPie = pie.operator("wm.call_menu_pie", text='Sticky...')
+            subPie.name = "SUBPIE_MT_uvSticky"  
+            # SOUTH-EAST
+            subPie = pie.operator("wm.call_menu_pie", text='Select...')
+            subPie.name = "SUBPIE_MT_uvSelect" 
 
         # Static menu
         pie.separator()
@@ -172,35 +193,17 @@ class IMAGE_PIE_MT_uvMode(Menu):
         dropdown_menu.menu("IMAGE_MT_uvs", text="UV menu", icon="COLLAPSEMENU")
 
 
-classes = [
+registry = [
     SUBPIE_MT_uvSelect,
     SUBPIE_MT_uvSticky,
     SUBPIE_MT_uvTools,
     IMAGE_PIE_MT_uvMode]
 
-addon_keymaps = []
-
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-    
-    wm = bpy.context.window_manager
-    if wm.keyconfigs.addon:
-        km = wm.keyconfigs.addon.keymaps.new(name='UV Editor')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "IMAGE_PIE_MT_uvMode"
-        addon_keymaps.append((km, kmi))
 
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
-    wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
-    if kc:
-        for km, kmi in addon_keymaps:
-            km.keymap_items.remove(kmi)
-    addon_keymaps.clear()
-
-if __name__ == "__main__":
-    register()
+    register_hotkey(
+        'wm.call_menu_pie',
+        op_kwargs={'name': 'IMAGE_PIE_MT_uvMode'},
+        hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
+        key_cat="UV Editor",
+    )
