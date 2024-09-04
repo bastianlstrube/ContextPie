@@ -196,16 +196,16 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie = layout.menu_pie()
 
             # WEST
-            pie.separator()
+            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
             # EAST
-            pie.separator()
+            pie.operator("sculpt.dynamic_topology_toggle", text="Dyntopo Toggle") #, icon="OBJECT_DATAMODE")
             # SOUTH
             box = pie.box()
             #show the colour picker directly
             box.menu_contents("VIEW3D_PT_sculpt_context_menu")
 
             # NORTH
-            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+            pie.separator()
             # NORTH-WEST
             pie.separator()
             # NORTH-EAST

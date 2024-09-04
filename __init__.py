@@ -29,6 +29,7 @@ module_names = (
 
     "SUBPIE_proportional_menu",
     "SUBPIE_snap_menu",
+    "SUBPIE_MeshAlign"
 )
 
 

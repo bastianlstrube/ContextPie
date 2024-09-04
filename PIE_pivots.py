@@ -66,7 +66,8 @@ class VIEW3D_PIE_MT_pivots(Menu):
             # NORTH-EAST
             pie.separator()
             # SOUTH-WEST
-            pie.separator()
+            subPie = pie.operator("wm.call_menu_pie", text='Align...', icon = "RIGHTARROW_THIN")
+            subPie.name = "SUBPIE_MT_mesh_align"
             # SOUTH-EAST
             pie.separator()
 
