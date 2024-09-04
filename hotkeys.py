@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2016-2024 Blender Foundation
+# SPDX-FileCopyrightText: 2016-2024 Bastian L. Strube
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 

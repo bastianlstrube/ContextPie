@@ -1,6 +1,6 @@
-# SPDX-FileCopyrightText: 2016-2022 Blender Foundation
+# SPDX-FileCopyrightText: 2016-2024 Bastian L. Strube
 #
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 bl_info = {
     "name": "Context Pie: Proportional Sub Pie Menu",
