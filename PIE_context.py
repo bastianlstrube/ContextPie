@@ -885,13 +885,13 @@ def register():
     create_icons()
 
     register_hotkey(
-        'wm.call_menu_pie',
+        'wm.call_menu_pie_drag_only_cpie',
         op_kwargs={'name': 'VIEW3D_PIE_MT_context'},
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
         key_cat="3D View",
     )
     register_hotkey(
-        'wm.call_menu_pie',
+        'wm.call_menu_pie_drag_only_cpie',
         op_kwargs={'name': 'VIEW3D_PIE_MT_context'},
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
         key_cat="Sculpt",

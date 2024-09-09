@@ -56,7 +56,7 @@ registry = [
 def register():
 
     register_hotkey(
-        'wm.call_menu_pie',
+        'wm.call_menu_pie_drag_only_cpie',
         op_kwargs={'name': 'IMAGE_PIE_MT_uvPivots'},
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'ctrl': True},
         key_cat="UV Editor",

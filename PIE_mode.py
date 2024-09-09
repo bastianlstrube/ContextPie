@@ -286,7 +286,7 @@ def register():
 
     for cat in categories:
         register_hotkey(
-            'wm.call_menu_pie',
+            'wm.call_menu_pie_drag_only_cpie',
             op_kwargs={'name': 'VIEW3D_PIE_MT_mode'},
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
             key_cat=cat,

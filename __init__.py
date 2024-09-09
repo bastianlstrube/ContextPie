@@ -17,8 +17,8 @@ import importlib
 module_names = (
     "hotkeys",
     "prefs",
-    "op_pie_drag_only",
-
+    "op_pie_drag_only", 
+    
     "PIE_context",
     "PIE_mode",
     "PIE_pivots",
