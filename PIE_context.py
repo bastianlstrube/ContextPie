@@ -135,7 +135,7 @@ class SUBPIE_MT_divide(Menu):
         # EAST
         pie.operator("mesh.subdivide", text='Subdivide')
         # SOUTH
-        pie..operator("mesh.edge_split")
+        pie.operator("mesh.edge_split")
         # NORTH
         pie.operator("mesh.poke")
         
