@@ -57,7 +57,7 @@ class SUBPIE_MT_merge(Menu):
         if is_vert_mode and typeLen == 5:
         '''
         # NORTH-WEST
-        pie.separator()
+        pie.operator("mesh.unsubdivide")
         # NORTH-EAST
         pie.operator("mesh.remove_doubles", text="By Distance")
 
@@ -133,9 +133,9 @@ class SUBPIE_MT_divide(Menu):
         # WEST
         pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
         # EAST
-        pie.operator("mesh.bevel", text='Bevel')
+        pie.operator("mesh.subdivide", text='Subdivide')
         # SOUTH
-        pie.separator()
+        pie..operator("mesh.edge_split")
         # NORTH
         pie.operator("mesh.poke")
         
@@ -143,7 +143,7 @@ class SUBPIE_MT_divide(Menu):
         # NORTH-WEST
         pie.separator()
         # NORTH-EAST
-        pie.operator("mesh.subdivide", text='Subdivide')
+        pie.operator("mesh.bevel", text='Bevel')
         # SOUTH-WEST
         pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
         # SOUTH-EAST
