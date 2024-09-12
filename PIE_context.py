@@ -79,7 +79,7 @@ class SUBPIE_MT_connect(Menu):
         pie = layout.menu_pie()
         
         # WEST
-        pie.separator()
+        pie.operator("mesh.edge_rotate").use_ccw=False
         # EAST
         pie.operator("mesh.bridge_edge_loops", text="Bridge")
         # SOUTH
@@ -91,7 +91,7 @@ class SUBPIE_MT_connect(Menu):
         # NORTH-EAST
         pie.operator("mesh.edge_face_add", text="Add Edge/Face")
         # SOUTH-WEST
-        pie.separator()
+        pie.operator("mesh.edge_rotate").use_ccw=True
         # SOUTH-EAST
         pie.operator("mesh.fill", text="Fill Loop")
 
@@ -174,6 +174,31 @@ class SUBPIE_MT_extrudeFaces(Menu):
         pie.operator("wm.tool_set_by_id", text="Extrude To Cursor Tool").name = "builtin.extrude_to_cursor"
         # SOUTH-EAST
         pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude")
+
+# Sub Pie for mesh face extrusions
+class SUBPIE_MT_normals(Menu):
+    bl_label = "Normals"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("mesh.mark_sharp", text = "Mark Sharp").clear = False
+        # EAST
+        pie.operator("transform.edge_crease", text = "Crease Tool")
+        # SOUTH
+        pie.operator("mesh.mark_sharp", text = "Clear Sharp").clear = True
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("mesh.flip_normals")
+        # SOUTH-EAST
+        pie.separator()
 
 # Sub Pie for curve operators
 class SUBPIE_MT_smoothCurve(Menu):
@@ -609,8 +634,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                subPie = pie.operator("wm.call_menu_pie", text='Divide...')
-                subPie.name = "SUBPIE_MT_divide"
+                subPie = pie.operator("wm.call_menu_pie", text='Divide...').name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
                 deletePie = pie.operator("wm.call_menu_pie", text='Delete...')
                 deletePie.name = "SUBPIE_MT_PieDelete"
