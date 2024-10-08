@@ -115,14 +115,15 @@ class VIEW3D_PIE_MT_mode(Menu):
 
             elif obj is not None and obj.type == 'ARMATURE':
 
+                # THIS IS KEY! obj is not it's armature data... the data object has the pose_position function 
+                armdata = obj.data
+
                 # WEST # EAST # SOUTH 
                 pie.operator_enum("OBJECT_OT_mode_set", "mode")
                 # NORTH 
                 pie.separator()
-                # NORTH-WEST 
-                pie.separator()
-                # NORTH-EAST
-                pie.separator()
+                # NORTH-WEST # NORTH-EAST
+                pie.prop(armdata, "pose_position", expand=True)
                 # SOUTH-WEST
                 pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
                 # SOUTH-EAST
@@ -215,16 +216,6 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-EAST
             pie.separator()
             
-            '''
-            VIEW3D_PT_sculpt_context_menu
-
-            obj = context.object
-            
-            if obj is not None and obj.type in {'MESH', 'CURVE', 'SURFACE'}:
-                pie.operator_enum("OBJECT_OT_mode_set", "mode")
-                pie.menu("VIEW3D_PIE_object_context_menu", text="Object Menu")
-            '''
-
         elif bpy.context.mode == 'POSE':
 
             layout = self.layout
@@ -232,12 +223,35 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie = layout.menu_pie()
 
             # WEST
-            pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+            pie.operator("object.mode_set", icon="OBJECT_DATAMODE", text="Object Mode")
             # EAST
-            pie.separator()
+            pie.operator("object.mode_set", icon="OUTLINER_DATA_ARMATURE", text="Edit Mode").mode = 'EDIT'
             # SOUTH
             pie.menu("VIEW3D_MT_pose_context_menu", text="Pose Context Menu", icon="COLLAPSEMENU")
 
+            # NORTH
+            pie.separator()
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.separator()
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
+        
+        elif bpy.context.mode == 'EDIT_ARMATURE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.operator("object.mode_set", icon="OBJECT_DATAMODE", text="Object Mode")
+            # EAST
+            pie.separator()
+            # SOUTH
+            pie.operator("object.mode_set", icon="ARMATURE_DATA", text="Pose Mode").mode = 'POSE'
             # NORTH
             pie.separator()
             # NORTH-WEST
@@ -282,7 +296,7 @@ addon_keymaps = []
 
 def register():
 
-    categories = ["Object Mode", "Mesh", "Curve", "Grease Pencil Edit Mode", "Sculpt", "Pose", "Lattice", ]
+    categories = ["Object Mode", "Mesh", "Curve", "Grease Pencil Edit Mode", "Sculpt", "Pose", "Armature", "Lattice", ]
 
     for cat in categories:
         register_hotkey(

@@ -284,26 +284,18 @@ class SUBPIE_MT_inbetweens(Menu):
         
         # WEST
         pie.operator("pose.push_rest")
-
         # EAST
         pie.operator("pose.relax_rest")
-
         # SOUTH
         pie.operator("pose.blend_to_neighbor")
-
         # NORTH
         pie.operator("pose.breakdown")
-        
         # NORTH-WEST
         pie.separator()
-               
-
         # NORTH-EAST
         pie.separator()
-
         # SOUTH-WEST
         pie.operator("pose.push")
-
         # SOUTH-EAST
         pie.operator("pose.relax")
 
@@ -317,30 +309,18 @@ class SUBPIE_MT_motionpaths(Menu):
         
         # WEST
         pie.separator()
-
         # EAST
         pie.separator()
-
         # SOUTH
         pie.operator("pose.paths_clear")
-
         # NORTH
-        calc = pie.operator("pose.paths_calculate")
-        calc.start_frame = context.scene.frame_start
-        calc.end_frame = context.scene.frame_end
-        calc.bake_location = 'HEADS'
-
-        
+        pie.operator("pose.paths_calculate")
         # NORTH-WEST
         pie.operator("pose.paths_update_visible")
-               
-
         # NORTH-EAST
         pie.operator("pose.paths_update")
-
         # SOUTH-WEST
         pie.separator()
-
         # SOUTH-EAST 
         pie.separator()
 

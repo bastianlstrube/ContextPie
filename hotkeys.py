@@ -28,6 +28,7 @@ KEYMAP_ICONS = {
 KEYMAP_UI_NAMES = {
     'Armature': "Armature Edit",
     'Object Non-modal': "Object Mode",
+    'Grease Pencil Edit Mode': 'Grease Pencil Edit',
 }
 
 DEBUG = False
@@ -161,12 +162,12 @@ def draw_kmi(km, kmi, layout, compact=False):
     keycombo_row = main_split.row(align=True)
     sub = keycombo_row.row(align=True)
     sub.enabled = kmi.active
-    if kmi.idname == 'wm.call_menu_pie_drag_only_cpie':
+    if kmi.idname == 'wm.call_menu_pie_drag_only':
         op_row = sub.row(align=True)
         if not compact:
             op_row.scale_x = 0.75
-        text = "" if compact else "Drag Only"
-        op = op_row.operator('wm.toggle_keymap_item_property_cpie', text=text, icon='MOUSE_MOVE', depress=kmi.properties.on_drag)
+        text = "" if compact else "Drag"
+        op = op_row.operator('wm.toggle_keymap_item_property', text=text, icon='MOUSE_MOVE', depress=kmi.properties.on_drag)
         op.prop_name = 'on_drag'
         op.addon_kmi_hash = kmi.properties['hash']
     sub.prop(kmi, "type", text="", full_event=True)
@@ -219,7 +220,11 @@ def find_kmi_in_km_by_hash(keymap, kmi_hash):
     for kmi in keymap.keymap_items:
         if not kmi.properties:
             continue
-        if 'hash' not in kmi.properties:
+        try:
+            if 'hash' not in kmi.properties:
+                continue
+        except TypeError:
+            # Happens sometimes on file load...?
             continue
 
         if kmi.properties['hash'] == kmi_hash:
