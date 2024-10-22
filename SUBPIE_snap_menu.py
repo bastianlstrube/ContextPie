@@ -28,11 +28,11 @@ class SUBPIE_OT_ProportionalEditObj(Operator):
     def execute(self, context):
         ts = context.tool_settings
 
-        if ts.use_proportional_edit_objects is True:
-            ts.use_proportional_edit_objects = False
+        if ts.use_snap is True:
+            ts.use_snap = False
 
-        elif ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        elif ts.use_snap is False:
+            ts.use_snap = True
 
         return {'FINISHED'}
 
@@ -43,8 +43,8 @@ class SUBPIE_OT_ProportionalConstantObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.proportional_edit_falloff = 'CONSTANT'
 
         if ts.proportional_edit_falloff != 'CONSTANT':
@@ -83,8 +83,8 @@ class SUBPIE_OT_SnapIncrement(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'INCREMENT'}
 
         if not ts.snap_elements_base == {'INCREMENT'}:
@@ -98,8 +98,8 @@ class SUBPIE_OT_SnapGrid(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'GRID'}
 
         if not ts.snap_elements_base == {'GRID'}:
@@ -113,8 +113,8 @@ class SUBPIE_OT_SnapVertex(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'VERTEX'}
 
         if not ts.snap_elements_base == {'VERTEX'}:
@@ -128,8 +128,8 @@ class SUBPIE_OT_SnapEdge(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'EDGE'}
 
         if not ts.snap_elements_base == {'EDGE'}:
@@ -143,8 +143,8 @@ class SUBPIE_OT_SnapFace(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'FACE'}
 
         if not ts.snap_elements_base == {'FACE'}:
@@ -158,8 +158,8 @@ class SUBPIE_OT_SnapVolume(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'VOLUME'}
 
         if not ts.snap_elements_base == {'VOLUME'}:
@@ -173,8 +173,8 @@ class SUBPIE_OT_SnapEdgeMidpoint(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'EDGE_MIDPOINT'}
 
         if not ts.snap_elements_base == {'EDGE_MIDPOINT'}:
@@ -188,8 +188,8 @@ class SUBPIE_OT_SnapEdgePerpendicular(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
+        if ts.use_snap is False:
+            ts.use_snap = True
             ts.snap_elements_base = {'EDGE_PERPENDICULAR'}
 
         if not ts.snap_elements_base == {'EDGE_PERPENDICULAR'}:
