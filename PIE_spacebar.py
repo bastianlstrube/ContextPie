@@ -1,27 +1,10 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
+# SPDX-FileCopyrightText: 2016-2024 Bastian L. Strube
 #
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 import bpy
-from bpy.types import (
-    Header,
-    Menu,
-    Panel,
-)
+from bpy.types import Menu
+from .hotkeys import register_hotkey
 
 # spawn an edit mode selection pie (run while object is in edit mode to get a valid output)
 '''
@@ -37,7 +20,7 @@ class ParentingSubMenu(bpy.types.Menu):
         layout.operator("object.parent_clear", text = "un-parent")
 '''
 # Sub Pie View Mode 
-class VIEW3D_PIE_MT_views(Menu):
+class SUBPIE_MT_views(Menu):
 
     bl_label = "Views"
 
@@ -53,7 +36,7 @@ class VIEW3D_PIE_MT_views(Menu):
 # Pie Master Mode 
 class VIEW3D_PIE_MT_spaceMain(Menu):
     # label is displayed at the center of the pie menu.
-    bl_label = ""
+    bl_label = "Options"
     
     def draw(self, context):
         layout = self.layout
@@ -63,7 +46,7 @@ class VIEW3D_PIE_MT_spaceMain(Menu):
         # for the type enum of the operator on the pie
         pie.operator("wm.toolbar", text = "handy tools", icon="TOOL_SETTINGS")    #W
         pie.operator("object.modifier_add", text = "modifier", icon="MODIFIER_ON") #E
-        pie.operator("wm.call_menu_pie", text="views", icon='VIEW_CAMERA').name = "VIEW3D_PIE_MT_views" #S
+        pie.operator("wm.call_menu_pie", text="views", icon='VIEW_CAMERA').name = "SUBPIE_MT_views" #S
         pie.operator("wm.search_menu", text = "search", icon="VIEWZOOM") #N
         pie.operator("mesh.select_less", text = "shrink selection", icon="REMOVE") #NE
         pie.operator("mesh.select_more", text = "grow selection", icon="ADD")   #NW
@@ -86,38 +69,17 @@ class VIEW3D_PIE_MT_spaceMain(Menu):
         #dropdown_menu.operator("object.join", text = "join")
 
 
-classes = [
+registry = [
     VIEW3D_PIE_MT_spaceMain, 
-    VIEW3D_PIE_MT_views,
+    SUBPIE_MT_views,
 
 ]
 
-addon_keymaps = []
-
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    register_hotkey(
+        'wm.call_menu_pie',
+        op_kwargs={'name': 'VIEW3D_PIE_MT_spaceMain'},
+        hotkey_kwargs={'type': "SPACE", 'value': "PRESS", 'ctrl': True},
+        key_cat="3D View",
+    )
 
-    wm = bpy.context.window_manager
-    if wm.keyconfigs.addon:
-        km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'SPACE', 'PRESS')
-        kmi.properties.name = "VIEW3D_PIE_MT_spaceMain"
-        addon_keymaps.append((km, kmi))
-
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
-    wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
-    if kc:
-        for km, kmi in addon_keymaps:
-            km.keymap_items.remove(kmi)
-    addon_keymaps.clear()
-    
-if __name__ == "__main__":
-    register()
-
-    bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_MT_spaceMain")
-  

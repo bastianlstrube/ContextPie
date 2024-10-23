@@ -1,20 +1,6 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
+# SPDX-FileCopyrightText: 2016-2024 Bastian L. Strube
 #
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 bl_info = {
     "name": "Context Pie: Mode Selection 'Right Mouse'",
@@ -210,16 +196,16 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie = layout.menu_pie()
 
             # WEST
-            pie.separator()
+            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
             # EAST
-            pie.separator()
+            pie.operator("sculpt.dynamic_topology_toggle", text="Dyntopo Toggle") #, icon="OBJECT_DATAMODE")
             # SOUTH
             box = pie.box()
             #show the colour picker directly
             box.menu_contents("VIEW3D_PT_sculpt_context_menu")
 
             # NORTH
-            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+            pie.separator()
             # NORTH-WEST
             pie.separator()
             # NORTH-EAST
@@ -300,7 +286,7 @@ def register():
 
     for cat in categories:
         register_hotkey(
-            'wm.call_menu_pie',
+            'wm.call_menu_pie_drag_only_cpie',
             op_kwargs={'name': 'VIEW3D_PIE_MT_mode'},
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
             key_cat=cat,

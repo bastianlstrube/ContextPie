@@ -2,11 +2,17 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+# liberally borrowed from Blenders Community Extension: Viewports Pie Menu
+
 import bpy, json
+import io, platform, struct, urllib
 from pathlib import Path
 from bpy.types import AddonPreferences
-from .hotkeys import draw_hotkey_list, PIE_ADDON_KEYMAPS, find_kmi_in_km_by_hash
+from bpy.props import BoolProperty
+from bl_ui.space_userpref import USERPREF_PT_interface_menus_pie
+from .hotkeys import draw_hotkey_list, PIE_ADDON_KEYMAPS, find_kmi_in_km_by_hash, print_kmi, get_kmi_ui_info
 from . import __package__ as base_package
+
 
 def get_addon_prefs(context=None):
     if not context:
@@ -17,10 +23,12 @@ def get_addon_prefs(context=None):
     else:
         return context.preferences.addons[base_package.split(".")[0]].preferences
 
+
 def update_prefs_on_file(self=None, context=None):
     prefs = get_addon_prefs(context)
     if not type(prefs).loading:
         prefs.save_prefs_to_file()
+
 
 class PrefsFileSaveLoadMixin:
     """Mix-in class that can be used by any add-on to store their preferences in a file,
@@ -126,30 +134,42 @@ class PrefsFileSaveLoadMixin:
             type(self).loading = False
 
 
-class ExtraPies_AddonPrefs(PrefsFileSaveLoadMixin, AddonPreferences):
+class ExtraPies_AddonPrefs(PrefsFileSaveLoadMixin, AddonPreferences, USERPREF_PT_interface_menus_pie):
     bl_idname = __package__
 
-    keymap_items = {}
+    show_in_sidebar: BoolProperty(
+        name="Show in Sidebar",
+        default=False, 
+        description="Show a compact version of the preferences in the sidebar. Useful when picking up the add-on for the first time to learn and customize it to your liking",
+    )
 
     def draw(self, context):
-        draw_hotkey_list(self.layout.column(), context)
+        draw_prefs(self.layout, context, compact=False)
 
     def prefs_to_dict_recursive(self, propgroup: 'IDPropertyGroup') -> dict:
         ret = super().prefs_to_dict_recursive(propgroup)
 
+        keymap_data = list(PIE_ADDON_KEYMAPS.items())
+        keymap_data = sorted(keymap_data, key=lambda tup: "".join(get_kmi_ui_info(tup[1][1], tup[1][2])))
+
         hotkeys = {}
-        for kmi_hash, kmi_tup in PIE_ADDON_KEYMAPS.items():
-            addon_kc, addon_km, addon_kmi = kmi_tup
+        for kmi_hash, kmi_tup in keymap_data:
+            _addon_kc, addon_km, addon_kmi = kmi_tup
             context = bpy.context
             user_kc = context.window_manager.keyconfigs.user
             user_km = user_kc.keymaps.get(addon_km.name)
             if not user_km:
                 continue
             user_kmi = find_kmi_in_km_by_hash(user_km, kmi_hash)
+            if not user_kmi:
+                print(base_package + ": Failed to find UserKeymapItem to store: ")
+                print_kmi(addon_kmi)
+                continue
 
-            hotkeys[kmi_hash] = {key:getattr(user_kmi, key) for key in ('active', 'type', 'shift_ui', 'ctrl_ui', 'alt_ui', 'oskey_ui', 'any', 'map_type', 'key_modifier')}
+            hotkeys[kmi_hash] = {key:getattr(user_kmi, key) for key in ('idname', 'active', 'type', 'value', 'shift_ui', 'ctrl_ui', 'alt_ui', 'oskey_ui', 'any', 'map_type', 'key_modifier')}
             hotkeys[kmi_hash]["key_cat"] = addon_km.name
-            hotkeys[kmi_hash]["name"] = user_kmi.properties.name
+            if user_kmi.properties:
+                hotkeys[kmi_hash]["properties"] = {key:getattr(user_kmi.properties, key) for key in user_kmi.properties.keys() if hasattr(user_kmi.properties, key)}
 
         ret["hotkeys"] = hotkeys
 
@@ -162,7 +182,6 @@ class ExtraPies_AddonPrefs(PrefsFileSaveLoadMixin, AddonPreferences):
         user_kc = context.window_manager.keyconfigs.user
 
         for kmi_hash, kmi_props in hotkeys.items():
-            kmi_props.pop("name")
             key_cat = kmi_props.pop("key_cat")
             user_km = user_kc.keymaps.get(key_cat)
             if not user_km:
@@ -170,6 +189,12 @@ class ExtraPies_AddonPrefs(PrefsFileSaveLoadMixin, AddonPreferences):
             user_kmi = find_kmi_in_km_by_hash(user_km, kmi_hash)
             if not user_kmi:
                 continue
+
+            if "properties" in kmi_props:
+                op_kwargs = kmi_props.pop("properties")
+                for key, value in op_kwargs.items():
+                    if hasattr(user_kmi.properties, key):
+                        setattr(user_kmi.properties, key, value)
 
             for key, value in kmi_props.items():
                 if key=="any" and not value:
@@ -179,12 +204,29 @@ class ExtraPies_AddonPrefs(PrefsFileSaveLoadMixin, AddonPreferences):
         super().apply_prefs_from_dict_recursive(propgroup, data)
 
 
+def draw_prefs(layout, context, compact=False):
+    prefs = get_addon_prefs(context)
+
+    layout.use_property_split = True
+    layout.use_property_decorate = False
+    layout.operator('wm.url_open', text="Report Bug", icon='URL').url="https://github.com/bastianlstrube/ContextPie/issues"
+    if not compact:
+        layout.prop(prefs, 'show_in_sidebar')
+
+    header, builtins_panel = layout.panel(idname="Extra Pies Builtin Prefs")
+    header.label(text="Pie Preferences")
+    if builtins_panel:
+        prefs.draw_centered(context, layout)
+
+    header, hotkeys_panel = layout.panel(idname="Extra Pies Hotkeys")
+    header.label(text="Hotkeys")
+    if hotkeys_panel:
+        draw_hotkey_list(hotkeys_panel, context, compact=compact)
+
 def register():
     bpy.utils.register_class(ExtraPies_AddonPrefs)
     ExtraPies_AddonPrefs.register_autoload_from_file()
 
+
 def unregister():
-    # This has to run before the AddonPrefs class is unregistered,
-    # in order for addon prefs to save to file successfully on unregister.
-    update_prefs_on_file()
     bpy.utils.unregister_class(ExtraPies_AddonPrefs)

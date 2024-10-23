@@ -1,20 +1,6 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
+# SPDX-FileCopyrightText: 2016-2024 Bastian L. Strube
 #
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 bl_info = {
     "name": "Pivot Pie: 'Ctrl + Right Mouse'",
@@ -80,7 +66,8 @@ class VIEW3D_PIE_MT_pivots(Menu):
             # NORTH-EAST
             pie.separator()
             # SOUTH-WEST
-            pie.separator()
+            subPie = pie.operator("wm.call_menu_pie", text='Align...', icon = "RIGHTARROW_THIN")
+            subPie.name = "SUBPIE_MT_mesh_align"
             # SOUTH-EAST
             pie.separator()
 
@@ -200,7 +187,7 @@ registry = [
 def register():
 
     register_hotkey(
-        'wm.call_menu_pie',
+        'wm.call_menu_pie_drag_only_cpie',
         op_kwargs={'name': 'VIEW3D_PIE_MT_pivots'},
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'ctrl': True},
         key_cat="3D View",

@@ -11,10 +11,6 @@ maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
 type = "add-on"
 
 # Optional: add-ons can list which resources they will require:
-# * "files" (for access of any filesystem operations)
-# * "network" (for internet access)
-# * "camera" (to capture photos and videos)
-# * "microphone" (to capture audio)
 # permissions = []
 
 # Optional link to documentation, support, source files, etc
