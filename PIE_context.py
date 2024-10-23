@@ -128,22 +128,61 @@ class SUBPIE_MT_divide(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
         
-        # WEST
-        pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
-        # EAST
-        pie.operator("mesh.subdivide", text='Subdivide')
-        # SOUTH
-        pie.operator("mesh.edge_split")
-        # NORTH
-        pie.operator("mesh.poke")
-        # NORTH-WEST
-        pie.operator("mesh.bisect", text = "Bisect")
-        # NORTH-EAST
-        pie.operator("mesh.bevel", text='Bevel')
-        # SOUTH-WEST
-        pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
-        # SOUTH-EAST
-        pie.operator("mesh.offset_edge_loops_slide")
+        is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
+
+        if is_vert_mode:
+            # WEST
+            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+            # EAST
+            pie.operator("mesh.subdivide", text='Subdivide')
+            # SOUTH
+            pie.operator("mesh.edge_split")
+            # NORTH
+            pie.separator()
+            # NORTH-WEST
+            pie.operator("mesh.bisect", text = "Bisect")
+            # NORTH-EAST
+            pie.operator("mesh.bevel", text='Bevel').affect = 'VERTICES'
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
+
+        elif is_edge_mode:
+            # WEST
+            pie.separator()
+            # EAST
+            pie.operator("mesh.subdivide", text='Subdivide')
+            # SOUTH
+            pie.separator()
+            # NORTH
+            pie.operator("mesh.edge_split")
+            # NORTH-WEST
+            pie.operator("mesh.bisect", text = "Bisect")
+            # NORTH-EAST
+            pie.operator("mesh.bevel", text='Bevel').affect = 'EDGES'
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.operator("mesh.offset_edge_loops_slide")
+
+        elif is_face_mode:
+            # WEST
+            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+            # EAST
+            pie.operator("mesh.subdivide", text='Subdivide')
+            # SOUTH
+            pie.operator("mesh.edge_split")
+            # NORTH
+            pie.operator("mesh.poke")
+            # NORTH-WEST
+            pie.operator("mesh.bisect", text = "Bisect")
+            # NORTH-EAST
+            pie.operator("mesh.bevel", text='Bevel')
+            # SOUTH-WEST
+            pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+            # SOUTH-EAST
+            pie.separator()
 
 # Sub Pie for mesh face extrusions
 class SUBPIE_MT_extrudeFaces(Menu):
