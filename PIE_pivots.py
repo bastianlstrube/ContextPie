@@ -43,7 +43,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
 
     def draw(self, context):
 
-        if context.mode in ('EDIT_MESH', 'EDIT_CURVE', 'EDIT_LATTICE'):
+        if context.mode in ('EDIT_MESH', 'EDIT_CURVE', 'EDIT_LATTICE', 'EDIT_ARMATURE'):
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -80,29 +80,29 @@ class VIEW3D_PIE_MT_pivots(Menu):
             obj = context.object
             sel = context.selected_objects
 
-            if obj is not None and sel:
+            #if obj is not None and sel:
                 # WEST
-                subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
-                subPie.name = "VIEW3D_MT_orientations_pie"
-                # EAST
-                subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
-                subPie.name = "VIEW3D_MT_pivot_pie"
-                # SOUTH
-                subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")
-                subPie.name = "SUBPIE_MT_snap"
-                # NORTH
-                subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
-                subPie.name = "SUBPIE_MT_proportional_obj"
-                # NORTH-WEST
-                pie.separator()
-                # NORTH-EAST
-                pie.separator()
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
+            subPie.name = "VIEW3D_MT_orientations_pie"
+            # EAST
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
+            subPie.name = "VIEW3D_MT_pivot_pie"
+            # SOUTH
+            subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")
+            subPie.name = "SUBPIE_MT_snap"
+            # NORTH
+            subPie = pie.operator("wm.call_menu_pie", text='Proportional...', icon = "RIGHTARROW_THIN")
+            subPie.name = "SUBPIE_MT_proportional_obj"
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.separator()
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
 
-            else:
+            '''else:
                 # WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
                 subPie.name = "VIEW3D_MT_orientations_pie"
@@ -122,7 +122,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
                 # SOUTH-WEST
                 pie.separator()
                 # SOUTH-EAST
-                pie.separator()
+                pie.separator()'''
 
 
         # Straight from Blenders Pie Addon Sculpt 'W' Menu

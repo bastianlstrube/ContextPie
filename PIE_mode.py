@@ -77,7 +77,7 @@ class VIEW3D_PIE_MT_mode(Menu):
 
     def draw(self, context):
         
-        if bpy.context.mode == 'OBJECT':
+        if context.mode == 'OBJECT':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -189,7 +189,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
 
-        elif bpy.context.mode == 'SCULPT':
+        elif context.mode == 'SCULPT':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -225,7 +225,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                 pie.menu("VIEW3D_PIE_object_context_menu", text="Object Menu")
             '''
 
-        elif bpy.context.mode == 'POSE':
+        elif context.mode == 'POSE':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -249,7 +249,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-EAST
             pie.separator()
 
-        elif bpy.context.mode == 'EDIT_LATTICE':
+        elif context.mode == 'EDIT_LATTICE':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -271,6 +271,29 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.separator()
             # SOUTH-EAST
             pie.separator()
+        
+        elif context.mode == 'EDIT_ARMATURE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+            # EAST
+            pie.separator()
+            # SOUTH
+            pie.separator()
+            # NORTH
+            pie.separator() # REST AND POSE MODE HERE
+            # NORTH-WEST
+            pie.separator() 
+            # NORTH-EAST
+            pie.menu("VIEW3D_MT_edit_armature_names")
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
 
 registry = [
     SUBPIE_MT_objectSelect,
@@ -282,7 +305,7 @@ addon_keymaps = []
 
 def register():
 
-    categories = ["Object Mode", "Mesh", "Curve", "Grease Pencil Edit Mode", "Sculpt", "Pose", "Lattice", ]
+    categories = ["Object Mode", "Mesh", "Curve", "Grease Pencil Edit Mode", "Sculpt", "Pose", "Lattice", "Armature"]
 
     for cat in categories:
         register_hotkey(

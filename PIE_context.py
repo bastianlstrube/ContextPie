@@ -530,7 +530,6 @@ class VIEW3D_PIE_MT_context(Menu):
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Circularize Component")
                 
 
-
             elif is_edge_mode:
                 #render = context.scene.render
 
@@ -589,7 +588,6 @@ class VIEW3D_PIE_MT_context(Menu):
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Insert Edgeloop Tool")
                 #dropdown_menu.operator("mesh.primitive_cube_add", text = "Connect Components")
                 
-
 
             elif is_face_mode:
 
@@ -807,6 +805,168 @@ class VIEW3D_PIE_MT_context(Menu):
             pie.separator()
             # SOUTH-EAST
             pie.separator()
+            '''
+            VIEW3D_MT_pose_context_menu
+            layout.operator("anim.keyframe_insert", text="Insert Keyframe")
+            layout.operator("anim.keyframe_insert_menu", text="Insert Keyframe with Keying Set").always_prompt = True
+
+            layout.separator()
+
+            layout.operator("pose.copy", icon='COPYDOWN')
+            layout.operator("pose.paste", icon='PASTEDOWN').flipped = False
+            layout.operator("pose.paste", icon='PASTEFLIPDOWN', text="Paste X-Flipped Pose").flipped = True
+
+            layout.separator()
+
+            props = layout.operator("wm.call_panel", text="Rename Active Bone...")
+            props.name = "TOPBAR_PT_name"
+            props.keep_open = False
+
+            layout.separator()
+
+            layout.operator("pose.push")
+            layout.operator("pose.relax")
+            layout.operator("pose.breakdown")
+            layout.operator("pose.blend_to_neighbor")
+
+            layout.separator()
+
+            layout.operator("pose.paths_calculate", text="Calculate Motion Paths")
+            layout.operator("pose.paths_clear", text="Clear Motion Paths")
+            layout.operator("pose.paths_update", text="Update Armature Motion Paths")
+            layout.operator("object.paths_update_visible", text="Update All Motion Paths")
+
+            layout.separator()
+
+            layout.operator("pose.hide").unselected = False
+            layout.operator("pose.reveal")
+
+            layout.separator()
+
+            layout.operator("pose.user_transforms_clear")
+            '''
+
+        if context.mode == 'EDIT_ARMATURE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            edit_object = context.edit_object
+            arm = edit_object.data
+
+            # WEST
+            pie.operator("armature.parent_set", text="Make Parent")
+            # EAST
+            pie.operator("armature.parent_clear", text="Clear Parent")
+            # SOUTH
+            pie.operator("armature.extrude_move")
+            # NORTH
+            pie.operator("armature.fill")
+            # NORTH-WEST
+            pie.operator("armature.symmetrize")
+            # NORTH-EAST
+            pie.operator("armature.subdivide", text="Subdivide")
+            # SOUTH-WEST
+            pie.operator("armature.dissolve", text="Dissolve")
+            # SOUTH-EAST
+            pie.operator("armature.split")
+            '''
+            class VIEW3D_MT_armature_context_menu(Menu):
+                bl_label = "Armature"
+
+                def draw(self, context):
+                    layout = self.layout
+
+                    edit_object = context.edit_object
+                    arm = edit_object.data
+
+                    layout.operator_context = 'INVOKE_REGION_WIN'
+
+                    # Add
+                    layout.operator("armature.subdivide", text="Subdivide")
+                    layout.operator("armature.duplicate_move", text="Duplicate")
+                    layout.operator("armature.extrude_move")
+                    if arm.use_mirror_x:
+                        layout.operator("armature.extrude_forked")
+
+                    layout.separator()
+
+                    layout.operator("armature.fill")
+
+                    layout.separator()
+
+                    # Modify
+                    layout.menu("VIEW3D_MT_mirror")
+                    layout.menu("VIEW3D_MT_snap")
+                    layout.operator("armature.symmetrize")
+                    layout.operator("armature.switch_direction", text="Switch Direction")
+                    layout.menu("VIEW3D_MT_edit_armature_names")
+
+                    layout.separator()
+
+                    layout.menu("VIEW3D_MT_edit_armature_parent")
+
+                    layout.separator()
+
+                    # Remove
+                    layout.operator("armature.split")
+                    layout.operator("armature.separate")
+                    layout.operator("armature.dissolve")
+                    layout.operator("armature.delete")
+
+
+            class VIEW3D_MT_edit_armature_names(Menu):
+                bl_label = "Names"
+
+                def draw(self, _context):
+                    layout = self.layout
+
+                    layout.operator_context = 'EXEC_REGION_WIN'
+                    layout.operator("armature.autoside_names", text="Auto-Name Left/Right").type = 'XAXIS'
+                    layout.operator("armature.autoside_names", text="Auto-Name Front/Back").type = 'YAXIS'
+                    layout.operator("armature.autoside_names", text="Auto-Name Top/Bottom").type = 'ZAXIS'
+                    layout.operator("armature.flip_names", text="Flip Names")
+
+
+            class VIEW3D_MT_edit_armature_parent(Menu):
+                bl_label = "Parent"
+                bl_translation_context = i18n_contexts.operator_default
+
+                def draw(self, _context):
+                    layout = self.layout
+
+                    layout.operator("armature.parent_set", text="Make")
+                    layout.operator("armature.parent_clear", text="Clear")
+
+
+            class VIEW3D_MT_edit_armature_roll(Menu):
+                bl_label = "Bone Roll"
+
+                def draw(self, _context):
+                    layout = self.layout
+
+                    layout.operator_menu_enum("armature.calculate_roll", "type")
+
+                    layout.separator()
+
+                    layout.operator("transform.transform", text="Set Roll").mode = 'BONE_ROLL'
+                    layout.operator("armature.roll_clear")
+
+
+            class VIEW3D_MT_edit_armature_delete(Menu):
+                bl_label = "Delete"
+
+                def draw(self, _context):
+                    layout = self.layout
+                    layout.operator_context = 'EXEC_AREA'
+
+                    layout.operator("armature.delete", text="Bones")
+
+                    layout.separator()
+
+                    layout.operator("armature.dissolve", text="Dissolve Bones")
+            '''
 
 
 # Brush Functions and Icons for Sculpt Menu
