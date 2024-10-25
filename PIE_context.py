@@ -57,7 +57,7 @@ class SUBPIE_MT_merge(Menu):
         if is_vert_mode and typeLen == 5:
         '''
         # NORTH-WEST
-        pie.separator()
+        pie.operator("mesh.unsubdivide")
         # NORTH-EAST
         pie.operator("mesh.remove_doubles", text="By Distance")
 
@@ -594,7 +594,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # WEST
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
-                pie.operator("mesh.unsubdivide")
+                pie.operator("transform.shrink_fatten")
                 # SOUTH
                 subPie = pie.operator("wm.call_menu_pie", text='Extrude Faces...')
                 subPie.name = "SUBPIE_MT_extrudeFaces"
@@ -664,11 +664,14 @@ class VIEW3D_PIE_MT_context(Menu):
             sel = context.selected_objects
 
             if obj is not None and sel:
+                
                 # WEST & EAST
                 if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
-
                     pie.operator("object.shade_smooth")
                     pie.operator("object.shade_flat")
+                elif obj.type == 'ARMATURE':
+                    arm = obj.data
+                    pie.prop(arm, "pose_position", expand=True)
                 else:
                     pie.separator()
                     pie.separator()
@@ -851,9 +854,6 @@ class VIEW3D_PIE_MT_context(Menu):
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
             pie = layout.menu_pie()
-
-            edit_object = context.edit_object
-            arm = edit_object.data
 
             # WEST
             pie.operator("armature.parent_set", text="Make Parent")

@@ -285,7 +285,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH
             pie.separator()
             # NORTH
-            pie.separator() # REST AND POSE MODE HERE
+            pie.separator()
             # NORTH-WEST
             pie.separator() 
             # NORTH-EAST
