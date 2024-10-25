@@ -15,7 +15,11 @@ bl_info = {
 import bpy
 from bpy.types import Menu
 from .hotkeys import register_hotkey
+from bl_ui.properties_paint_common import (
+    UnifiedPaintPanel,
+)
 from bpy.app.translations import contexts as i18n_contexts
+
 
 class SUBPIE_MT_objectSelect(Menu):
     bl_label = "Select"
@@ -202,8 +206,62 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH
             box = pie.box()
             #show the colour picker directly
-            box.menu_contents("VIEW3D_PT_sculpt_context_menu")
+            brush = context.tool_settings.sculpt.brush
+            capabilities = brush.sculpt_capabilities
 
+            if capabilities.has_color:
+                split = box.split(factor=0.1)
+                UnifiedPaintPanel.prop_unified_color(split, context, brush, "color", text="")
+                UnifiedPaintPanel.prop_unified_color_picker(split, context, brush, "color", value_slider=True)
+                box.prop(brush, "blend", text="")
+
+            ups = context.tool_settings.unified_paint_settings
+            size = "size"
+            size_owner = ups if ups.use_unified_size else brush
+            if size_owner.use_locked_size == 'SCENE':
+                size = "unprojected_radius"
+
+            UnifiedPaintPanel.prop_unified(
+                box,
+                context,
+                brush,
+                size,
+                unified_name="use_unified_size",
+                pressure_name="use_pressure_size",
+                text="Radius",
+                slider=True,
+            )
+            UnifiedPaintPanel.prop_unified(
+                box,
+                context,
+                brush,
+                "strength",
+                unified_name="use_unified_strength",
+                pressure_name="use_pressure_strength",
+                slider=True,
+            )
+
+            if capabilities.has_auto_smooth:
+                box.prop(brush, "auto_smooth_factor", slider=True)
+
+            if capabilities.has_normal_weight:
+                box.prop(brush, "normal_weight", slider=True)
+
+            if capabilities.has_pinch_factor:
+                text = "Pinch"
+                if brush.sculpt_tool in {'BLOB', 'SNAKE_HOOK'}:
+                    text = "Magnify"
+                box.prop(brush, "crease_pinch_factor", slider=True, text=text)
+
+            if capabilities.has_rake_factor:
+                box.prop(brush, "rake_factor", slider=True)
+
+            if capabilities.has_plane_offset:
+                box.prop(brush, "plane_offset", slider=True)
+                box.prop(brush, "plane_trim", slider=True, text="Distance")
+
+            if capabilities.has_height:
+                box.prop(brush, "height", slider=True, text="Height")
             # NORTH
             pie.separator()
             # NORTH-WEST
