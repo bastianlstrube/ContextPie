@@ -130,24 +130,61 @@ class SUBPIE_MT_divide(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
         
-        # WEST
-        pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
-        # EAST
-        pie.operator("mesh.bevel", text='Bevel')
-        # SOUTH
-        pie.separator()
-        # NORTH
-        pie.operator("mesh.poke")
-        
+        is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
 
-        # NORTH-WEST
-        pie.separator()
-        # NORTH-EAST
-        pie.operator("mesh.subdivide", text='Subdivide')
-        # SOUTH-WEST
-        pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
-        # SOUTH-EAST
-        pie.separator()
+        if is_vert_mode:
+            # WEST
+            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+            # EAST
+            pie.operator("mesh.subdivide", text='Subdivide')
+            # SOUTH
+            pie.separator()
+            # NORTH
+            pie.operator("mesh.poke")
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.operator("mesh.bevel", text='Bevel').affect = 'VERTICES'
+            # SOUTH-WEST
+            pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+            # SOUTH-EAST
+            pie.separator()
+
+        if is_edge_mode:
+            # WEST
+            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+            # EAST
+            pie.operator("mesh.subdivide", text='Subdivide')
+            # SOUTH
+            pie.separator()
+            # NORTH
+            pie.operator("mesh.poke")
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.operator("mesh.bevel", text='Bevel').affect = 'EDGES'     
+            # SOUTH-WEST
+            pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+            # SOUTH-EAST
+            pie.separator()
+
+        if is_face_mode:
+            # WEST
+            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+            # EAST
+            pie.operator("mesh.bevel", text='Bevel')
+            # SOUTH
+            pie.separator()
+            # NORTH
+            pie.operator("mesh.poke")
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.operator("mesh.subdivide", text='Subdivide')
+            # SOUTH-WEST
+            pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+            # SOUTH-EAST
+            pie.separator()
 
 # Sub Pie for mesh face extrusions
 class SUBPIE_MT_extrudeFaces(Menu):
@@ -501,11 +538,12 @@ class VIEW3D_PIE_MT_context(Menu):
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Merge...', icon = "RIGHTARROW_THIN")
                 subPie.name = "SUBPIE_MT_merge"                
-                
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                pie.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
+                #pie.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
+                subPie = pie.operator("wm.call_menu_pie", text='Divide...')
+                subPie.name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
                 subPie.name = "SUBPIE_MT_PieDelete"
@@ -535,30 +573,24 @@ class VIEW3D_PIE_MT_context(Menu):
 
                 # WEST
                 pie.operator("mesh.knife_tool", text="Knife")
-            
                 # EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Connect...')
                 subPie.name = "SUBPIE_MT_connect"
-
                 # SOUTH
                 pie.operator("mesh.extrude_edges_move", text="Extrude Edges")
-
                 # NORTH
                 subPie = pie.operator("wm.call_menu_pie", text='Merge...')
                 subPie.name = "SUBPIE_MT_merge"
                 #pie.operator("mesh.merge", text="Merge")
-                
-                
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
-                
                 # NORTH-EAST
-                pie.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
-
+                #pie.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
+                subPie = pie.operator("wm.call_menu_pie", text='Divide...')
+                subPie.name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
                 subPie = pie.operator("wm.call_menu_pie", text='Delete...')
                 subPie.name = "SUBPIE_MT_PieDelete"
-                
                 # SOUTH-EAST
                 pie.operator("transform.edge_slide", text="Slide Edge")
                 
