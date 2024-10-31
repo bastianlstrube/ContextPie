@@ -34,7 +34,7 @@ class SUBPIE_MT_uvUnwrap(Menu):
         # NORTH
         pie.operator("uv.unwrap")
         # NORTH-WEST
-        pie.separator()
+        pie.operator("uv.lightmap_pack")
         # NORTH-EAST
         o = pie.operator('wm.context_toggle', text="Live Unwrap")
         o.data_path = 'tool_settings.use_live_unwrap'

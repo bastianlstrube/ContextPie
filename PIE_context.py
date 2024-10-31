@@ -122,7 +122,7 @@ class SUBPIE_MT_separate(Menu):
         # SOUTH-EAST
         pie.operator("mesh.separate", text='Selection').type = 'SELECTED'
 
-# Sub Pie for mesh face/edge divisions
+# Sub Pie for mesh vert/edge/face divisions
 class SUBPIE_MT_divide(Menu):
     bl_label = "Divide"
     def draw(self, context):
@@ -212,6 +212,36 @@ class SUBPIE_MT_extrudeFaces(Menu):
         # SOUTH-EAST
         pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude")
 
+# Sub Pie Menu for Mesh Delete, ripped directly from 3D Viewport Pie Menus
+class SUBPIE_MT_PieDelete(Menu):
+    bl_label = "Pie Delete"
+
+    def draw(self, context):
+        layout = self.layout
+        pie = layout.menu_pie()
+        # 4 - LEFT
+        box = pie.split().column()
+        box.operator("mesh.dissolve_limited", text="Limited Dissolve", icon='STICKY_UVS_LOC')
+        box.operator("mesh.delete_edgeloop", text="Delete Edge Loops", icon='NONE')
+        box.operator("mesh.edge_collapse", text="Edge Collapse", icon='UV_EDGESEL')
+        # 6 - RIGHT
+        box = pie.split().column()
+        box.operator("mesh.remove_doubles", text="Merge By Distance", icon='NONE')
+        box.operator("mesh.delete", text="Only Edge & Faces", icon='NONE').type = 'EDGE_FACE'
+        box.operator("mesh.delete", text="Only Faces", icon='UV_FACESEL').type = 'ONLY_FACE'
+        # 2 - BOTTOM
+        pie.operator("mesh.dissolve_edges", text="Dissolve Edges", icon='SNAP_EDGE')
+        # 8 - TOP
+        pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
+        # 7 - TOP - LEFT
+        pie.operator("mesh.delete", text="Delete Vertices", icon='VERTEXSEL').type = 'VERT'
+        # 9 - TOP - RIGHT
+        pie.operator("mesh.delete", text="Delete Faces", icon='FACESEL').type = 'FACE'
+        # 1 - BOTTOM - LEFT
+        pie.operator("mesh.dissolve_verts", text="Dissolve Vertices", icon='SNAP_VERTEX')
+        # 3 - BOTTOM - RIGHT
+        pie.operator("mesh.dissolve_faces", text="Dissolve Faces", icon='SNAP_FACE')
+
 # Sub Pie for curve operators
 class SUBPIE_MT_smoothCurve(Menu):
     bl_label = "Smooth"
@@ -255,6 +285,7 @@ class SUBPIE_MT_curveDelete(Menu):
         # SOUTH-EAST
         pie.separator()
 
+# OBJECT MODE SUB MENUS
 # Sub Pie for object applying transform
 class SUBPIE_MT_applyTransform(Menu):
     bl_label = "Apply"
@@ -285,6 +316,75 @@ class SUBPIE_MT_applyTransform(Menu):
         op.location = True
         op.rotation = True
         op.scale = True
+
+class SUBPIE_MT_shadeObject(Menu):
+    bl_label = "Shade/Display"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("object.shade_smooth")
+        # EAST & SOUTH & NORTH & NORTH-WEST  
+        pie.prop(context.object, "display_type", expand=True)
+        # SOUTH
+        # NORTH
+        # NORTH-WEST
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("object.shade_flat")
+        # SOUTH-EAST
+        pie.separator()
+
+class SUBPIE_MT_LinkTransfer(Menu):
+    bl_label = "Link"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("wm.call_menu_pie", text='Copy/Transfer...').name = "SUBPIE_MT_CopyTransfer"
+        # EAST
+        pie.operator('object.make_links_data', text='Link Material').type = 'MATERIAL'
+        # SOUTH
+        pie.operator('object.make_links_data', text='Link Animation Data').type = 'ANIMATION'
+        # NORTH
+        pie.operator('object.make_links_data', text='Link Collections').type = 'GROUPS'
+        # NORTH-WEST
+        pie.operator('object.make_links_data', text='Link Instance Collection').type = 'DUPLICOLLECTION'
+        # NORTH-EAST
+        pie.operator('object.make_links_data', text='Link Object Data').type = 'OBDATA'
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
+
+class SUBPIE_MT_CopyTransfer(Menu):
+    bl_label = "Copy/Transfer"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator('object.data_transfer')
+        # EAST
+        pie.operator('object.constraints_copy', text='Copy Constraints')
+        # SOUTH
+        pie.operator('object.join_uvs', text='Copy UV Maps')
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.operator('object.make_links_data', text='Copy Grease Pencil FX').type = 'EFFECTS'
+        # NORTH-EAST
+        pie.operator('object.modifiers_copy_to_selected', text='Copy Modifiers')
+        # SOUTH-WEST
+        pie.operator('object.datalayout_transfer')
+        # SOUTH-EAST
+        pie.separator()
 
 # Sub Pie Menu for animation inbetween ops
 class SUBPIE_MT_inbetweens(Menu):
@@ -319,7 +419,7 @@ class SUBPIE_MT_inbetweens(Menu):
         # SOUTH-EAST
         pie.operator("pose.relax")
 
-# Sub Pie Menu for mesh merge operators
+# Sub Pie Menu for animation motion paths
 class SUBPIE_MT_motionpaths(Menu):
     bl_label = "Motion Paths"
     def draw(self, context):
@@ -355,36 +455,6 @@ class SUBPIE_MT_motionpaths(Menu):
 
         # SOUTH-EAST 
         pie.separator()
-
-# Sub Pie Menu for Delete, ripped directly from 3D Viewport Pie Menus
-class SUBPIE_MT_PieDelete(Menu):
-    bl_label = "Pie Delete"
-
-    def draw(self, context):
-        layout = self.layout
-        pie = layout.menu_pie()
-        # 4 - LEFT
-        box = pie.split().column()
-        box.operator("mesh.dissolve_limited", text="Limited Dissolve", icon='STICKY_UVS_LOC')
-        box.operator("mesh.delete_edgeloop", text="Delete Edge Loops", icon='NONE')
-        box.operator("mesh.edge_collapse", text="Edge Collapse", icon='UV_EDGESEL')
-        # 6 - RIGHT
-        box = pie.split().column()
-        box.operator("mesh.remove_doubles", text="Merge By Distance", icon='NONE')
-        box.operator("mesh.delete", text="Only Edge & Faces", icon='NONE').type = 'EDGE_FACE'
-        box.operator("mesh.delete", text="Only Faces", icon='UV_FACESEL').type = 'ONLY_FACE'
-        # 2 - BOTTOM
-        pie.operator("mesh.dissolve_edges", text="Dissolve Edges", icon='SNAP_EDGE')
-        # 8 - TOP
-        pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
-        # 7 - TOP - LEFT
-        pie.operator("mesh.delete", text="Delete Vertices", icon='VERTEXSEL').type = 'VERT'
-        # 9 - TOP - RIGHT
-        pie.operator("mesh.delete", text="Delete Faces", icon='FACESEL').type = 'FACE'
-        # 1 - BOTTOM - LEFT
-        pie.operator("mesh.dissolve_verts", text="Dissolve Vertices", icon='SNAP_VERTEX')
-        # 3 - BOTTOM - RIGHT
-        pie.operator("mesh.dissolve_faces", text="Dissolve Faces", icon='SNAP_FACE')
 
 
 ### SUB PIE MENUS FOR SCULPT BRUSH SELECT, COPIED DIRECTLY FROM EXTENSION "3D VIEWPORT PIE MENUS"
@@ -699,8 +769,8 @@ class VIEW3D_PIE_MT_context(Menu):
                 
                 # WEST & EAST
                 if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
-                    pie.operator("object.shade_smooth")
-                    pie.operator("object.shade_flat")
+                    pie.operator("wm.call_menu_pie", text='Shade...').name = "SUBPIE_MT_shadeObject"
+                    pie.operator("wm.call_menu_pie", text='Link/Transfer...').name = "SUBPIE_MT_LinkTransfer"
                 elif obj.type == 'ARMATURE':
                     arm = obj.data
                     pie.prop(arm, "pose_position", expand=True)
@@ -1063,6 +1133,9 @@ registry = [
     SUBPIE_MT_smoothCurve,
     SUBPIE_MT_curveDelete,
     SUBPIE_MT_applyTransform,
+    SUBPIE_MT_shadeObject,
+    SUBPIE_MT_LinkTransfer,
+    SUBPIE_MT_CopyTransfer,
     SUBPIE_MT_inbetweens,
     SUBPIE_MT_motionpaths,
     SUBPIE_MT_PieDelete,
