@@ -17,6 +17,32 @@ from bpy.types import Menu
 from .hotkeys import register_hotkey
 from bpy.app.translations import contexts as i18n_contexts
 
+
+# Sub Sub Pie Menu for UV Unwrap
+class SUBPIE_MT_uvPrimUnwrap(Menu):
+    bl_label = "Unwrap"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.separator()
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.operator("uv.cylinder_project")
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("uv.sphere_project")
+        # SOUTH-EAST
+        pie.operator("uv.cube_project")
+
 # Sub Pie Menu for UV Unwrap
 class SUBPIE_MT_uvUnwrap(Menu):
     bl_label = "Unwrap"
@@ -30,18 +56,23 @@ class SUBPIE_MT_uvUnwrap(Menu):
         # EAST
         pie.operator("uv.follow_active_quads")
         # SOUTH
-        pie.operator("uv.cylinder_project")
+        pie.operator("wm.call_menu_pie", text='Primitive Unwrap...').name = "SUBPIE_MT_uvPrimUnwrap"
         # NORTH
-        pie.operator("uv.unwrap")
+        if bpy.app.version >= (4,3,0):
+            pie.operator("uv.unwrap", text='Minimum Stretch').method = 'MINIMUM_STRETCH'
+        else:
+            pie.operator("uv.unwrap", text='Angle Based').method = 'ANGLE_BASED'
         # NORTH-WEST
-        pie.operator("uv.lightmap_pack")
+        if bpy.app.version >= (4,3,0):
+            pie.operator("uv.unwrap", text='Angle Based').method = 'ANGLE_BASED'
+        else:
+            pie.separator()
         # NORTH-EAST
-        o = pie.operator('wm.context_toggle', text="Live Unwrap")
-        o.data_path = 'tool_settings.use_live_unwrap'
+        pie.operator("uv.unwrap", text='Conformal').method = 'CONFORMAL'
         # SOUTH-WEST
-        pie.operator("uv.sphere_project")
+        pie.operator("uv.lightmap_pack")
         # SOUTH-EAST
-        pie.operator("uv.cube_project")
+        pie.operator('wm.context_toggle', text="Live Unwrap").data_path = 'tool_settings.use_live_unwrap'
 
 # Reference context menu: IMAGE_MT_uvs_context_menu
 class IMAGE_PIE_MT_uvContext(Menu):
@@ -89,6 +120,7 @@ class IMAGE_PIE_MT_uvContext(Menu):
 registry = [
     SUBPIE_MT_uvUnwrap,
     IMAGE_PIE_MT_uvContext,
+    SUBPIE_MT_uvPrimUnwrap,
 ]
 
 
