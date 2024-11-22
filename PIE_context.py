@@ -19,6 +19,7 @@ from bpy.types import Menu
 from .hotkeys import register_hotkey
 
 from bpy.app.translations import contexts as i18n_contexts
+from bl_ui.properties_paint_common import BrushAssetShelf
 
 # Sub Pie Menu for mesh merge operators
 class SUBPIE_MT_merge(Menu):
@@ -1071,7 +1072,6 @@ class VIEW3D_PIE_MT_context(Menu):
             '''
 
 
-# Brush Functions and Icons for Sculpt Menu
 def blender_uses_brush_assets():
     return 'asset_activate' in dir(bpy.ops.brush)
 
@@ -1090,7 +1090,7 @@ def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
         )
         op.asset_library_type = 'ESSENTIALS'
         op.relative_asset_identifier = os.path.join(
-            "brushes", "essentials_brushes.blend", "Brush", brush_name
+            "brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", brush_name
         )
     else:
         # Pre-4.3
@@ -1106,6 +1106,7 @@ def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
 
 
 brush_icons = {}
+
 
 def create_icons():
     global brush_icons
@@ -1161,6 +1162,9 @@ def register():
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
         key_cat="Sculpt",
     )
+
+def unregister():
+    release_icons()
 
 """
 EMPTY PIE MENU

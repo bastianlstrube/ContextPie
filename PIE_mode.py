@@ -132,7 +132,6 @@ class VIEW3D_PIE_MT_mode(Menu):
                 # SOUTH-EAST
                 subPie = pie.operator("wm.call_menu_pie", text='Select...')
                 subPie.name = "SUBPIE_MT_objectSelect"
-            
 
         elif context.mode == 'EDIT_MESH':
 
@@ -202,6 +201,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # WEST
             pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
             # EAST
+            #pie.prop(bpy.context.view_layer.objects.active, "use_dynamic_topology_sculpting", toggle=True)
             pie.operator("sculpt.dynamic_topology_toggle", text="Dyntopo Toggle") #, icon="OBJECT_DATAMODE")
             # SOUTH
             box = pie.box()
