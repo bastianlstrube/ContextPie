@@ -13,7 +13,7 @@ Made following an ancient Mayan pie recipe and works well with the industry comp
 
 ## Installation:
 
-Install from [extensions.blender.org](https://extensions.blender.org/add-ons/contextpie/) or directly from Blender in Preferences Menu > Extensions, searching for 'Context Pie'.
+Install from [extensions.blender.org](https://extensions.blender.org/add-ons/contextpie/) or directly from Blender in Preferences Menu > Extensions, search for 'Context Pie'.
 
 
 
