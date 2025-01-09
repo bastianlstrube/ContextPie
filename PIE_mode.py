@@ -76,6 +76,30 @@ class SUBPIE_MT_meshSelect(Menu):
         # SOUTH-EAST
         pie.operator("mesh.select_linked", text='Linked')
 
+class SUBPIE_MT_curveHandles(Menu):
+    bl_label = "Set Handle Type"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("curve.handle_type_set").type = 'AUTOMATIC'
+        # EAST
+        pie.operator("curve.handle_type_set").type = 'VECTOR'
+        # SOUTH
+        pie.separator()  
+        # NORTH
+        pie.operator("curve.handle_type_set").type = 'FREE_ALIGN'
+        # NORTH-WEST
+        pie.operator("curve.handle_type_set").type = 'TOGGLE_FREE_ALIGN'
+        # NORTH-EAST
+        pie.operator("curve.handle_type_set").type = 'ALIGNED'
+        # SOUTH-WEST
+        pie.separator()   
+        # SOUTH-EAST
+        pie.operator("curve.normals_make_consistent")
+
 class VIEW3D_PIE_MT_mode(Menu):
     bl_label  = "Mode Selection"
 
@@ -175,7 +199,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.operator("curve.cyclic_toggle")
             
             # NORTH-WEST
-            pie.separator()
+            pie.operator("wm.call_menu_pie", text='Set Handle Type...').name = "SUBPIE_MT_curveHandles"
             # NORTH-EAST
             pie.operator("curve.switch_direction")
             # SOUTH-WEST
@@ -356,6 +380,7 @@ class VIEW3D_PIE_MT_mode(Menu):
 registry = [
     SUBPIE_MT_objectSelect,
     SUBPIE_MT_meshSelect,
+    SUBPIE_MT_curveHandles,
     VIEW3D_PIE_MT_mode,
 ]
 
