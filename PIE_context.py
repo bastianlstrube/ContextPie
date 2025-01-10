@@ -109,7 +109,7 @@ class SUBPIE_MT_separate(Menu):
         # EAST
         pie.operator("mesh.separate", text='By Loose Parts').type = 'LOOSE'
         # SOUTH
-        pie.separator()
+        pie.operator("mesh.rip_move")
         # NORTH
         pie.separator()
         
@@ -252,13 +252,21 @@ class SUBPIE_MT_smoothCurve(Menu):
         pie = layout.menu_pie()
         
         # WEST
-        pie.operator("curve.smooth_weight")
+        pie.operator("curve.normals_make_consistent")
         # EAST
         pie.operator("curve.smooth")
         # SOUTH
         pie.operator("curve.smooth_radius")
         # NORTH
         pie.operator("curve.smooth_tilt")
+        # NORTH-WEST
+        pie.operator("curve.smooth_weight")
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
 
 # Sub Pie for curve operators
 class SUBPIE_MT_curveDelete(Menu):
@@ -300,7 +308,6 @@ class SUBPIE_MT_applyTransform(Menu):
         op.location = True
         op.rotation = False
         op.scale = False
-        
         # EAST
         op =  pie.operator("object.transform_apply", text="Scale")
         op.scale = True
@@ -311,12 +318,19 @@ class SUBPIE_MT_applyTransform(Menu):
         op.rotation = True
         op.location = False
         op.scale = False
-
         # NORTH
         op = pie.operator("object.transform_apply", text="All Transforms")
         op.location = True
         op.rotation = True
         op.scale = True
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.operator("object.convert", text="Visual Geo to Mesh").target = 'MESH'
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
 
 class SUBPIE_MT_shadeObject(Menu):
     bl_label = "Shade/Display"

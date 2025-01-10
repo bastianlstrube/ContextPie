@@ -76,29 +76,29 @@ class SUBPIE_MT_meshSelect(Menu):
         # SOUTH-EAST
         pie.operator("mesh.select_linked", text='Linked')
 
-class SUBPIE_MT_curveHandles(Menu):
-    bl_label = "Set Handle Type"
+class SUBPIE_MT_curveTypeHandles(Menu):
+    bl_label = "Set Curve/Handle Type"
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
         
         # WEST
-        pie.operator("curve.handle_type_set").type = 'AUTOMATIC'
+        pie.operator("curve.handle_type_set", text='Automatic Handles').type = 'AUTOMATIC'
         # EAST
-        pie.operator("curve.handle_type_set").type = 'VECTOR'
+        pie.operator("curve.handle_type_set", text='Toggle Free/Align Handles').type = 'TOGGLE_FREE_ALIGN'
         # SOUTH
-        pie.separator()  
+        pie.operator("curve.spline_type_set", text='Bezier Curve').type = 'BEZIER'
         # NORTH
-        pie.operator("curve.handle_type_set").type = 'FREE_ALIGN'
+        pie.operator("curve.handle_type_set", text='Free Handles').type = 'FREE_ALIGN'
         # NORTH-WEST
-        pie.operator("curve.handle_type_set").type = 'TOGGLE_FREE_ALIGN'
+        pie.operator("curve.handle_type_set", text='Vector Handles').type = 'VECTOR'
         # NORTH-EAST
-        pie.operator("curve.handle_type_set").type = 'ALIGNED'
+        pie.operator("curve.handle_type_set", text='Aligned Handles').type = 'ALIGNED'
         # SOUTH-WEST
-        pie.separator()   
+        pie.operator("curve.spline_type_set", text='Poly Curve').type = 'POLY'
         # SOUTH-EAST
-        pie.operator("curve.normals_make_consistent")
+        pie.operator("curve.spline_type_set", text='NURBS Curve').type = 'NURBS'
 
 class VIEW3D_PIE_MT_mode(Menu):
     bl_label  = "Mode Selection"
@@ -194,18 +194,18 @@ class VIEW3D_PIE_MT_mode(Menu):
             # EAST
             pie.menu("VIEW3D_MT_edit_curve_context_menu", text="curve menu", icon="COLLAPSEMENU")
             # SOUTH
-            pie.operator("curve.spline_type_set", text='Set Type Bezier').type = 'BEZIER'
+            pie.operator("wm.call_menu_pie", text='Curve/Handle Type...').name = "SUBPIE_MT_curveTypeHandles"
             # NORTH
             pie.operator("curve.cyclic_toggle")
             
             # NORTH-WEST
-            pie.operator("wm.call_menu_pie", text='Set Handle Type...').name = "SUBPIE_MT_curveHandles"
+            pie.separator()
             # NORTH-EAST
             pie.operator("curve.switch_direction")
             # SOUTH-WEST
-            pie.operator("curve.spline_type_set", text='Set Type Poly').type = 'POLY'
+            pie.separator()
             # SOUTH-EAST
-            pie.operator("curve.spline_type_set", text='Set Type NURBS').type = 'NURBS'
+            pie.separator()
 
         elif context.mode == 'EDIT_GPENCIL':
 
@@ -380,7 +380,7 @@ class VIEW3D_PIE_MT_mode(Menu):
 registry = [
     SUBPIE_MT_objectSelect,
     SUBPIE_MT_meshSelect,
-    SUBPIE_MT_curveHandles,
+    SUBPIE_MT_curveTypeHandles,
     VIEW3D_PIE_MT_mode,
 ]
 
