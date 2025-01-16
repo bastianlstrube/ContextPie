@@ -113,7 +113,7 @@ class VIEW3D_PIE_MT_mode(Menu):
 
             obj = context.object
             
-            if obj is not None and obj.type in {'MESH', 'GPENCIL', 'FONT'}:
+            if obj is not None and obj.type in {'MESH', 'GPENCIL', 'GREASEPENCIL', 'FONT'}:
 
                 # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
                 pie.operator_enum("OBJECT_OT_mode_set", "mode")
@@ -207,7 +207,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-EAST
             pie.separator()
 
-        elif context.mode == 'EDIT_GPENCIL':
+        elif context.mode == 'EDIT_GPENCIL' or context.mode == 'EDIT_GREASE_PENCIL':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'

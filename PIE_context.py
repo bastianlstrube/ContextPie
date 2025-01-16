@@ -157,7 +157,7 @@ class SUBPIE_MT_divide(Menu):
             # EAST
             pie.operator("mesh.subdivide", text='Subdivide')
             # SOUTH
-            pie.separator()
+            pie.operator("mesh.rip_move")
             # NORTH
             pie.operator("mesh.poke")
             # NORTH-WEST
@@ -167,7 +167,7 @@ class SUBPIE_MT_divide(Menu):
             # SOUTH-WEST
             pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
             # SOUTH-EAST
-            pie.separator()
+            pie.operator("mesh.edge_split")
 
         if is_face_mode:
             # WEST
