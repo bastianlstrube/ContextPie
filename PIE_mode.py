@@ -301,7 +301,7 @@ class VIEW3D_PIE_MT_mode(Menu):
                     slider=True,
                 )
 
-        elif context.mode == 'PAINT_VERTEX':
+        elif context.mode == 'PAINT_WEIGHT':
 
             layout = self.layout
             layout.operator_context = 'INVOKE_REGION_WIN'
@@ -310,7 +310,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # WEST
             pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
             # EAST
-            pie.seperator()
+            pie.separator()
             # SOUTH
             box = pie.box()
             brush = context.tool_settings.weight_paint.brush
@@ -557,8 +557,7 @@ addon_keymaps = []
 
 def register():
 
-    categories = 
-    [
+    categories = [
         "Object Mode", 
         "Mesh", 
         "Curve", 
