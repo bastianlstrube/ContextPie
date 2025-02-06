@@ -76,6 +76,31 @@ class SUBPIE_MT_meshSelect(Menu):
         # SOUTH-EAST
         pie.operator("mesh.select_linked", text='Linked')
 
+class SUBPIE_MT_curveSelect(Menu):
+    bl_label = "Select"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("curve.select_previous", text='Previous')
+        # EAST
+        pie.operator("curve.select_next", text='Next')
+        # SOUTH
+        pie.operator("curve.select_similar", text='Similar Direction').type = 'DIRECTION'
+        # NORTH
+        pie.operator("curve.select_nth", text='Checker Deselect')
+        # NORTH-WEST
+        pie.operator("curve.select_all", text='Invert').action = 'INVERT'
+        # NORTH-EAST
+        pie.operator("curve.select_random", text='Random')
+        # SOUTH-WEST
+        pie.operator("curve.select_similar", text='Similar Radius').type = 'RADIUS'      
+        # SOUTH-EAST
+        pie.operator("curve.select_linked", text='Linked')
+
+
 class SUBPIE_MT_curveTypeHandles(Menu):
     bl_label = "Set Curve/Handle Type"
     def draw(self, context):
@@ -179,8 +204,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-WEST
             pie.menu("VIEW3D_MT_edit_mesh_faces", text="face menu", icon="COLLAPSEMENU")
             # SOUTH-EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Select...')
-            subPie.name = "SUBPIE_MT_meshSelect"  
+            pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_meshSelect"  
 
         elif context.mode == 'EDIT_CURVE':
 
@@ -205,7 +229,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-WEST
             pie.separator()
             # SOUTH-EAST
-            pie.separator()
+            pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_curveSelect"
 
         elif context.mode == 'EDIT_GPENCIL' or context.mode == 'EDIT_GREASE_PENCIL':
 
@@ -215,6 +239,107 @@ class VIEW3D_PIE_MT_mode(Menu):
             
             # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
+
+        elif context.mode == 'PAINT_GREASE_PENCIL':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+            
+            # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
+            pie.operator_enum("OBJECT_OT_mode_set", "mode")
+
+        elif context.mode == 'SCULPT_GREASE_PENCIL':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+            
+            # WEST # EAST # SOUTH # NORTH # NORTH-WEST # NORTH-EAST
+            pie.operator_enum("OBJECT_OT_mode_set", "mode")
+
+        elif context.mode == 'PAINT_TEXTURE':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+            # EAST
+            pie.separator()
+            # SOUTH
+            box = pie.box()
+            #show the colour picker directly
+
+            brush = context.tool_settings.image_paint.brush
+            capabilities = brush.image_paint_capabilities
+
+            if capabilities.has_color:
+                split = layout.split(factor=0.1)
+                UnifiedPaintPanel.prop_unified_color(split, context, brush, "color", text="")
+                UnifiedPaintPanel.prop_unified_color_picker(split, context, brush, "color", value_slider=True)
+                layout.prop(brush, "blend", text="")
+
+            if capabilities.has_radius:
+                UnifiedPaintPanel.prop_unified(
+                    layout,
+                    context,
+                    brush,
+                    "size",
+                    unified_name="use_unified_size",
+                    pressure_name="use_pressure_size",
+                    slider=True,
+                )
+                UnifiedPaintPanel.prop_unified(
+                    layout,
+                    context,
+                    brush,
+                    "strength",
+                    unified_name="use_unified_strength",
+                    pressure_name="use_pressure_strength",
+                    slider=True,
+                )
+
+        elif context.mode == 'PAINT_VERTEX':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+            # EAST
+            pie.seperator()
+            # SOUTH
+            box = pie.box()
+            brush = context.tool_settings.weight_paint.brush
+            UnifiedPaintPanel.prop_unified(
+                layout,
+                context,
+                brush,
+                "weight",
+                unified_name="use_unified_weight",
+                slider=True,
+            )
+            UnifiedPaintPanel.prop_unified(
+                layout,
+                context,
+                brush,
+                "size",
+                unified_name="use_unified_size",
+                pressure_name="use_pressure_size",
+                slider=True,
+            )
+            UnifiedPaintPanel.prop_unified(
+                layout,
+                context,
+                brush,
+                "strength",
+                unified_name="use_unified_strength",
+                pressure_name="use_pressure_strength",
+                slider=True,
+            )
 
         elif context.mode == 'SCULPT':
 
@@ -377,9 +502,53 @@ class VIEW3D_PIE_MT_mode(Menu):
             # SOUTH-EAST
             pie.separator()
 
+        elif context.mode == 'PAINT_VERTEX':
+
+            layout = self.layout
+            layout.operator_context = 'INVOKE_REGION_WIN'
+            pie = layout.menu_pie()
+
+            # WEST
+            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+            # EAST
+            pie.separator()
+            # SOUTH
+            box = pie.box()
+            #show the colour picker directly
+            brush = context.tool_settings.vertex_paint.brush
+            capabilities = brush.vertex_paint_capabilities
+
+            if capabilities.has_color:
+                split = layout.split(factor=0.1)
+                UnifiedPaintPanel.prop_unified_color(split, context, brush, "color", text="")
+                UnifiedPaintPanel.prop_unified_color_picker(split, context, brush, "color", value_slider=True)
+                layout.prop(brush, "blend", text="")
+
+            UnifiedPaintPanel.prop_unified(
+                layout,
+                context,
+                brush,
+                "size",
+                unified_name="use_unified_size",
+                pressure_name="use_pressure_size",
+                slider=True,
+            )
+            UnifiedPaintPanel.prop_unified(
+                layout,
+                context,
+                brush,
+                "strength",
+                unified_name="use_unified_strength",
+                pressure_name="use_pressure_strength",
+                slider=True,
+            )
+
+
+
 registry = [
     SUBPIE_MT_objectSelect,
     SUBPIE_MT_meshSelect,
+    SUBPIE_MT_curveSelect,
     SUBPIE_MT_curveTypeHandles,
     VIEW3D_PIE_MT_mode,
 ]
@@ -388,7 +557,20 @@ addon_keymaps = []
 
 def register():
 
-    categories = ["Object Mode", "Mesh", "Curve", "Grease Pencil Edit Mode", "Sculpt", "Pose", "Lattice", "Armature"]
+    categories = 
+    [
+        "Object Mode", 
+        "Mesh", 
+        "Curve", 
+        "Grease Pencil Edit Mode", 
+        "Sculpt", 
+        "Pose",
+        "Lattice",
+        "Armature",
+        "Vertex Paint",
+        "Weight Paint",
+        "Image Paint",
+    ]
 
     for cat in categories:
         register_hotkey(
