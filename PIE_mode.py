@@ -137,17 +137,17 @@ class VIEW3D_PIE_MT_mode(Menu):
             'OBJECT': self.draw_object_mode,
             'EDIT_MESH': self.draw_edit_mesh_mode,
             'EDIT_CURVE': self.draw_edit_curve_mode,
+            'POSE': self.draw_pose_mode,
+            'EDIT_LATTICE': self.draw_edit_lattice_mode,
+            'EDIT_ARMATURE': self.draw_edit_armature_mode,
             'EDIT_GPENCIL': self.draw_edit_gpencil_mode,
             'EDIT_GREASE_PENCIL': self.draw_edit_gpencil_mode,
             'PAINT_GREASE_PENCIL': self.draw_paint_gpencil_mode,
             'SCULPT_GREASE_PENCIL': self.draw_sculpt_gpencil_mode,
+            'PAINT_VERTEX': self.draw_paint_vertex_mode,
             'PAINT_TEXTURE': self.draw_paint_texture_mode,
             'PAINT_WEIGHT': self.draw_paint_weight_mode,
             'SCULPT': self.draw_sculpt_mode,
-            'POSE': self.draw_pose_mode,
-            'EDIT_LATTICE': self.draw_edit_lattice_mode,
-            'EDIT_ARMATURE': self.draw_edit_armature_mode,
-            'PAINT_VERTEX': self.draw_paint_vertex_mode
         }
 
         if context.mode in mode_actions:
@@ -198,95 +198,6 @@ class VIEW3D_PIE_MT_mode(Menu):
         pie.separator()
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_curveSelect"
 
-    def draw_edit_gpencil_mode(self, pie, context):
-        pie.operator_enum("OBJECT_OT_mode_set", "mode")
-
-    def draw_paint_gpencil_mode(self, pie, context):
-        pie.operator_enum("OBJECT_OT_mode_set", "mode")
-
-    def draw_sculpt_gpencil_mode(self, pie, context):
-        pie.operator_enum("OBJECT_OT_mode_set", "mode")
-
-    def draw_paint_texture_mode(self, pie, context):
-        pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
-        pie.separator()
-        box = pie.box()
-        brush = context.tool_settings.image_paint.brush
-        if brush.image_paint_capabilities.has_color:
-            UnifiedPaintPanel.prop_unified_color(box, context, brush, "color", text="")
-            UnifiedPaintPanel.prop_unified_color_picker(box, context, brush, "color", value_slider=True)
-        if brush.image_paint_capabilities.has_radius:
-            UnifiedPaintPanel.prop_unified(box, context, brush, "size", slider=True)
-            UnifiedPaintPanel.prop_unified(box, context, brush, "strength", slider=True)
-
-    def draw_paint_weight_mode(self, pie, context):
-        pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
-        pie.separator()
-        box = pie.box()
-        brush = context.tool_settings.weight_paint.brush
-        UnifiedPaintPanel.prop_unified(box, context, brush, "weight", slider=True)
-        UnifiedPaintPanel.prop_unified(box, context, brush, "size", slider=True)
-        UnifiedPaintPanel.prop_unified(box, context, brush, "strength", slider=True)
-
-    def draw_sculpt_mode(self, pie, context):
-            # WEST
-            pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
-            # EAST
-            #pie.prop(bpy.context.view_layer.objects.active, "use_dynamic_topology_sculpting", toggle=True)
-            pie.operator("sculpt.dynamic_topology_toggle", text="Dyntopo Toggle") #, icon="OBJECT_DATAMODE")
-            # SOUTH
-            box = pie.box()
-            #show the colour picker directly
-            brush = context.tool_settings.sculpt.brush
-            capabilities = brush.sculpt_capabilities
-
-            if capabilities.has_color:
-                split = box.split(factor=0.1)
-                UnifiedPaintPanel.prop_unified_color(split, context, brush, "color", text="")
-                UnifiedPaintPanel.prop_unified_color_picker(split, context, brush, "color", value_slider=True)
-                box.prop(brush, "blend", text="")
-
-            ups = context.tool_settings.unified_paint_settings
-            size = "size"
-            size_owner = ups if ups.use_unified_size else brush
-            if size_owner.use_locked_size == 'SCENE':
-                size = "unprojected_radius"
-
-            UnifiedPaintPanel.prop_unified(box, context, brush, size, 
-                                            unified_name="use_unified_size", pressure_name="use_pressure_size",
-                                            text="Radius",
-                                            slider=True,
-                                            )
-
-            UnifiedPaintPanel.prop_unified(box, context, brush,
-                                            "strength",
-                                            unified_name="use_unified_strength",
-                                            pressure_name="use_pressure_strength",
-                                            slider=True,
-                                            )
-
-            if capabilities.has_auto_smooth:
-                box.prop(brush, "auto_smooth_factor", slider=True)
-
-            if capabilities.has_normal_weight:
-                box.prop(brush, "normal_weight", slider=True)
-
-            if capabilities.has_pinch_factor:
-                text = "Pinch"
-                if brush.sculpt_tool in {'BLOB', 'SNAKE_HOOK'}:
-                    text = "Magnify"
-                box.prop(brush, "crease_pinch_factor", slider=True, text=text)
-
-            if capabilities.has_rake_factor:
-                box.prop(brush, "rake_factor", slider=True)
-
-            if capabilities.has_plane_offset:
-                box.prop(brush, "plane_offset", slider=True)
-                box.prop(brush, "plane_trim", slider=True, text="Distance")
-
-            if capabilities.has_height:
-                box.prop(brush, "height", slider=True, text="Height")
-
     def draw_pose_mode(self, pie, context):
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
         pie.separator()
@@ -303,15 +214,104 @@ class VIEW3D_PIE_MT_mode(Menu):
         pie.menu("VIEW3D_MT_edit_armature_names")
         pie.separator()
 
+    ## GREASE PENCIL MODES
+    def draw_edit_gpencil_mode(self, pie, context):
+        pie.operator_enum("OBJECT_OT_mode_set", "mode")
+
+    def draw_paint_gpencil_mode(self, pie, context):
+        pie.operator_enum("OBJECT_OT_mode_set", "mode")
+
+    def draw_sculpt_gpencil_mode(self, pie, context):
+        pie.operator_enum("OBJECT_OT_mode_set", "mode")
+
+    ## BRUSH MODE SECTION
     def draw_paint_vertex_mode(self, pie, context):
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
         pie.separator()
         box = pie.box()
         brush = context.tool_settings.vertex_paint.brush
-        UnifiedPaintPanel.prop_unified_color(box, context, brush, "color", text="")
-        UnifiedPaintPanel.prop_unified_color_picker(box, context, brush, "color", value_slider=True)
-        UnifiedPaintPanel.prop_unified(box, context, brush, "size", slider=True)
-        UnifiedPaintPanel.prop_unified(box, context, brush, "strength", slider=True)
+        capabilities = brush.vertex_paint_capabilities
+
+        self.draw_brush_properties(box, context, brush, capabilities)
+
+    def draw_paint_texture_mode(self, pie, context):
+        pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        pie.separator()
+        box = pie.box()
+        brush = context.tool_settings.image_paint.brush
+        capabilities = brush.image_paint_capabilities
+
+        self.draw_brush_properties(box, context, brush, capabilities)
+
+    def draw_paint_weight_mode(self, pie, context):
+        pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        pie.separator()
+        box = pie.box()
+        brush = context.tool_settings.weight_paint.brush
+        capabilities = brush.weight_paint_capabilities
+
+        self.draw_brush_properties(box, context, brush, capabilities)
+
+    def draw_sculpt_mode(self, pie, context):
+        pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        pie.operator("sculpt.dynamic_topology_toggle", text="Dyntopo Toggle")
+        box = pie.box()
+        brush = context.tool_settings.sculpt.brush
+        capabilities = brush.sculpt_capabilities
+
+        self.draw_brush_properties(box, context, brush, capabilities)
+
+    def draw_brush_properties(self, box, context, brush, capabilities):
+        properties = []
+
+        if hasattr(capabilities, "has_color") and capabilities.has_color:
+            split = box.split(factor=0.1)
+            UnifiedPaintPanel.prop_unified_color(split, context, brush, "color", text="")
+            UnifiedPaintPanel.prop_unified_color_picker(split, context, brush, "color", value_slider=True)
+            if hasattr(brush, "blend"):
+                box.prop(brush, "blend", text="")
+
+        if hasattr(capabilities, "has_radius") and capabilities.has_radius:
+            properties.extend(["size", "strength"])
+
+        if hasattr(capabilities, "has_weight") and capabilities.has_weight:
+            properties.append("weight")
+
+        sculpt_properties = [
+            "auto_smooth_factor", "normal_weight", "crease_pinch_factor",
+            "rake_factor", "plane_offset", "plane_trim", "height"
+        ]
+
+        for prop in sculpt_properties:
+            if hasattr(capabilities, f"has_{prop}") and getattr(capabilities, f"has_{prop}"):
+                properties.append(prop)
+
+        property_names = {
+            "crease_pinch_factor": ("Pinch", "Magnify"),
+            "plane_trim": "Distance",
+            "height": "Height",
+            "weight": "Weight",
+            "size": "Size",
+            "strength": "Strength"
+        }
+
+        for prop in properties:
+            text = property_names.get(prop)
+            if isinstance(text, tuple):
+                text = text if getattr(brush, "sculpt_tool", None) not in {'BLOB', 'SNAKE_HOOK'} else text
+
+            try:  # Handle potential exceptions during property drawing
+                UnifiedPaintPanel.prop_unified(
+                    box, context, brush, prop,
+                    unified_name=f"use_unified_{prop}",
+                    pressure_name=f"use_pressure_{prop}",
+                    text=text, slider=True,
+                )
+            except Exception as e:
+                print(f"Error drawing property {prop}: {e}")  # Print error message
+
+
+
 
 
 """
