@@ -96,9 +96,9 @@ class IMAGE_PIE_MT_uvContext(Menu):
         # NORTH-EAST
         pie.operator("uv.average_islands_scale")
         # SOUTH-WEST
-        pie.operator("mesh.mark_seam", text='Mark Seam').clear = False
+        pie.operator("uv.mark_seam", text='Mark Seam').clear = False
         # SOUTH-EAST
-        pie.operator("mesh.mark_seam", text='Clear Seam').clear = True
+        pie.operator("uv.mark_seam", text='Clear Seam').clear = True
 
         # Static face menu
         pie.separator()
