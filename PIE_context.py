@@ -569,9 +569,6 @@ class SUBPIE_MT_sculpt_brush_select_special(Menu):
         # 3 - BOTTOM - RIGHT
         draw_brush_operator(pie, 'Smear Multires Displacement', 'displacement_smear')
 
-
-
-
 # Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
     bl_label    = "Context Pie"
@@ -1085,7 +1082,6 @@ class VIEW3D_PIE_MT_context(Menu):
                     layout.operator("armature.dissolve", text="Dissolve Bones")
             '''
 
-
 def blender_uses_brush_assets():
     return 'asset_activate' in dir(bpy.ops.brush)
 
@@ -1158,6 +1154,8 @@ registry = [
     SUBPIE_MT_sculpt_brush_select_transform,
     SUBPIE_MT_sculpt_brush_select_volume,
     SUBPIE_MT_sculpt_brush_select_special,
+    SUBPIE_MT_vertex_color_ops,
+    SUBPIE_MT_vertex_data_transfer,
     VIEW3D_PIE_MT_context,
 ]
 

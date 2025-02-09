@@ -100,7 +100,6 @@ class SUBPIE_MT_curveSelect(Menu):
         # SOUTH-EAST
         pie.operator("curve.select_linked", text='Linked')
 
-
 class SUBPIE_MT_curveTypeHandles(Menu):
     bl_label = "Set Curve/Handle Type"
     def draw(self, context):
@@ -262,7 +261,19 @@ class VIEW3D_PIE_MT_mode(Menu):
         self.draw_brush_properties(box, context, brush, capabilities)
 
     def draw_brush_properties(self, box, context, brush, capabilities):
-        properties = []
+
+        def draw_property(box, context, brush, prop, text=None):
+            unified_name = f"use_unified_{prop}"
+            pressure_name = f"use_pressure_{prop}"
+            try:
+                UnifiedPaintPanel.prop_unified(
+                    box, context, brush, prop,
+                    unified_name=unified_name,
+                    pressure_name=pressure_name,
+                    text=text, slider=True,
+                )
+            except Exception as e:
+                print(f"Error drawing property {prop}: {e}")
 
         if hasattr(capabilities, "has_color") and capabilities.has_color:
             split = box.split(factor=0.1)
@@ -271,44 +282,33 @@ class VIEW3D_PIE_MT_mode(Menu):
             if hasattr(brush, "blend"):
                 box.prop(brush, "blend", text="")
 
-        if hasattr(capabilities, "has_radius") and capabilities.has_radius:
-            properties.extend(["size", "strength"])
+        ups = context.tool_settings.unified_paint_settings
+        size_prop = "size"
+        size_owner = ups if ups.use_unified_size else brush
+        if size_owner.use_locked_size == 'SCENE':
+            size_prop = "unprojected_radius"
 
-        if hasattr(capabilities, "has_weight") and capabilities.has_weight:
-            properties.append("weight")
+        draw_property(box, context, brush, size_prop, text="Radius")
+        draw_property(box, context, brush, "strength", text="Strength")
 
-        sculpt_properties = [
-            "auto_smooth_factor", "normal_weight", "crease_pinch_factor",
-            "rake_factor", "plane_offset", "plane_trim", "height"
-        ]
 
-        for prop in sculpt_properties:
-            if hasattr(capabilities, f"has_{prop}") and getattr(capabilities, f"has_{prop}"):
-                properties.append(prop)
-
-        property_names = {
+        sculpt_properties = {
+            "auto_smooth_factor": "Auto Smooth",
+            "normal_weight": "Normal Weight",
             "crease_pinch_factor": ("Pinch", "Magnify"),
+            "rake_factor": "Rake Factor",
+            "plane_offset": "Plane Offset",
             "plane_trim": "Distance",
             "height": "Height",
-            "weight": "Weight",
-            "size": "Size",
-            "strength": "Strength"
+            "weight": "Weight"
         }
 
-        for prop in properties:
-            text = property_names.get(prop)
-            if isinstance(text, tuple):
-                text = text if getattr(brush, "sculpt_tool", None) not in {'BLOB', 'SNAKE_HOOK'} else text
+        for prop, text in sculpt_properties.items():
+            if hasattr(capabilities, f"has_{prop}") and getattr(capabilities, f"has_{prop}"):
+                if isinstance(text, tuple):
+                    text = text[1] if brush.sculpt_tool in {'BLOB', 'SNAKE_HOOK'} else text[0]
+                draw_property(box, context, brush, prop, text=text)
 
-            try:  # Handle potential exceptions during property drawing
-                UnifiedPaintPanel.prop_unified(
-                    box, context, brush, prop,
-                    unified_name=f"use_unified_{prop}",
-                    pressure_name=f"use_pressure_{prop}",
-                    text=text, slider=True,
-                )
-            except Exception as e:
-                print(f"Error drawing property {prop}: {e}")  # Print error message
 
 
 
@@ -769,56 +769,3 @@ def register():
             key_cat=cat,
         )
 
-    
-    '''wm = bpy.context.window_manager
-    if wm.keyconfigs.addon:
-        km = wm.keyconfigs.addon.keymaps.new(name='Object Mode')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Mesh')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Curve')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Grease Pencil Edit Mode')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Sculpt')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Pose')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))
-
-        km = wm.keyconfigs.addon.keymaps.new(name='Lattice')#, space_type='EMPTY')
-        kmi = km.keymap_items.new('wm.call_menu_pie', 'RIGHTMOUSE', 'PRESS', shift=False)
-        kmi.properties.name = "VIEW3D_PIE_MT_mode"
-        addon_keymaps.append((km, kmi))'''
-
-'''def unregister():
-    for cls in registry:
-        bpy.utils.unregister_class(cls)
-
-    wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
-    if kc:
-        for km, kmi in addon_keymaps:
-            km.keymap_items.remove(kmi)
-    addon_keymaps.clear()
-
-if __name__ == "__main__":
-    register()
-
-    #bpy.ops.wm.call_menu_pie(name="VIEW3D_PIE_mode")'''
