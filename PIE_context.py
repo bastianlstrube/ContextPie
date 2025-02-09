@@ -569,6 +569,69 @@ class SUBPIE_MT_sculpt_brush_select_special(Menu):
         # 3 - BOTTOM - RIGHT
         draw_brush_operator(pie, 'Smear Multires Displacement', 'displacement_smear')
 
+
+class SUBPIE_MT_add_mesh(Menu):
+    bl_label = "Mesh"
+    def draw(self, context):
+        mesh_pie = self.layout.menu_pie()
+        mesh_pie.operator("mesh.primitive_cube_add", text="Cube")
+        mesh_pie.operator("mesh.primitive_plane_add", text="Plane")
+        mesh_pie.operator("mesh.primitive_uv_sphere_add", text="UV Sphere")
+        mesh_pie.operator("mesh.primitive_ico_sphere_add", text="Ico Sphere")
+        mesh_pie.operator("mesh.primitive_cylinder_add", text="Cylinder")
+        mesh_pie.operator("mesh.primitive_cone_add", text="Cone")
+        mesh_pie.operator("mesh.primitive_torus_add", text="Torus")
+        mesh_pie.operator("mesh.primitive_grid_add", text="Grid")
+
+class SUBPIE_MT_add_curves_text(Menu):
+    bl_label = "Curves & Text"
+    def draw(self, context):
+        curves_text_pie = self.layout.menu_pie()
+        curves_text_pie.operator("curve.primitive_bezier_curve_add", text="Bezier")
+        curves_text_pie.operator("curve.primitive_bezier_circle_add", text="Circle")
+        curves_text_pie.operator("curve.primitive_nurbs_circle_add", text="NURBS Circle")
+        curves_text_pie.operator("curve.primitive_nurbs_curve_add", text="NURBS Curve")
+        curves_text_pie.operator("curve.primitive_nurbs_path_add", text="NURBS Path")
+        curves_text_pie.operator("object.text_add", text="Text")
+
+class SUBPIE_MT_add_empties(Menu):
+    bl_label = "Empties"
+    def draw(self, context):
+        empties_armatures_pie = self.layout.menu_pie()
+        empties_armatures_pie.operator_enum("object.empty_add", "type")  # Use operator_enum
+
+class SUBPIE_MT_add_lights_probes(Menu):
+    bl_label = "Lights & Probes"
+    def draw(self, context):
+        lights_probes_pie = self.layout.menu_pie()
+        lights_probes_pie.operator_enum("object.light_add", "type")  # Use operator_enum
+        lights_probes_pie.operator_enum("object.lightprobe_add", "type")  # Use operator_enum
+
+class SUBPIE_MT_add_cameras_speakers(Menu):
+    bl_label = "Camera, Images & Speakers"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator("object.camera_add", text="Camera")
+        pie.operator("object.speaker_add", text="Speaker")
+        pie.operator("object.empty_image_add", text="Reference").background = False
+        pie.operator("object.empty_image_add", text="Background").background = True
+        pie.operator("image.import_as_mesh_planes", text="Image Mesh Plane")
+
+class SUBPIE_MT_add_greasepencil(Menu):
+    bl_label = "Grease Pencil"
+    def draw(self, context):
+        gp_instances_pie = self.layout.menu_pie()
+
+        # Grease Pencil (Updated for Blender 4.3+, with layer creation)
+        gp_instances_pie.operator_enum("object.grease_pencil_add", "type")
+
+class SUBPIE_MT_add_forcefield(Menu):
+    bl_label = "Volumes & Force Fields"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("object.effector_add", "type")
+
+
 # Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
     bl_label    = "Context Pie"
@@ -810,6 +873,16 @@ class VIEW3D_PIE_MT_context(Menu):
 
                 
             else:
+                pie.operator("wm.call_menu_pie", text="Mesh...").name = "SUBPIE_MT_add_mesh"
+                pie.operator("wm.call_menu_pie", text="Curves & Text...").name = "SUBPIE_MT_add_curves_text"
+                pie.operator("wm.call_menu_pie", text="Empties...").name = "SUBPIE_MT_add_empties"
+                pie.operator("wm.call_menu_pie", text="Lights & Probes...").name = "SUBPIE_MT_add_lights_probes"
+                pie.operator("wm.call_menu_pie", text="Camera & Images...").name = "SUBPIE_MT_add_cameras_speakers"
+                pie.operator("wm.call_menu_pie", text="Grease Pencil...").name = "SUBPIE_MT_add_greasepencil"
+                pie.operator("wm.call_menu_pie", text="Force Fields...").name = "SUBPIE_MT_add_forcefield"
+                pie.operator("object.armature_add", text="Armature")
+
+                '''
                 # WEST
                 pie.operator("mesh.primitive_cube_add")
                 # EAST
@@ -827,7 +900,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.primitive_cone_add")
                 # SOUTH-EAST
                 pie.operator("mesh.primitive_ico_sphere_add")
-                '''
+
                 PUT MENU WITH CURVES
                 # Static face menu
                 pie.separator()
@@ -1154,8 +1227,13 @@ registry = [
     SUBPIE_MT_sculpt_brush_select_transform,
     SUBPIE_MT_sculpt_brush_select_volume,
     SUBPIE_MT_sculpt_brush_select_special,
-    SUBPIE_MT_vertex_color_ops,
-    SUBPIE_MT_vertex_data_transfer,
+    SUBPIE_MT_add_mesh,
+    SUBPIE_MT_add_curves_text,
+    SUBPIE_MT_add_empties,
+    SUBPIE_MT_add_lights_probes,
+    SUBPIE_MT_add_cameras_speakers,
+    SUBPIE_MT_add_greasepencil,
+    SUBPIE_MT_add_forcefield,
     VIEW3D_PIE_MT_context,
 ]
 
