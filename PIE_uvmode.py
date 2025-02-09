@@ -80,19 +80,21 @@ class SUBPIE_MT_uvTools(Menu):
         
         # WEST
         o = pie.operator('wm.tool_set_by_id', text="Pinch")
-        o.name = 'builtin_brush.Pinch'
+        o.name = 'sculpt.uv_sculpt_pinch'
         # EAST
-        pie.separator()
+        o = pie.operator('wm.tool_set_by_id', text="Select Box")
+        o.name = 'builtin.select_box'
         # SOUTH
         pie.separator()
         # NORTH
         o = pie.operator('wm.tool_set_by_id', text="Grab")
-        o.name = 'builtin_brush.Grab'
+        o.name = 'sculpt.uv_sculpt_grab'
         # NORTH-WEST
         o = pie.operator('wm.tool_set_by_id', text="Relax")
-        o.name = 'builtin_brush.Relax'
+        o.name = 'sculpt.uv_sculpt_relax'
         # NORTH-EAST
-        pie.separator()
+        o = pie.operator('wm.tool_set_by_id', text="Rip Region")
+        o.name = 'builtin.rip_region'
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST
