@@ -294,6 +294,7 @@ class SUBPIE_MT_curveDelete(Menu):
         # SOUTH-EAST
         pie.separator()
 
+
 # OBJECT MODE SUB MENUS
 # Sub Pie for object applying transform
 class SUBPIE_MT_applyTransform(Menu):
@@ -496,7 +497,6 @@ class SUBPIE_MT_sculpt_brush_select_contrast(Menu):
         draw_brush_operator(pie, 'Smooth', 'smooth')
         # 3 - BOTTOM - RIGHT
 
-
 class SUBPIE_MT_sculpt_brush_select_transform(Menu):
     bl_idname = "SUBPIE_MT_sculpt_brush_select_transform"
     bl_label = "Transform Brushes"
@@ -521,7 +521,6 @@ class SUBPIE_MT_sculpt_brush_select_transform(Menu):
         # 3 - BOTTOM - RIGHT
         draw_brush_operator(pie, 'Thumb', 'thumb')
 
-
 class SUBPIE_MT_sculpt_brush_select_volume(Menu):
     bl_idname = "SUBPIE_MT_sculpt_brush_select_volume"
     bl_label = "Volume Brushes"
@@ -544,7 +543,6 @@ class SUBPIE_MT_sculpt_brush_select_volume(Menu):
         draw_brush_operator(pie, 'Clay Thumb', 'clay_thumb')
         # 3 - BOTTOM - RIGHT
         draw_brush_operator(pie, 'Layer', 'layer')
-
 
 class SUBPIE_MT_sculpt_brush_select_special(Menu):
     bl_idname = "SUBPIE_MT_sculpt_brush_select_special"
@@ -569,7 +567,7 @@ class SUBPIE_MT_sculpt_brush_select_special(Menu):
         # 3 - BOTTOM - RIGHT
         draw_brush_operator(pie, 'Smear Multires Displacement', 'displacement_smear')
 
-
+### Add Objects Categories Menus, when nothing is selected
 class SUBPIE_MT_add_mesh(Menu):
     bl_label = "Mesh"
     def draw(self, context):
@@ -639,7 +637,7 @@ class VIEW3D_PIE_MT_context(Menu):
     def draw(self, context):
 
         if context.mode == 'EDIT_MESH':
-
+            ''' COUNTING LENGTH OF SELECTION LISTS FOR EACH COMPONENT TYPE
             def count_selected_items_for_objects_in_mode():
                 selected_verts_len = 0
                 selected_edges_len = 0
@@ -650,21 +648,12 @@ class VIEW3D_PIE_MT_context(Menu):
                     selected_edges_len += e
                     selected_faces_len += f
                 return (selected_verts_len, selected_edges_len, selected_faces_len)
+            
+            selected_verts_len, selected_edges_len, selected_faces_len = count_selected_items_for_objects_in_mode()
+            del count_selected_items_for_objects_in_mode
+            '''
 
             is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
-            selected_verts_len, selected_edges_len, selected_faces_len = count_selected_items_for_objects_in_mode()
-
-            del count_selected_items_for_objects_in_mode
-
-            # If nothing is selected
-            # (disabled for now until it can be made more useful).
-            '''
-            # If nothing is selected
-            if not (selected_verts_len or selected_edges_len or selected_faces_len):
-                layout.menu("VIEW3D_PIE_mesh_add", text="Add")
-
-                return
-            '''
 
             # Else something is selected
             layout = self.layout
