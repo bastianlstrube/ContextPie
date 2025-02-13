@@ -352,7 +352,7 @@ class SUBPIE_MT_shadeObject(Menu):
         # SOUTH-WEST
         pie.operator("object.shade_flat")
         # SOUTH-EAST
-        pie.separator()
+        pie.operator("object.shade_auto_smooth")
 
 class SUBPIE_MT_LinkTransfer(Menu):
     bl_label = "Link"
