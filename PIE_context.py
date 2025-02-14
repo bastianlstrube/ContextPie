@@ -693,38 +693,26 @@ class VIEW3D_PIE_MT_context(Menu):
                 gap.scale_y = 8
                 dropdown_menu = dropdown.box().column()
                 dropdown_menu.scale_y=1
-                dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
                 dropdown_menu.operator("mesh.bisect", text = "Bisect")
-                dropdown_menu.operator("transform.edge_crease", text = "Crease Tool")
                 separatePie = dropdown_menu.operator("wm.call_menu_pie", text='Separate...').name = "SUBPIE_MT_separate"
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Crease Tool", icon="ops.generic.select")
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Connect Components")
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Circularize Component")
                 
 
             elif is_edge_mode:
-                #render = context.scene.render
 
                 # WEST
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
-                subPie = pie.operator("wm.call_menu_pie", text='Connect...')
-                subPie.name = "SUBPIE_MT_connect"
+                pie.operator("wm.call_menu_pie", text='Connect...').name = "SUBPIE_MT_connect"
                 # SOUTH
                 pie.operator("mesh.extrude_edges_move", text="Extrude Edges")
                 # NORTH
-                subPie = pie.operator("wm.call_menu_pie", text='Merge...')
-                subPie.name = "SUBPIE_MT_merge"
-                #pie.operator("mesh.merge", text="Merge")
+                pie.operator("wm.call_menu_pie", text='Merge...').name = "SUBPIE_MT_merge"
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                #pie.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
-                subPie = pie.operator("wm.call_menu_pie", text='Divide...')
-                subPie.name = "SUBPIE_MT_divide"
+                pie.operator("wm.call_menu_pie", text='Divide...').name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
-                subPie = pie.operator("wm.call_menu_pie", text='Delete...')
-                subPie.name = "SUBPIE_MT_PieDelete"
+                pie.operator("wm.call_menu_pie", text='Delete...').name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
                 pie.operator("transform.edge_slide", text="Slide Edge")
                 
@@ -737,22 +725,15 @@ class VIEW3D_PIE_MT_context(Menu):
                 gap.scale_y = 8
                 dropdown_menu = dropdown.box().column()
                 dropdown_menu.scale_y=1
-                dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
-                dropdown_menu.operator("transform.edge_crease", text = "Crease Tool")
                 dropdown_menu.operator("mesh.mark_sharp", text = "Mark Sharp").clear = False
                 dropdown_menu.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
-                dropdown_menu.operator("mesh.subdivide", text = "Add Division To Edge")
-                dropdown_menu.operator("mesh.edge_split")
-                dropdown_menu.operator("mesh.edge_rotate").use_ccw=False
-                dropdown_menu.operator("mesh.edge_rotate").use_ccw=True
-                dropdown_menu.operator("mesh.rip_move", text = "Detach Components")
-                subPie = dropdown_menu.operator("wm.call_menu_pie", text='Separate')
-                subPie.name = "SUBPIE_MT_separate"
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Circularize Component")
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Edit Edge Flow")
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Offset Edge Loop Tool")
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Insert Edgeloop Tool")
-                #dropdown_menu.operator("mesh.primitive_cube_add", text = "Connect Components")
+                dropdown_menu.operator("mesh.edge_rotate", text="Rotate CW").use_ccw=False
+                dropdown_menu.operator("mesh.edge_rotate", text="Rotate CCW").use_ccw=True
+                dropdown_menu.operator("mesh.mark_seam", text='Mark Seam').clear = False
+                dropdown_menu.operator("mesh.mark_seam", text='Clear Seam').clear = True
+                dropdown_menu.operator("transform.edge_crease")
+                dropdown_menu.operator("transform.edge_bevelweight")
+                dropdown_menu.operator("wm.call_menu_pie", text='Separate').name = "SUBPIE_MT_separate"
                 
 
             elif is_face_mode:
@@ -791,10 +772,8 @@ class VIEW3D_PIE_MT_context(Menu):
                 gap.scale_y = 8
                 dropdown_menu = dropdown.box().column()
                 dropdown_menu.scale_y=1
-                dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
                 dropdown_menu.operator("mesh.bisect")
                 dropdown_menu.operator("mesh.flip_normals")
-                dropdown_menu.operator("mesh.rip_move", text = "Extract Faces")
 
         if context.mode == 'EDIT_CURVE':
 
