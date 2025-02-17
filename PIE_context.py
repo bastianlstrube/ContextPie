@@ -435,6 +435,102 @@ class SUBPIE_MT_inbetweens(Menu):
         # SOUTH-EAST
         pie.operator("pose.relax")
 
+# Sub Pie Menu for propagate Options
+class SUBPIE_MT_propagate(Menu):
+    bl_label = "propagate"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("pose.propagate",text =  "Selected Markers").mode = 'SELECTED_MARKERS'
+
+        # EAST
+        pie.operator("pose.propagate",text = "Selected Keys").mode = 'SELECTED_KEYS'
+
+        # SOUTH
+        pie.operator("pose.propagate",text = "Last Key").mode = 'LAST_KEY'
+
+        # NORTH
+        pie.operator("pose.propagate",text = "Next Key").mode = 'NEXT_KEY'
+        
+        # NORTH-WEST
+        pie.operator("pose.propagate",text = "Before Frame").mode = 'BEFORE_FRAME'
+               
+        # NORTH-EAST
+        pie.operator("pose.propagate",text = "Before End").mode = 'BEFORE_END'
+
+        # SOUTH-WEST
+        pie.separator()
+
+        # SOUTH-EAST
+        pie.separator()
+
+# Sub Pie Menu for Constraints Option
+class SUBPIE_MT_constraints(Menu):
+    bl_label = "constraints"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.separator()
+
+        # EAST
+        pie.separator()
+
+        # SOUTH
+        pie.operator("pose.constraints_clear",text = "Clear Constraints")
+
+        # NORTH
+        pie.operator("pose.constraint_add_with_targets",text = "Constraint with targets")
+
+        # NORTH-WEST
+        pie.separator()
+               
+        # NORTH-EAST
+        pie.separator()
+
+        # SOUTH-WEST
+        pie.separator()
+
+        # SOUTH-EAST
+        pie.separator()
+    
+# Sub Pie Menu for Inverse Kinametics    
+class SUBPIE_MT_ik(Menu):
+    bl_label = "ik"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.separator()
+
+        # EAST
+        pie.separator()
+        
+        # SOUTH
+        pie.operator("pose.ik_clear",text = "Clear IK")
+
+        # NORTH
+        pie.operator("pose.ik_add",text = "Add IK")
+        
+        # NORTH-WEST
+        pie.separator()
+
+        # NORTH-EAST
+        pie.separator()
+
+        # SOUTH-WEST
+        pie.separator()
+
+        # SOUTH-EAST
+        pie.separator()
+
 # Sub Pie Menu for animation motion paths
 class SUBPIE_MT_motionpaths(Menu):
     bl_label = "Motion Paths"
@@ -956,13 +1052,13 @@ class VIEW3D_PIE_MT_context(Menu):
             # NORTH
             pie.operator("wm.call_menu_pie", text='Motion Paths...').name = "SUBPIE_MT_motionpaths"
             # NORTH-WEST
-            pie.separator()
+            pie.operator("wm.call_menu_pie", text='Constraints...').name = "SUBPIE_MT_constraints"
             # NORTH-EAST
             pie.operator("pose.paste", text='Paste Flipped').flipped = True
             # SOUTH-WEST
-            pie.separator()
+            pie.operator("wm.call_menu_pie", text='Propagate...').name = "SUBPIE_MT_propagate"
             # SOUTH-EAST
-            pie.separator()
+            pie.operator("wm.call_menu_pie", text='IK...').name = "SUBPIE_MT_ik"
             '''
             VIEW3D_MT_pose_context_menu
             layout.operator("anim.keyframe_insert", text="Insert Keyframe")
@@ -1189,6 +1285,9 @@ registry = [
     SUBPIE_MT_LinkTransfer,
     SUBPIE_MT_CopyTransfer,
     SUBPIE_MT_inbetweens,
+    SUBPIE_MT_propagate,
+    SUBPIE_MT_constraints,
+    SUBPIE_MT_ik,
     SUBPIE_MT_motionpaths,
     SUBPIE_MT_PieDelete,
     SUBPIE_MT_sculpt_brush_select_contrast,
