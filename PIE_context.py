@@ -294,8 +294,59 @@ class SUBPIE_MT_curveDelete(Menu):
         # SOUTH-EAST
         pie.separator()
 
-
 # OBJECT MODE SUB MENUS
+# Join + Boolean
+class SUBPIE_MT_joinMeshes(Menu):
+    bl_label = "Join"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        obj = context.object
+        sel = context.selected_objects
+
+        # WEST
+        if obj is not None and len(sel) > 1:
+            if obj.type in {'MESH'}:
+                for s in sel:
+                    if s == obj:
+                        continue
+                    modType = 'DIFFERENCE'
+                    modname =    "PieBoolean_" + modType.title()
+                    modCollection = obj.users_collection
+
+                    mod = s.modifiers.get(modname)
+                    if mod:
+                        sCollection = modCollection
+                        modCollection = bpy.ops.collection.create(s.name + "_" + modname)
+                        sCollection.children.link(modCollection)
+
+                        mod.operand_type = 'COLLECTION'
+                        mod.collection = modCollection
+                        mod.operation = modType
+                    else:
+                        mod = s.modifiers.new(modname, 'BOOLEAN')
+                        mod.operation = modType
+                        mod.object = obj
+        else:
+            pie.separator()
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.separator()
+        # NORTH
+        pie.operator("object.join")
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
+
+
 # Sub Pie for object applying transform
 class SUBPIE_MT_applyTransform(Menu):
     bl_label = "Apply"
@@ -333,6 +384,37 @@ class SUBPIE_MT_applyTransform(Menu):
         # SOUTH-EAST
         pie.separator()
 
+class OBJECT_OT_edit_display_type(bpy.types.Operator):
+    bl_idname = "object.edit_display_type"
+    bl_label = "Set Display Type"
+    bl_description = "Sets the display type for selected objects"
+
+    '''
+    display_type: bpy.props.EnumProperty(
+        name="Display Type",
+        description="How to display the object",
+        items=[
+            ('SOLID', "Solid", "Rendered normally"),
+            ('WIRE', "Wireframe", "Display as wireframe"),
+            ('BOUNDS', "Bounding Box", "Display as bounding box"),
+            ('TEXTURED', "Textured", "Display with textures (if available)"),
+        ],
+        default='SOLID',  # Set a default value
+    )'''
+
+    def execute(self, context):
+        selected_objects = bpy.context.selected_objects
+
+        if not selected_objects:
+            self.report({'WARNING'}, "No objects selected")
+            return {'CANCELLED'}
+
+        for obj in selected_objects:
+            obj.display_type = self.display_type
+
+        return {'FINISHED'}
+
+
 class SUBPIE_MT_shadeObject(Menu):
     bl_label = "Shade/Display"
     def draw(self, context):
@@ -340,10 +422,16 @@ class SUBPIE_MT_shadeObject(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
+        sel = context.selected_objects
+
         # WEST
         pie.operator("object.shade_smooth")
-        # EAST & SOUTH & NORTH & NORTH-WEST  
-        pie.prop(context.object, "display_type", expand=True)
+        # EAST & SOUTH & NORTH & NORTH-WEST 
+        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Solid").display_type = 'SOLID'
+        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Wireframe").display_type = 'WIRE'
+        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Bounding Box").display_type = 'BOUNDS'
+        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Textured").display_type = 'TEXTURED'
+        #pie.prop(context.object, "display_type", expand=True)
         # SOUTH
         # NORTH
         # NORTH-WEST
@@ -402,6 +490,7 @@ class SUBPIE_MT_CopyTransfer(Menu):
         # SOUTH-EAST
         pie.separator()
 
+# POSE MODE SUB MENUS
 # Sub Pie Menu for animation inbetween ops
 class SUBPIE_MT_inbetweens(Menu):
     bl_label = "Inbetweens"
@@ -1281,6 +1370,7 @@ registry = [
     SUBPIE_MT_smoothCurve,
     SUBPIE_MT_curveDelete,
     SUBPIE_MT_applyTransform,
+    OBJECT_OT_edit_display_type,
     SUBPIE_MT_shadeObject,
     SUBPIE_MT_LinkTransfer,
     SUBPIE_MT_CopyTransfer,
