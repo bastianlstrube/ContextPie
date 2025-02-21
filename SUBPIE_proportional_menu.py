@@ -308,15 +308,15 @@ class SUBPIE_MT_ProportionalObj(Menu):
         # 6 - RIGHT
         pie.operator("pie_proportional_obj.sphere", text="Sphere", icon='SPHERECURVE')
         # 2 - BOTTOM
-        pie.operator("pie_proportional_obj.linear", text="Linear", icon='LINCURVE')
+        pie.operator("pie_proportional_obj.inversesquare", text="Inverse Square", icon='INVERSESQUARECURVE')
         # 8 - TOP
         pie.prop(context.tool_settings, "use_proportional_edit_objects", text="Proportional On/Off")
         # 7 - TOP - LEFT
-        pie.operator("pie_proportional_obj.root", text="Root", icon='ROOTCURVE')
+        pie.separator()
         # 9 - TOP - RIGHT
-        pie.operator("pie_proportional_obj.inversesquare", text="Inverse Square", icon='INVERSESQUARECURVE')
+        pie.separator()
         # 1 - BOTTOM - LEFT
-        pie.operator("pie_proportional_obj.sharp", text="Sharp", icon='SHARPCURVE')
+        pie.operator("pie_proportional_obj.root", text="Root", icon='ROOTCURVE')
         # 3 - BOTTOM - RIGHT
         pie.menu("SUBPIE_MT_proportional_moreob", text="More...", icon='LINCURVE')
 
@@ -371,6 +371,8 @@ class SUBPIE_MT_proportionalmoreob(Menu):
         layout = self.layout
         pie = layout.menu_pie()
         box = pie.split().column()
+        box.operator("pie_proportional_obj.sharp", text="Sharp", icon='SHARPCURVE')
+        box.operator("pie_proportional_obj.linear", text="Linear", icon='LINCURVE')
         box.operator("pie_proportional_obj.constant", text="Constant", icon='NOCURVE')
         box.operator("pie_proportional_obj.random", text="Random", icon='RNDCURVE')
 
