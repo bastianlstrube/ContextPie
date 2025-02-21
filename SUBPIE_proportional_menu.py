@@ -20,23 +20,6 @@ from bpy.types import (
 
 
 # Proportional Edit Object
-class SUBPIE_OT_ProportionalEditObj(Operator):
-    bl_idname = "pie_proportional_obj.active"
-    bl_label = "Proportional Edit Object"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        ts = context.tool_settings
-
-        if ts.use_proportional_edit_objects is True:
-            ts.use_proportional_edit_objects = False
-
-        elif ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-
-        return {'FINISHED'}
-
-
 class SUBPIE_OT_ProportionalSmoothObj(Operator):
     bl_idname = "pie_proportional_obj.smooth"
     bl_label = "Proportional Smooth Object"
@@ -44,12 +27,8 @@ class SUBPIE_OT_ProportionalSmoothObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'SMOOTH'
-
-        if ts.proportional_edit_falloff != 'SMOOTH':
-            ts.proportional_edit_falloff = 'SMOOTH'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'SMOOTH'
         return {'FINISHED'}
 
 
@@ -60,12 +39,8 @@ class SUBPIE_OT_ProportionalSphereObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'SPHERE'
-
-        if ts.proportional_edit_falloff != 'SPHERE':
-            ts.proportional_edit_falloff = 'SPHERE'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'SPHERE'
         return {'FINISHED'}
 
 
@@ -76,12 +51,8 @@ class SUBPIE_OT_ProportionalRootObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'ROOT'
-
-        if ts.proportional_edit_falloff != 'ROOT':
-            ts.proportional_edit_falloff = 'ROOT'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'ROOT'
         return {'FINISHED'}
 
 
@@ -92,12 +63,8 @@ class SUBPIE_OT_ProportionalSharpObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'SHARP'
-
-        if ts.proportional_edit_falloff != 'SHARP':
-            ts.proportional_edit_falloff = 'SHARP'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'SHARP'
         return {'FINISHED'}
 
 
@@ -108,12 +75,8 @@ class SUBPIE_OT_ProportionalLinearObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'LINEAR'
-
-        if ts.proportional_edit_falloff != 'LINEAR':
-            ts.proportional_edit_falloff = 'LINEAR'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'LINEAR'
         return {'FINISHED'}
 
 
@@ -124,12 +87,8 @@ class SUBPIE_OT_ProportionalConstantObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'CONSTANT'
-
-        if ts.proportional_edit_falloff != 'CONSTANT':
-            ts.proportional_edit_falloff = 'CONSTANT'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'CONSTANT'
         return {'FINISHED'}
 
 
@@ -140,12 +99,8 @@ class SUBPIE_OT_ProportionalRandomObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'RANDOM'
-
-        if ts.proportional_edit_falloff != 'RANDOM':
-            ts.proportional_edit_falloff = 'RANDOM'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'RANDOM'
         return {'FINISHED'}
 
 
@@ -156,49 +111,12 @@ class SUBPIE_OT_ProportionalInverseSquareObj(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_proportional_edit_objects is False:
-            ts.use_proportional_edit_objects = True
-            ts.proportional_edit_falloff = 'INVERSE_SQUARE'
-
-        if ts.proportional_edit_falloff != 'INVERSE_SQUARE':
-            ts.proportional_edit_falloff = 'INVERSE_SQUARE'
+        ts.use_proportional_edit_objects = True
+        ts.proportional_edit_falloff = 'INVERSE_SQUARE'
         return {'FINISHED'}
 
 
 # Proportional Edit Edit Mode
-class SUBPIE_OT_ProportionalEditEdt(Operator):
-    bl_idname = "pie_proportional_edt.active"
-    bl_label = "Proportional Edit EditMode"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        ts = context.tool_settings
-        ts.use_proportional_edit ^= 1
-        return {'FINISHED'}
-
-
-class SUBPIE_OT_ProportionalConnectedEdt(Operator):
-    bl_idname = "pie_proportional_edt.connected"
-    bl_label = "Proportional Connected EditMode"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        ts = context.tool_settings
-        ts.use_proportional_connected ^= 1
-        return {'FINISHED'}
-
-
-class SUBPIE_OT_ProportionalProjectedEdt(Operator):
-    bl_idname = "pie_proportional_edt.projected"
-    bl_label = "Proportional projected EditMode"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        ts = context.tool_settings
-        ts.use_proportional_projected ^= 1
-        return {'FINISHED'}
-
-
 class SUBPIE_OT_ProportionalSmoothEdt(Operator):
     bl_idname = "pie_proportional_edt.smooth"
     bl_label = "Proportional Smooth EditMode"
@@ -329,6 +247,7 @@ class SUBPIE_MT_ProportionalEdt(Menu):
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
+        tool_settings = context.tool_settings
         # 4 - LEFT
         pie.operator("pie_proportional_edt.smooth", text="Smooth", icon='SMOOTHCURVE')
         # 6 - RIGHT
@@ -336,11 +255,11 @@ class SUBPIE_MT_ProportionalEdt(Menu):
         # 2 - BOTTOM
         pie.operator("pie_proportional_edt.inversesquare", text="Inverse Square", icon='INVERSESQUARECURVE')
         # 8 - TOP
-        pie.operator("pie_proportional_edt.active", text="Proportional On/Off", icon='PROP_ON')
+        pie.prop(tool_settings, "use_proportional_edit", text="Proportional On/Off")
         # 7 - TOP - LEFT
-        pie.operator("pie_proportional_edt.connected", text="Connected", icon='PROP_CON')
+        pie.prop(tool_settings, "use_proportional_connected")
         # 9 - TOP - RIGHT
-        pie.operator("pie_proportional_edt.projected", text="Projected", icon='PROP_PROJECTED')
+        pie.prop(tool_settings, "use_proportional_projected")
         # 1 - BOTTOM - LEFT
         pie.operator("pie_proportional_edt.root", text="Root", icon='ROOTCURVE')
         # 3 - BOTTOM - RIGHT
@@ -378,7 +297,6 @@ class SUBPIE_MT_proportionalmoreob(Menu):
 
 
 registry = (
-    SUBPIE_OT_ProportionalEditObj,
     SUBPIE_OT_ProportionalSmoothObj,
     SUBPIE_OT_ProportionalSphereObj,
     SUBPIE_OT_ProportionalRootObj,
@@ -387,9 +305,6 @@ registry = (
     SUBPIE_OT_ProportionalConstantObj,
     SUBPIE_OT_ProportionalRandomObj,
     SUBPIE_OT_ProportionalInverseSquareObj,
-    SUBPIE_OT_ProportionalEditEdt,
-    SUBPIE_OT_ProportionalConnectedEdt,
-    SUBPIE_OT_ProportionalProjectedEdt,
     SUBPIE_OT_ProportionalSmoothEdt,
     SUBPIE_OT_ProportionalSphereEdt,
     SUBPIE_OT_ProportionalRootEdt,
