@@ -295,6 +295,7 @@ class SUBPIE_MT_curveDelete(Menu):
         pie.separator()
 
 # OBJECT MODE SUB MENUS
+
 # Join + Boolean
 class SUBPIE_MT_joinMeshes(Menu):
     bl_label = "Join"
@@ -389,7 +390,7 @@ class OBJECT_OT_edit_display_type(bpy.types.Operator):
     bl_label = "Set Display Type"
     bl_description = "Sets the display type for selected objects"
 
-    '''
+    
     display_type: bpy.props.EnumProperty(
         name="Display Type",
         description="How to display the object",
@@ -400,7 +401,7 @@ class OBJECT_OT_edit_display_type(bpy.types.Operator):
             ('TEXTURED', "Textured", "Display with textures (if available)"),
         ],
         default='SOLID',  # Set a default value
-    )'''
+    )
 
     def execute(self, context):
         selected_objects = bpy.context.selected_objects
@@ -426,21 +427,23 @@ class SUBPIE_MT_shadeObject(Menu):
 
         # WEST
         pie.operator("object.shade_smooth")
-        # EAST & SOUTH & NORTH & NORTH-WEST 
+        # EAST
         pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Solid").display_type = 'SOLID'
-        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Wireframe").display_type = 'WIRE'
-        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Bounding Box").display_type = 'BOUNDS'
-        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Textured").display_type = 'TEXTURED'
-        #pie.prop(context.object, "display_type", expand=True)
         # SOUTH
-        # NORTH
-        # NORTH-WEST
-        # NORTH-EAST
         pie.separator()
+        # NORTH
+        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Bounding Box").display_type = 'BOUNDS'
+        # NORTH-WEST
+        pie.operator("object.shade_auto_smooth")
+        # NORTH-EAST
+        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Wireframe").display_type = 'WIRE'
         # SOUTH-WEST
         pie.operator("object.shade_flat")
         # SOUTH-EAST
-        pie.operator("object.shade_auto_smooth")
+        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Textured").display_type = 'TEXTURED'
+
+        # OLD NATIVE WAY THAT DOESNT WORK ON MULTIPLE OBJECTS:
+        #pie.prop(context.object, "display_type", expand=True)
 
 class SUBPIE_MT_LinkTransfer(Menu):
     bl_label = "Link"
@@ -1010,7 +1013,8 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
 
                 # NORTH
-                pie.operator("object.join")
+                pie.operator("wm.call_menu_pie", text='Join...').name = "SUBPIE_MT_joinMeshes"
+                #pie.operator("object.join")
                 
                 # NORTH-WEST
                 pie.operator("object.parent_set")
@@ -1369,6 +1373,7 @@ registry = [
     SUBPIE_MT_divide,
     SUBPIE_MT_smoothCurve,
     SUBPIE_MT_curveDelete,
+    SUBPIE_MT_joinMeshes,
     SUBPIE_MT_applyTransform,
     OBJECT_OT_edit_display_type,
     SUBPIE_MT_shadeObject,
