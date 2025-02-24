@@ -295,10 +295,112 @@ class SUBPIE_MT_curveDelete(Menu):
         pie.separator()
 
 # OBJECT MODE SUB MENUS
+class SUBPIE_MT_parent(Menu):
+    bl_label = "Parent"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.separator()
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.operator("object.parent_clear")
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.operator("object.parent_set")
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
+
+class SUBPIE_MT_convert(Menu):
+    bl_label = "Convert"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator_enum("object.convert", "target")
 
 # Join + Boolean
+class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
+    bl_idname = "object.add_pie_boolean"
+    bl_label = "Set Display Type"
+    bl_description = "Sets the display type for selected objects"
+
+    boolean_type: bpy.props.EnumProperty(
+        name="Boolean Type",
+        description="Which type of boolean modifier",
+        items=[
+            ('DIFFERENCE', "Difference", "Subtract active from selected"),
+            ('UNION', "Union", "Union active to selected"),
+            ('INTERSECT', "Intersect", "Intersect active with selected"),
+        ],
+        default='DIFFERENCE',  # Set a default value
+        )
+
+    def link_sole_collection(self, obj, target_collection):
+        "links object only to given collection"
+        if not isinstance(target_collection, bpy.types.Collection):
+            self.report({'WARNING'}, "Invalid collection object provided.")
+            return {'CANCELLED'}
+
+        collections_copy = list(obj.users_collection)
+        for collection in collections_copy:
+            collection.objects.unlink(obj)
+        target_collection.objects.link(obj)
+
+        self.report({'INFO'}, f"Objects linked to '{target_collection.name}'.")
+        return {'FINISHED'}
+
+
+    def execute(self, context):
+        selected_objects = bpy.context.selected_objects
+        obj = bpy.context.object
+
+        if not selected_objects:
+            self.report({'WARNING'}, "No objects selected")
+            return {'CANCELLED'}
+
+        for s in selected_objects:
+            if s == obj or s.type != 'MESH':
+                continue
+            modType = self.boolean_type
+            modname = "Modifier_" + modType.title()
+
+            mod = s.modifiers.get(modname)
+            if mod:
+                if not mod.operand_type == 'COLLECTION':
+                    if obj.users_collection:
+                        sCollection = obj.users_collection[0]
+                    else:
+                        sCollection = bpy.context.scene.collection
+                    modCollection = bpy.data.collections.new(s.name + "_" + modname)
+                    sCollection.children.link(modCollection)
+                    olobj = mod.object
+                    self.link_sole_collection(olobj, modCollection)
+                    mod.operand_type = 'COLLECTION'
+                    mod.collection = modCollection
+                else:
+                    modCollection = mod.collection
+
+                self.link_sole_collection(obj, modCollection)
+                mod.operation = modType
+            else:
+                mod = s.modifiers.new(modname, 'BOOLEAN')
+                mod.operation = modType
+                mod.object = obj
+
+        return {'FINISHED'}
+        
 class SUBPIE_MT_joinMeshes(Menu):
-    bl_label = "Join"
+    bl_label = "Join/Boolean"
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
@@ -308,34 +410,20 @@ class SUBPIE_MT_joinMeshes(Menu):
         sel = context.selected_objects
 
         # WEST
-        if obj is not None and len(sel) > 1:
-            if obj.type in {'MESH'}:
-                for s in sel:
-                    if s == obj:
-                        continue
-                    modType = 'DIFFERENCE'
-                    modname =    "PieBoolean_" + modType.title()
-                    modCollection = obj.users_collection
-
-                    mod = s.modifiers.get(modname)
-                    if mod:
-                        sCollection = modCollection
-                        modCollection = bpy.ops.collection.create(s.name + "_" + modname)
-                        sCollection.children.link(modCollection)
-
-                        mod.operand_type = 'COLLECTION'
-                        mod.collection = modCollection
-                        mod.operation = modType
-                    else:
-                        mod = s.modifiers.new(modname, 'BOOLEAN')
-                        mod.operation = modType
-                        mod.object = obj
+        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
+            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Difference").boolean_type = 'DIFFERENCE'
         else:
             pie.separator()
         # EAST
-        pie.separator()
+        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
+            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Union").boolean_type = 'UNION'
+        else:
+            pie.separator()
         # SOUTH
-        pie.separator()
+        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
+            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Intersect").boolean_type = 'INTERSECT'
+        else:
+            pie.separator()
         # NORTH
         pie.operator("object.join")
         # NORTH-WEST
@@ -347,6 +435,30 @@ class SUBPIE_MT_joinMeshes(Menu):
         # SOUTH-EAST
         pie.separator()
 
+
+class SUBPIE_MT_addMeshInteractive(Menu):
+    bl_label = "Add Mesh Interactively"
+
+    def draw(self, context):
+        layout = self.layout
+        pie = layout.menu_pie()
+
+        # WEST (Cube)
+        pie.operator("wm.tool_set_by_id", text="Cube", icon='MESH_CUBE').name = "builtin.primitive_cube_add"
+        # EAST (Cone)
+        pie.operator("wm.tool_set_by_id", text="Cone", icon='MESH_CONE').name = "builtin.primitive_cone_add"
+        # SOUTH (Cylinder)
+        pie.operator("wm.tool_set_by_id", text="Cylinder", icon='MESH_CYLINDER').name = "builtin.primitive_cylinder_add"
+        # NORTH (UV Sphere)
+        pie.operator("wm.tool_set_by_id", text="UV Sphere", icon='MESH_UVSPHERE').name = "builtin.primitive_uv_sphere_add"
+        # NORTH-WEST (Empty)
+        pie.operator("wm.tool_set_by_id", text="Ico Sphere", icon='MESH_ICOSPHERE').name = "builtin.primitive_ico_sphere_add"
+        # NORTH-EAST (Empty)
+        pie.separator()
+        # SOUTH-WEST (Empty)
+        pie.separator()
+        # SOUTH-EAST (Empty)
+        pie.separator()
 
 # Sub Pie for object applying transform
 class SUBPIE_MT_applyTransform(Menu):
@@ -415,15 +527,12 @@ class OBJECT_OT_edit_display_type(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
 class SUBPIE_MT_shadeObject(Menu):
     bl_label = "Shade/Display"
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-
-        sel = context.selected_objects
 
         # WEST
         pie.operator("object.shade_smooth")
@@ -1011,24 +1120,21 @@ class VIEW3D_PIE_MT_context(Menu):
 
                 # SOUTH
                 pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
-
                 # NORTH
-                pie.operator("wm.call_menu_pie", text='Join...').name = "SUBPIE_MT_joinMeshes"
+                if len(sel) > 1:
+                    pie.operator("wm.call_menu_pie", text='Join...').name = "SUBPIE_MT_joinMeshes"
+                elif obj.type in {'MESH', 'CURVE', 'SURFACE'}:
+                    pie.operator("wm.call_menu_pie", text='Add Interactive...').name = "SUBPIE_MT_addMeshInteractive"
                 #pie.operator("object.join")
-                
                 # NORTH-WEST
-                pie.operator("object.parent_set")
-
+                pie.operator("wm.call_menu_pie", text='Parent...').name = "SUBPIE_MT_parent"
                 # NORTH-EAST
-                pie.operator("object.parent_clear")
-
+                pie.operator("wm.call_menu_pie", text='Convert...').name = "SUBPIE_MT_convert"
                 # SOUTH-WEST
                 pie.operator("object.delete")
-
                 # SOUTH-EAST
                 pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
-
-                
+  
             else:
                 pie.operator("wm.call_menu_pie", text="Mesh...").name = "SUBPIE_MT_add_mesh"
                 pie.operator("wm.call_menu_pie", text="Curves & Text...").name = "SUBPIE_MT_add_curves_text"
@@ -1038,39 +1144,6 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("wm.call_menu_pie", text="Grease Pencil...").name = "SUBPIE_MT_add_greasepencil"
                 pie.operator("wm.call_menu_pie", text="Force Fields...").name = "SUBPIE_MT_add_forcefield"
                 pie.operator("object.armature_add", text="Armature")
-
-                '''
-                # WEST
-                pie.operator("mesh.primitive_cube_add")
-                # EAST
-                pie.operator("mesh.primitive_plane_add")
-                # SOUTH
-                pie.operator("mesh.primitive_uv_sphere_add")
-                # NORTH
-                pie.operator("mesh.primitive_cylinder_add")
-                
-                # NORTH-WEST
-                pie.operator("mesh.primitive_torus_add")
-                # NORTH-EAST
-                pie.operator("mesh.primitive_circle_add")
-                # SOUTH-WEST
-                pie.operator("mesh.primitive_cone_add")
-                # SOUTH-EAST
-                pie.operator("mesh.primitive_ico_sphere_add")
-
-                PUT MENU WITH CURVES
-                # Static face menu
-                pie.separator()
-                pie.separator()
-                dropdown = pie.column()
-                gap = dropdown.column()
-                gap.separator()
-                gap.scale_y = 8
-                dropdown_menu = dropdown.box().column()
-                dropdown_menu.scale_y=1
-                dropdown_menu.operator("wm.toolbar", text = "Handy Tools", icon="TOOL_SETTINGS")
-                dropdown_menu.operator("mesh.edge_split")
-                '''
 
         # Straight from Blenders Pie Addon Sculpt 'W' Menu
         if context.mode == 'SCULPT':
@@ -1373,7 +1446,11 @@ registry = [
     SUBPIE_MT_divide,
     SUBPIE_MT_smoothCurve,
     SUBPIE_MT_curveDelete,
+    SUBPIE_MT_parent,
+    SUBPIE_MT_convert,
+    OBJECT_OT_add_pie_boolean,
     SUBPIE_MT_joinMeshes,
+    SUBPIE_MT_addMeshInteractive,
     SUBPIE_MT_applyTransform,
     OBJECT_OT_edit_display_type,
     SUBPIE_MT_shadeObject,
