@@ -21,7 +21,7 @@ from .hotkeys import register_hotkey
 from bpy.app.translations import contexts as i18n_contexts
 from bl_ui.properties_paint_common import BrushAssetShelf
 
-# Sub Pie Menu for mesh merge operators
+# Sub Pie Menu for Edit Mesh merge operators
 class SUBPIE_MT_merge(Menu):
     bl_label = "Merge"
     def draw(self, context):
@@ -392,10 +392,12 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
 
                 self.link_sole_collection(obj, modCollection)
                 mod.operation = modType
+                obj.display_type = 'WIRE'
             else:
                 mod = s.modifiers.new(modname, 'BOOLEAN')
                 mod.operation = modType
                 mod.object = obj
+                obj.display_type = 'WIRE'
 
         return {'FINISHED'}
         
