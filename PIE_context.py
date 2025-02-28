@@ -437,7 +437,6 @@ class SUBPIE_MT_joinMeshes(Menu):
         # SOUTH-EAST
         pie.separator()
 
-
 class SUBPIE_MT_addMeshInteractive(Menu):
     bl_label = "Add Mesh Interactively"
 
@@ -935,6 +934,10 @@ class VIEW3D_PIE_MT_context(Menu):
 
     def draw(self, context):
 
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
         if context.mode == 'EDIT_MESH':
             ''' COUNTING LENGTH OF SELECTION LISTS FOR EACH COMPONENT TYPE
             def count_selected_items_for_objects_in_mode():
@@ -953,11 +956,6 @@ class VIEW3D_PIE_MT_context(Menu):
             '''
 
             is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
-
-            # Else something is selected
-            layout = self.layout
-            layout.operator_context = 'INVOKE_REGION_WIN'
-            pie = layout.menu_pie()
 
             if is_vert_mode:
                 
@@ -1076,10 +1074,6 @@ class VIEW3D_PIE_MT_context(Menu):
 
         if context.mode == 'EDIT_CURVE':
 
-            layout = self.layout
-            layout.operator_context = 'INVOKE_REGION_WIN'
-            pie = layout.menu_pie()
-
             # WEST
             pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
             # EAST
@@ -1100,10 +1094,6 @@ class VIEW3D_PIE_MT_context(Menu):
 
         if context.mode == 'OBJECT':
 
-            layout = self.layout
-            layout.operator_context = 'INVOKE_REGION_WIN'
-            pie = layout.menu_pie()
-
             obj = context.object
             sel = context.selected_objects
 
@@ -1116,6 +1106,17 @@ class VIEW3D_PIE_MT_context(Menu):
                 elif obj.type == 'ARMATURE':
                     arm = obj.data
                     pie.prop(arm, "pose_position", expand=True)
+                elif obj.type == 'CAMERA':
+                    opsLens = pie.operator("wm.context_modal_mouse", text='Adjust Focal Length')
+                    opsLens.data_path_iter = "selected_editable_objects"
+                    opsLens.data_path_item = "data.lens"
+                    opsLens.header_text = "Camera Focal Length: %.1fmm"
+                    opsLens.input_scale = 0.1
+                    opsDof = pie.operator("wm.context_modal_mouse", text='Adjust Focus Distance')
+                    opsDof.data_path_iter = "selected_editable_objects"
+                    opsDof.data_path_item = "data.dof.focus_distance"
+                    opsDof.header_text = "Focus Distance: %.3f"
+                    opsDof.input_scale = 0.02
                 else:
                     pie.separator()
                     pie.separator()
@@ -1124,10 +1125,16 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
                 # NORTH
                 if len(sel) > 1:
-                    pie.operator("wm.call_menu_pie", text='Join...').name = "SUBPIE_MT_joinMeshes"
+                    if obj.type == 'MESH':
+                        pie.operator("wm.call_menu_pie", text='Join...').name = "SUBPIE_MT_joinMeshes"
+                    else:
+                        pie.operator("object.join")
                 elif obj.type in {'MESH', 'CURVE', 'SURFACE'}:
                     pie.operator("wm.call_menu_pie", text='Add Interactive...').name = "SUBPIE_MT_addMeshInteractive"
-                #pie.operator("object.join")
+                elif obj.type == 'CAMERA':
+                    pie.operator("view3d.object_as_camera")
+                else:
+                    pie.separator()
                 # NORTH-WEST
                 pie.operator("wm.call_menu_pie", text='Parent...').name = "SUBPIE_MT_parent"
                 # NORTH-EAST
@@ -1151,8 +1158,6 @@ class VIEW3D_PIE_MT_context(Menu):
         if context.mode == 'SCULPT':
 
             global brush_icons
-            layout = self.layout
-            pie = layout.menu_pie()
             pie.scale_y = 1.2
 
             # 4 - LEFT
