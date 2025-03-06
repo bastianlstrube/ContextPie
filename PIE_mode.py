@@ -141,8 +141,8 @@ class VIEW3D_PIE_MT_mode(Menu):
             'EDIT_ARMATURE': self.draw_edit_armature_mode,
             'EDIT_GPENCIL': self.draw_edit_gpencil_mode,
             'EDIT_GREASE_PENCIL': self.draw_edit_gpencil_mode,
-            'PAINT_GREASE_PENCIL': self.draw_paint_gpencil_mode,
-            'SCULPT_GREASE_PENCIL': self.draw_sculpt_gpencil_mode,
+            'PAINT_GREASE_PENCIL': self.draw_edit_gpencil_mode,
+            'SCULPT_GREASE_PENCIL': self.draw_edit_gpencil_mode,
             'PAINT_VERTEX': self.draw_paint_vertex_mode,
             'PAINT_TEXTURE': self.draw_paint_texture_mode,
             'PAINT_WEIGHT': self.draw_paint_weight_mode,
@@ -154,12 +154,13 @@ class VIEW3D_PIE_MT_mode(Menu):
 
     def draw_object_mode(self, pie, context):
         obj = context.object
-        if obj and obj.type in {'MESH', 'GPENCIL', 'GREASEPENCIL', 'FONT'}:
+        sel = context.selected_objects
+        if obj and sel and obj.type in {'MESH', 'GPENCIL', 'GREASEPENCIL', 'FONT'}:
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             subPie = pie.operator("wm.call_menu_pie", text='Select...')
             subPie.name = "SUBPIE_MT_objectSelect"
-        elif obj and obj.type in {'CURVE', 'SURFACE', 'LATTICE'}:
+        elif obj and sel and obj.type in {'CURVE', 'SURFACE', 'LATTICE'}:
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
             pie.separator()
             pie.separator()
@@ -168,7 +169,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             subPie = pie.operator("wm.call_menu_pie", text='Select...')
             subPie.name = "SUBPIE_MT_objectSelect"
-        elif obj and obj.type == 'ARMATURE':
+        elif obj and sel and obj.type == 'ARMATURE':
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
             pie.separator()
             pie.separator()
@@ -216,13 +217,13 @@ class VIEW3D_PIE_MT_mode(Menu):
     ## GREASE PENCIL MODES
     def draw_edit_gpencil_mode(self, pie, context):
         pie.operator_enum("OBJECT_OT_mode_set", "mode")
-
+    '''
     def draw_paint_gpencil_mode(self, pie, context):
         pie.operator_enum("OBJECT_OT_mode_set", "mode")
 
     def draw_sculpt_gpencil_mode(self, pie, context):
         pie.operator_enum("OBJECT_OT_mode_set", "mode")
-
+    '''
     ## BRUSH MODE SECTION
     def draw_paint_vertex_mode(self, pie, context):
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
