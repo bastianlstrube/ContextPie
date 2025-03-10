@@ -11,10 +11,11 @@ bl_info = {
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
+import bpy
 from bpy.utils import register_class, unregister_class
 import importlib
 
-module_names = (
+module_names = [
     "hotkeys",
     "prefs",
     "op_pie_drag_only", 
@@ -25,12 +26,13 @@ module_names = (
     "PIE_uvcontext",
     "PIE_uvmode",
     "PIE_uvpivots",
-    #"PIE_spacebar", I don't like the state of this menu
 
     "SUBPIE_proportional_menu",
     "SUBPIE_snap_menu",
-    "SUBPIE_MeshAlign"
-)
+    "SUBPIE_MeshAlign",
+]
+if not "bl_ext.blender_org.copy_attributes_menu" in bpy.context.preferences.addons:
+    module_names.append("CopyOps")
 
 
 modules = [

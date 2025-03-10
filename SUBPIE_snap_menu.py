@@ -11,8 +11,6 @@ bl_info = {
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
-
-import bpy
 from bpy.types import (
     Menu,
     Operator,

@@ -5,7 +5,6 @@
 import bpy
 from bpy.types import Menu, Operator
 from bpy.props import EnumProperty
-from .hotkeys import register_hotkey
 
 
 class SUBPIE_MT_mesh_align(Menu):
@@ -204,9 +203,9 @@ class TRANSFORM_OT_flat_local_minmax(Operator):
         return {'FINISHED'}
 
 
-registry = [
+registry = (
     SUBPIE_MT_mesh_align,
     TRANSFORM_OT_flat_global_axis,
     TRANSFORM_OT_flat_local_axis,
     TRANSFORM_OT_flat_local_minmax,
-]
+)
