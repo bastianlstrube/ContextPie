@@ -30,10 +30,12 @@ module_names = [
     "SUBPIE_proportional_menu",
     "SUBPIE_snap_menu",
     "SUBPIE_MeshAlign",
+    "SUBPIE_set_origin",
 ]
-if not "bl_ext.blender_org.copy_attributes_menu" in bpy.context.preferences.addons:
-    module_names.append("CopyOps")
 
+'''if not "bl_ext.blender_org.copy_attributes_menu" in bpy.context.preferences.addons:
+    module_names.append("CopyOps")
+'''
 
 modules = [
     __import__(__package__ + "." + submod, {}, {}, submod)
