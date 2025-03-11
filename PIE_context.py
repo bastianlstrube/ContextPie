@@ -1392,9 +1392,42 @@ class VIEW3D_PIE_MT_context(Menu):
                     layout.operator("armature.dissolve", text="Dissolve Bones")
             '''
 
+        if 'PAINT_' in context.mode:
+            # Get the active tool (e.g., 'sculpt', 'paint', etc.)
+
+            brush_filter_attr = None
+
+            # Filter brushes based on the tool
+            if context.mode == 'PAINT_VERTEX':
+                brush_filter_attr = 'use_paint_vertex'
+            elif context.mode == 'PAINT_WEIGHT':
+                brush_filter_attr = 'use_paint_weight'
+            elif context.mode == 'PAINT_TEXTURE':
+                brush_filter_attr = 'use_paint_image'
+            elif context.mode == 'PAINT_GREASE_PENCIL':
+                brush_filter_attr = 'use_paint_grease_pencil'
+
+            if brush_filter_attr:
+                brushes = [b for b in bpy.data.brushes if getattr(b, brush_filter_attr)]
+
+                for brush in brushes:
+                    op = layout.operator("brush.set_brush_from_pie", text=brush.name)
+                    op.brush_name = brush.name
+            else:
+                layout.label(text="Unsupported mode", icon='ERROR')
+
+class BRUSH_OT_set_brush_from_pie(bpy.types.Operator):
+    bl_idname = "brush.set_brush_from_pie"
+    bl_label = "Set Brush From Pie"
+
+    brush_name: bpy.props.StringProperty()
+
+    def execute(self, context):
+        context.tool_settings.unified_paint_settings.brush = bpy.data.brushes[self.brush_name]
+        return {'FINISHED'}
+
 def blender_uses_brush_assets():
     return 'asset_activate' in dir(bpy.ops.brush)
-
 
 def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
     """Draw a brush select operator in the provided UI element with the pre-4.3 icons.
@@ -1481,6 +1514,7 @@ registry = [
     SUBPIE_MT_add_greasepencil,
     SUBPIE_MT_add_forcefield,
     VIEW3D_PIE_MT_context,
+    BRUSH_OT_set_brush_from_pie,
 ]
 
 def register():

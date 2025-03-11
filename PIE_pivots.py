@@ -83,10 +83,10 @@ class VIEW3D_PIE_MT_pivots(Menu):
 
             #if obj is not None and sel:
                 # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation...', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_orientations_pie"
             # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot...', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
             subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")
@@ -161,10 +161,10 @@ class VIEW3D_PIE_MT_pivots(Menu):
             obj = context.object
 
             # WEST
-            subPie = pie.operator("wm.call_menu_pie", text='Orientation', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Orientation...', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_orientations_pie"
             # EAST
-            subPie = pie.operator("wm.call_menu_pie", text='Pivot', icon = "RIGHTARROW_THIN")
+            subPie = pie.operator("wm.call_menu_pie", text='Pivot...', icon = "RIGHTARROW_THIN")
             subPie.name = "VIEW3D_MT_pivot_pie"
             # SOUTH
             subPie = pie.operator("wm.call_menu_pie", text='Snap...', icon = "RIGHTARROW_THIN")

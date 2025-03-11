@@ -752,7 +752,7 @@ def register():
         "Object Mode", 
         "Mesh", 
         "Curve", 
-        "Grease Pencil Edit Mode", 
+        "Grease Pencil", 
         "Sculpt", 
         "Pose",
         "Lattice",
