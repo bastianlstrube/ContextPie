@@ -1416,6 +1416,45 @@ class VIEW3D_PIE_MT_context(Menu):
             else:
                 layout.label(text="Unsupported mode", icon='ERROR')
 
+            '''CLAUDES SUGGESTION # Get current mode and brushes
+            brushes = []
+            active_brush = None
+            
+            if context.mode == 'PAINT_VERTEX':
+                brushes = [b for b in bpy.data.brushes if b.use_paint_vertex]
+                active_brush = context.tool_settings.vertex_paint.brush
+            elif context.mode == 'PAINT_TEXTURE':
+                brushes = [b for b in bpy.data.brushes if b.use_paint_image]
+                active_brush = context.tool_settings.image_paint.brush
+            elif context.mode == 'PAINT_WEIGHT':
+                brushes = [b for b in bpy.data.brushes if b.use_paint_weight]
+                active_brush = context.tool_settings.weight_paint.brush
+            elif context.mode == 'SCULPT':
+                brushes = [b for b in bpy.data.brushes if b.use_sculpt]
+                active_brush = context.tool_settings.sculpt.brush
+            else:
+                pie.label(text="Not in a paint mode")
+                return
+            
+            # Sort brushes by name
+            brushes.sort(key=lambda b: b.name)
+            
+            # Place up to 8 brushes in the pie menu
+            pie_slots = min(8, len(brushes))
+            for i in range(pie_slots):
+                brush = brushes[i]
+                op = pie.operator("paint.set_brush", text=brush.name)
+                op.brush = brush.name
+                
+            # If more than 8 brushes, add extras in a box
+            if len(brushes) > 8:
+                box = pie.box()
+                col = box.column()
+                col.label(text="More Brushes:")
+                for brush in brushes[8:]:
+                    op = col.operator("paint.set_brush", text=brush.name)
+                    op.brush = brush.name'''
+
 class BRUSH_OT_set_brush_from_pie(bpy.types.Operator):
     bl_idname = "brush.set_brush_from_pie"
     bl_label = "Set Brush From Pie"
