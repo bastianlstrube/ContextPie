@@ -1393,77 +1393,36 @@ class VIEW3D_PIE_MT_context(Menu):
             '''
 
         if 'PAINT_' in context.mode:
-            # Get the active tool (e.g., 'sculpt', 'paint', etc.)
-
-            brush_filter_attr = None
-
-            # Filter brushes based on the tool
+          
             if context.mode == 'PAINT_VERTEX':
-                brush_filter_attr = 'use_paint_vertex'
-            elif context.mode == 'PAINT_WEIGHT':
-                brush_filter_attr = 'use_paint_weight'
+                pie.scale_y = 1.2
+                # WEST
+                draw_brush_operator(pie, 'Paint Hard', 'paint hard')
+                # EAST
+                draw_brush_operator(pie, 'Paint Soft', 'paint soft')
+                # SOUTH
+                pie.separator()
+                # NORTH
+                pie.separator()
+                # NORTH-WEST
+                pie.separator()
+                # NORTH-EAST
+                pie.separator()
+                # SOUTH-WEST
+                draw_brush_operator(pie, 'Paint Hard Pressure', 'paint hard pressure')
+                # SOUTH-EAST
+                pie.separator()
+
             elif context.mode == 'PAINT_TEXTURE':
-                brush_filter_attr = 'use_paint_image'
-            elif context.mode == 'PAINT_GREASE_PENCIL':
-                brush_filter_attr = 'use_paint_grease_pencil'
-
-            if brush_filter_attr:
-                brushes = [b for b in bpy.data.brushes if getattr(b, brush_filter_attr)]
-
-                for brush in brushes:
-                    op = layout.operator("brush.set_brush_from_pie", text=brush.name)
-                    op.brush_name = brush.name
-            else:
-                layout.label(text="Unsupported mode", icon='ERROR')
-
-            '''CLAUDES SUGGESTION # Get current mode and brushes
-            brushes = []
-            active_brush = None
-            
-            if context.mode == 'PAINT_VERTEX':
-                brushes = [b for b in bpy.data.brushes if b.use_paint_vertex]
-                active_brush = context.tool_settings.vertex_paint.brush
-            elif context.mode == 'PAINT_TEXTURE':
-                brushes = [b for b in bpy.data.brushes if b.use_paint_image]
-                active_brush = context.tool_settings.image_paint.brush
+                pie.separator()
             elif context.mode == 'PAINT_WEIGHT':
-                brushes = [b for b in bpy.data.brushes if b.use_paint_weight]
-                active_brush = context.tool_settings.weight_paint.brush
+                pie.separator()
             elif context.mode == 'SCULPT':
-                brushes = [b for b in bpy.data.brushes if b.use_sculpt]
-                active_brush = context.tool_settings.sculpt.brush
+                pie.separator()
             else:
                 pie.label(text="Not in a paint mode")
                 return
-            
-            # Sort brushes by name
-            brushes.sort(key=lambda b: b.name)
-            
-            # Place up to 8 brushes in the pie menu
-            pie_slots = min(8, len(brushes))
-            for i in range(pie_slots):
-                brush = brushes[i]
-                op = pie.operator("paint.set_brush", text=brush.name)
-                op.brush = brush.name
-                
-            # If more than 8 brushes, add extras in a box
-            if len(brushes) > 8:
-                box = pie.box()
-                col = box.column()
-                col.label(text="More Brushes:")
-                for brush in brushes[8:]:
-                    op = col.operator("paint.set_brush", text=brush.name)
-                    op.brush = brush.name'''
 
-class BRUSH_OT_set_brush_from_pie(bpy.types.Operator):
-    bl_idname = "brush.set_brush_from_pie"
-    bl_label = "Set Brush From Pie"
-
-    brush_name: bpy.props.StringProperty()
-
-    def execute(self, context):
-        context.tool_settings.unified_paint_settings.brush = bpy.data.brushes[self.brush_name]
-        return {'FINISHED'}
 
 def blender_uses_brush_assets():
     return 'asset_activate' in dir(bpy.ops.brush)
@@ -1481,9 +1440,14 @@ def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
             icon_value=brush_icons.get(brush_icon, 0),
         )
         op.asset_library_type = 'ESSENTIALS'
-        op.relative_asset_identifier = os.path.join(
-            "brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", brush_name
-        )
+        if bpy.context.mode == 'SCULPT':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", brush_name
+            )
+        if bpy.context.mode == 'PAINT_VERTEX':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_vertex.blend", "Brush", brush_name
+            )
     else:
         # Pre-4.3
         if brush_icon:
@@ -1553,7 +1517,6 @@ registry = [
     SUBPIE_MT_add_greasepencil,
     SUBPIE_MT_add_forcefield,
     VIEW3D_PIE_MT_context,
-    BRUSH_OT_set_brush_from_pie,
 ]
 
 def register():
