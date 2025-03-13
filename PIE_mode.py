@@ -153,43 +153,53 @@ class VIEW3D_PIE_MT_mode(Menu):
             mode_actions[context.mode](pie, context)
 
     def draw_object_mode(self, pie, context):
+
         obj = context.object
         sel = context.selected_objects
-        if obj and sel and obj.type in {'MESH', 'GPENCIL', 'GREASEPENCIL', 'FONT'}:
+
+        if obj and sel and obj.type in {'MESH', 'GPENCIL', 'GREASEPENCIL'}:
+            # WEST EAST NORTH SOUTH N-W N-E
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
-            pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
-            subPie = pie.operator("wm.call_menu_pie", text='Select...')
-            subPie.name = "SUBPIE_MT_objectSelect"
-        elif obj and sel and obj.type in {'CURVE', 'SURFACE', 'LATTICE'}:
-            pie.operator_enum("OBJECT_OT_mode_set", "mode")
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
-            subPie = pie.operator("wm.call_menu_pie", text='Select...')
-            subPie.name = "SUBPIE_MT_objectSelect"
-        elif obj and sel and obj.type == 'ARMATURE':
-            pie.operator_enum("OBJECT_OT_mode_set", "mode")
-            pie.separator()
-            pie.separator()
-            pie.separator()
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             subPie = pie.operator("wm.call_menu_pie", text='Select...')
             subPie.name = "SUBPIE_MT_objectSelect"
 
+        elif obj and sel and obj.type in {'CURVE', 'SURFACE', 'LATTICE', 'FONT'}:
+            # WEST EAST
+            pie.operator_enum("OBJECT_OT_mode_set", "mode")
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+            pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
+
+        elif obj and sel and obj.type == 'ARMATURE':
+            # WEST
+            pie.operator_enum("OBJECT_OT_mode_set", "mode")
+            # EAST
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+            pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
+
     def draw_edit_mesh_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        # EAST
         pie.operator('mesh.select_mode', text="Vertex", icon="VERTEXSEL").type = 'VERT'
         pie.operator('mesh.select_mode', text="Face", icon="FACESEL").type = 'FACE'
         pie.operator('mesh.select_mode', text="Edge", icon="EDGESEL").type = 'EDGE'
-        pie.menu("VIEW3D_MT_edit_mesh_edges", text="edge menu", icon="COLLAPSEMENU")
-        pie.menu("VIEW3D_MT_edit_mesh_vertices", text="vert menu", icon="COLLAPSEMENU")
-        pie.menu("VIEW3D_MT_edit_mesh_faces", text="face menu", icon="COLLAPSEMENU")
+        pie.separator()
+        pie.separator()
+        pie.menu("VIEW3D_MT_edit_mesh_context_menu", text="Context Menu", icon="COLLAPSEMENU")
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_meshSelect"
 
     def draw_edit_curve_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+        # EAST
         pie.menu("VIEW3D_MT_edit_curve_context_menu", text="curve menu", icon="COLLAPSEMENU")
         pie.operator("wm.call_menu_pie", text='Curve/Handle Type...').name = "SUBPIE_MT_curveTypeHandles"
         pie.operator("curve.cyclic_toggle")
@@ -199,23 +209,28 @@ class VIEW3D_PIE_MT_mode(Menu):
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_curveSelect"
 
     def draw_pose_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+        # EAST
         pie.separator()
         pie.menu("VIEW3D_MT_pose_context_menu", text="Pose Context Menu", icon="COLLAPSEMENU")
         pie.separator()
 
     def draw_edit_lattice_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
-        pie.separator()
 
     def draw_edit_armature_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+        # EAST
         pie.separator()
         pie.menu("VIEW3D_MT_edit_armature_names")
-        pie.separator()
+        pie.separator() 
 
     ## GREASE PENCIL MODES
     def draw_edit_gpencil_mode(self, pie, context):
+        # WEST
         pie.operator_enum("OBJECT_OT_mode_set", "mode")
     '''
     def draw_paint_gpencil_mode(self, pie, context):
@@ -226,7 +241,9 @@ class VIEW3D_PIE_MT_mode(Menu):
     '''
     ## BRUSH MODE SECTION
     def draw_paint_vertex_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        # EAST
         pie.separator()
         box = pie.box()
         brush = context.tool_settings.vertex_paint.brush
@@ -235,7 +252,9 @@ class VIEW3D_PIE_MT_mode(Menu):
         self.draw_brush_properties(box, context, brush, capabilities)
 
     def draw_paint_texture_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        # EAST
         pie.separator()
         box = pie.box()
         brush = context.tool_settings.image_paint.brush
@@ -244,7 +263,9 @@ class VIEW3D_PIE_MT_mode(Menu):
         self.draw_brush_properties(box, context, brush, capabilities)
 
     def draw_paint_weight_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        # EAST
         pie.separator()
         box = pie.box()
         brush = context.tool_settings.weight_paint.brush
@@ -253,7 +274,9 @@ class VIEW3D_PIE_MT_mode(Menu):
         self.draw_brush_properties(box, context, brush, capabilities)
 
     def draw_sculpt_mode(self, pie, context):
+        # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
+        # EAST
         pie.operator("sculpt.dynamic_topology_toggle", text="Dyntopo Toggle")
         box = pie.box()
         brush = context.tool_settings.sculpt.brush
@@ -309,11 +332,6 @@ class VIEW3D_PIE_MT_mode(Menu):
                 if isinstance(text, tuple):
                     text = text[1] if brush.sculpt_tool in {'BLOB', 'SNAKE_HOOK'} else text[0]
                 draw_property(box, context, brush, prop, text=text)
-
-
-
-
-
 
 """
 class VIEW3D_PIE_MT_mode(Menu):
@@ -734,7 +752,6 @@ class VIEW3D_PIE_MT_mode(Menu):
                 slider=True,
             )
 """
-
 
 registry = [
     SUBPIE_MT_objectSelect,
