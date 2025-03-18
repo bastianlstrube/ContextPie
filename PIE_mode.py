@@ -100,6 +100,33 @@ class SUBPIE_MT_curveSelect(Menu):
         # SOUTH-EAST
         pie.operator("curve.select_linked", text='Linked')
 
+# Sub Pie for mesh face split/separate operators
+class SUBPIE_MT_separate(Menu):
+    bl_label = "Split/Separate"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        
+        # WEST
+        pie.operator("mesh.split")
+        # EAST
+        pie.operator("mesh.separate", text='By Loose Parts').type = 'LOOSE'
+        # SOUTH
+        pie.operator("mesh.rip_move")
+        # NORTH
+        pie.separator()
+        
+        # NORTH-WEST
+        pie.operator("mesh.edge_split", text='Split By Edge').type = 'EDGE'      
+        # NORTH-EAST
+        pie.operator("mesh.separate", text='By Material').type = 'MATERIAL'
+        # SOUTH-WEST
+        pie.operator("mesh.edge_split", text='Split By Vertex').type = 'VERT'
+        # SOUTH-EAST
+        pie.operator("mesh.separate", text='Selection').type = 'SELECTED'
+
+
 class SUBPIE_MT_curveTypeHandles(Menu):
     bl_label = "Set Curve/Handle Type"
     def draw(self, context):
@@ -160,9 +187,10 @@ class VIEW3D_PIE_MT_mode(Menu):
         if obj and sel and obj.type in {'MESH', 'GPENCIL', 'GREASEPENCIL'}:
             # WEST EAST NORTH SOUTH N-W N-E
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
+            # SOUTH WEST
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
-            subPie = pie.operator("wm.call_menu_pie", text='Select...')
-            subPie.name = "SUBPIE_MT_objectSelect"
+            # SOUTH EAST
+            pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
 
         elif obj and sel and obj.type in {'CURVE', 'SURFACE', 'LATTICE', 'FONT'}:
             # WEST EAST
@@ -171,7 +199,9 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.separator()
             pie.separator()
             pie.separator()
+            # SOUTH WEST
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+            # SOUTH EAST
             pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
 
         elif obj and sel and obj.type == 'ARMATURE':
@@ -181,7 +211,9 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.separator()
             pie.separator()
             pie.separator()
+            # SOUTH WEST
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+            # SOUTH EAST
             pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
 
     def draw_edit_mesh_mode(self, pie, context):
@@ -189,23 +221,36 @@ class VIEW3D_PIE_MT_mode(Menu):
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
         # EAST
         pie.operator('mesh.select_mode', text="Vertex", icon="VERTEXSEL").type = 'VERT'
+        # SOUTH
         pie.operator('mesh.select_mode', text="Face", icon="FACESEL").type = 'FACE'
+        # NORTH
         pie.operator('mesh.select_mode', text="Edge", icon="EDGESEL").type = 'EDGE'
-        pie.separator()
-        pie.separator()
+        # NORTH WEST
         pie.menu("VIEW3D_MT_edit_mesh_context_menu", text="Context Menu", icon="COLLAPSEMENU")
+        # NORTH EAST
+        # --------------------- ADD NORMALS SUB PIE HERE -------------------------------
+        pie.separator()
+        # SOUTH WEST
+        pie.operator("wm.call_menu_pie", text='Split/Separate...').name = "SUBPIE_MT_separate"
+        # SOUTH EAST
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_meshSelect"
 
     def draw_edit_curve_mode(self, pie, context):
         # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
         # EAST
-        pie.menu("VIEW3D_MT_edit_curve_context_menu", text="curve menu", icon="COLLAPSEMENU")
         pie.operator("wm.call_menu_pie", text='Curve/Handle Type...').name = "SUBPIE_MT_curveTypeHandles"
-        pie.operator("curve.cyclic_toggle")
-        pie.separator()
+        # SOUTH
         pie.operator("curve.switch_direction")
+        # NORTH
+        pie.operator("curve.cyclic_toggle")
+        # NORTH WEST
+        pie.menu("VIEW3D_MT_edit_curve_context_menu", text="Context Menu", icon="COLLAPSEMENU")
+        # NORTH EAST
         pie.separator()
+        # SOUTH WEST
+        pie.separator()
+        # SOUTH EAST
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_curveSelect"
 
     def draw_pose_mode(self, pie, context):
@@ -757,6 +802,7 @@ registry = [
     SUBPIE_MT_objectSelect,
     SUBPIE_MT_meshSelect,
     SUBPIE_MT_curveSelect,
+    SUBPIE_MT_separate,
     SUBPIE_MT_curveTypeHandles,
     VIEW3D_PIE_MT_mode,
 ]

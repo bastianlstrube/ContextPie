@@ -21,7 +21,7 @@ from .hotkeys import register_hotkey
 from bpy.app.translations import contexts as i18n_contexts
 from bl_ui.properties_paint_common import BrushAssetShelf
 
-# Sub Pie Menu for Edit Mesh merge operators
+# Edit Mesh merge operators
 class SUBPIE_MT_merge(Menu):
     bl_label = "Merge"
     def draw(self, context):
@@ -71,7 +71,7 @@ class SUBPIE_MT_merge(Menu):
             pie.separator()
             pie.separator()
 
-# Sub Pie for mesh connect operators
+# Edit mesh connect operators
 class SUBPIE_MT_connect(Menu):
     bl_label = "Connect"
     def draw(self, context):
@@ -96,32 +96,30 @@ class SUBPIE_MT_connect(Menu):
         # SOUTH-EAST
         pie.operator("mesh.fill", text="Fill Loop")
 
-# Sub Pie for mesh face split/separate operators
-class SUBPIE_MT_separate(Menu):
-    bl_label = "Split/Separate"
+# Loop Tools Extension Sub Pie
+class SUBPIE_MT_edit_mesh_looptools(Menu):
+    bl_label = "LoopTools"
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
-        # WEST
-        pie.operator("mesh.split")
-        # EAST
-        pie.operator("mesh.separate", text='By Loose Parts').type = 'LOOSE'
-        # SOUTH
-        pie.operator("mesh.rip_move")
-        # NORTH
-        pie.separator()
-        
 
+        # WEST
+        pie.operator("mesh.looptools_gstretch")
+        # EAST
+        pie.operator("mesh.looptools_circle")
+        # SOUTH
+        pie.operator("mesh.looptools_curve")
+        # NORTH
+        pie.operator("mesh.looptools_flatten")
         # NORTH-WEST
-        pie.operator("mesh.edge_split", text='Split By Edge').type = 'EDGE'      
+        pie.operator("mesh.looptools_bridge", text="Bridge").loft = False
         # NORTH-EAST
-        pie.operator("mesh.separate", text='By Material').type = 'MATERIAL'
-        # SOUTH-WEST
-        pie.operator("mesh.edge_split", text='Split By Vertex').type = 'VERT'
+        pie.operator("mesh.looptools_bridge", text="Loft").loft = True
+         # SOUTH-WEST
+        pie.operator("mesh.looptools_relax")
         # SOUTH-EAST
-        pie.operator("mesh.separate", text='Selection').type = 'SELECTED'
+        pie.operator("mesh.looptools_space")
 
 # Sub Pie for mesh vert/edge/face divisions
 class SUBPIE_MT_divide(Menu):
@@ -328,7 +326,7 @@ class SUBPIE_MT_convert(Menu):
 
         pie.operator_enum("object.convert", "target")
 
-# Join + Boolean
+# Add Boolean Operator with collection managing
 class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
     bl_idname = "object.add_pie_boolean"
     bl_label = "Set Display Type"
@@ -400,7 +398,8 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
                 obj.display_type = 'WIRE'
 
         return {'FINISHED'}
-        
+
+# Join/Boolean Pie using above custom operator
 class SUBPIE_MT_joinMeshes(Menu):
     bl_label = "Join/Boolean"
     def draw(self, context):
@@ -498,6 +497,7 @@ class SUBPIE_MT_applyTransform(Menu):
         # SOUTH-EAST
         pie.separator()
 
+# Custom Operator for change display type for multiple selected objects
 class OBJECT_OT_edit_display_type(bpy.types.Operator):
     bl_idname = "object.edit_display_type"
     bl_label = "Set Display Type"
@@ -962,22 +962,17 @@ class VIEW3D_PIE_MT_context(Menu):
                 # WEST
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
-                subPie = pie.operator("wm.call_menu_pie", text='Connect...', icon = "RIGHTARROW_THIN")
-                subPie.name = "SUBPIE_MT_connect"
+                pie.operator("wm.call_menu_pie", text='Connect...', icon = "RIGHTARROW_THIN").name = "SUBPIE_MT_connect"
                 # SOUTH
                 pie.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
                 # NORTH
-                subPie = pie.operator("wm.call_menu_pie", text='Merge...', icon = "RIGHTARROW_THIN")
-                subPie.name = "SUBPIE_MT_merge"                
+                pie.operator("wm.call_menu_pie", text='Merge...', icon = "RIGHTARROW_THIN").name = "SUBPIE_MT_merge"                
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                #pie.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
-                subPie = pie.operator("wm.call_menu_pie", text='Divide...')
-                subPie.name = "SUBPIE_MT_divide"
+                pie.operator("wm.call_menu_pie", text='Divide...').name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
-                subPie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
-                subPie.name = "SUBPIE_MT_PieDelete"
+                pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN").name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
                 pie.operator("transform.vert_slide", text="Slide Vertex")
                 
@@ -993,7 +988,6 @@ class VIEW3D_PIE_MT_context(Menu):
                 dropdown_menu.operator("mesh.bisect", text = "Bisect")
                 separatePie = dropdown_menu.operator("wm.call_menu_pie", text='Separate...').name = "SUBPIE_MT_separate"
                 
-
             elif is_edge_mode:
 
                 # WEST
@@ -1032,33 +1026,29 @@ class VIEW3D_PIE_MT_context(Menu):
                 dropdown_menu.operator("transform.edge_bevelweight")
                 dropdown_menu.operator("wm.call_menu_pie", text='Separate').name = "SUBPIE_MT_separate"
                 
-
             elif is_face_mode:
 
                 # WEST
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
-                pie.operator("transform.shrink_fatten")
+                if  "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
+                    pie.operator("wm.call_menu_pie", text='LoopTools...').name = "SUBPIE_MT_edit_mesh_looptools"
+                else:
+                    pie.separator()
                 # SOUTH
-                subPie = pie.operator("wm.call_menu_pie", text='Extrude Faces...')
-                subPie.name = "SUBPIE_MT_extrudeFaces"
-                #pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces")
+                pie.operator("wm.call_menu_pie", text='Extrude Faces...').name = "SUBPIE_MT_extrudeFaces"
                 # NORTH
-                subPie = pie.operator("wm.call_menu_pie", text='Merge...')
-                subPie.name = "SUBPIE_MT_merge"
+                pie.operator("wm.call_menu_pie", text='Merge...').name = "SUBPIE_MT_merge"
                 #pie.operator("mesh.merge", text="Merge")
                 
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                subPie = pie.operator("wm.call_menu_pie", text='Divide...')
-                subPie.name = "SUBPIE_MT_divide"
+                pie.operator("wm.call_menu_pie", text='Divide...').name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
-                deletePie = pie.operator("wm.call_menu_pie", text='Delete...')
-                deletePie.name = "SUBPIE_MT_PieDelete"
+                pie.operator("wm.call_menu_pie", text='Delete...').name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
-                separatePie = pie.operator("wm.call_menu_pie", text='Split/Separate...')
-                separatePie.name = "SUBPIE_MT_separate"
+                pie.operator("transform.shrink_fatten")
 
                 # Static face menu
                 pie.separator()
@@ -1485,7 +1475,6 @@ registry = [
     SUBPIE_MT_merge, 
     SUBPIE_MT_connect, 
     SUBPIE_MT_extrudeFaces,
-    SUBPIE_MT_separate,
     SUBPIE_MT_divide,
     SUBPIE_MT_smoothCurve,
     SUBPIE_MT_curveDelete,
@@ -1518,6 +1507,11 @@ registry = [
     SUBPIE_MT_add_forcefield,
     VIEW3D_PIE_MT_context,
 ]
+
+# Add looptools sub pie if present
+if  "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
+    registry.append(SUBPIE_MT_edit_mesh_looptools)
+
 
 def register():
     create_icons()
