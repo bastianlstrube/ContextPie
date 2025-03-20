@@ -239,9 +239,9 @@ class VIEW3D_PIE_MT_mode(Menu):
         # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
         # EAST
-        pie.operator("wm.call_menu_pie", text='Curve/Handle Type...').name = "SUBPIE_MT_curveTypeHandles"
-        # SOUTH
         pie.operator("curve.switch_direction")
+        # SOUTH
+        pie.operator("wm.call_menu_pie", text='Curve/Handle Type...').name = "SUBPIE_MT_curveTypeHandles"
         # NORTH
         pie.operator("curve.cyclic_toggle")
         # NORTH WEST

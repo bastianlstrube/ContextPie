@@ -182,8 +182,6 @@ registry = [
     SUBPIE_MT_set_origin,
 ]
 if "bl_ext.blender_org.viewport_pie_menus" not in bpy.context.preferences.addons:
-    registry.append(
-        OBJECT_OT_set_origin_to_selection,
-        OBJECT_OT_set_origin_to_bottom,
-        OBJECT_OT_set_origin_any_mode,
-    )
+    registry.append(OBJECT_OT_set_origin_to_selection)
+    registry.append(OBJECT_OT_set_origin_to_bottom)
+    registry.append(OBJECT_OT_set_origin_any_mode)
