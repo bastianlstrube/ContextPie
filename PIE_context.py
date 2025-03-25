@@ -372,30 +372,33 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
             modType = self.boolean_type
             modname = "Modifier_" + modType.title()
 
-            mod = s.modifiers.get(modname)
-            if mod:
-                if not mod.operand_type == 'COLLECTION':
-                    if obj.users_collection:
-                        sCollection = obj.users_collection[0]
-                    else:
-                        sCollection = bpy.context.scene.collection
-                    modCollection = bpy.data.collections.new(s.name + "_" + modname)
-                    sCollection.children.link(modCollection)
-                    olobj = mod.object
-                    self.link_sole_collection(olobj, modCollection)
-                    mod.operand_type = 'COLLECTION'
-                    mod.collection = modCollection
-                else:
-                    modCollection = mod.collection
-
-                self.link_sole_collection(obj, modCollection)
-                mod.operation = modType
-                obj.display_type = 'WIRE'
+            if "Split" in modname:
+                splitInstance = bpy.ops.object.duplicate_move_linked
             else:
-                mod = s.modifiers.new(modname, 'BOOLEAN')
-                mod.operation = modType
-                mod.object = obj
-                obj.display_type = 'WIRE'
+                mod = s.modifiers.get(modname)
+                if mod:
+                    if not mod.operand_type == 'COLLECTION':
+                        if obj.users_collection:
+                            sCollection = obj.users_collection[0]
+                        else:
+                            sCollection = bpy.context.scene.collection
+                        modCollection = bpy.data.collections.new(s.name + "_" + modname)
+                        sCollection.children.link(modCollection)
+                        olobj = mod.object
+                        self.link_sole_collection(olobj, modCollection)
+                        mod.operand_type = 'COLLECTION'
+                        mod.collection = modCollection
+                    else:
+                        modCollection = mod.collection
+
+                    self.link_sole_collection(obj, modCollection)
+                    mod.operation = modType
+                    obj.display_type = 'WIRE'
+                else:
+                    mod = s.modifiers.new(modname, 'BOOLEAN')
+                    mod.operation = modType
+                    mod.object = obj
+                    obj.display_type = 'WIRE'
 
         return {'FINISHED'}
 
@@ -502,8 +505,8 @@ class OBJECT_OT_edit_display_type(bpy.types.Operator):
     bl_idname = "object.edit_display_type"
     bl_label = "Set Display Type"
     bl_description = "Sets the display type for selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
 
-    
     display_type: bpy.props.EnumProperty(
         name="Display Type",
         description="How to display the object",
@@ -528,6 +531,39 @@ class OBJECT_OT_edit_display_type(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# Custom Operator for change object colour for multiple selected objects
+class OBJECT_OT_edit_obj_color(bpy.types.Operator):
+    bl_idname = "object.edit_obj_color"
+    bl_label = "Set Object Colour"
+    bl_description = "Sets the object colour for selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    color: bpy.props.FloatVectorProperty(
+        name="Color",
+        subtype='COLOR',
+        size=4,
+        min=0.0,
+        max=1.0,
+        default=(1.0, 1.0, 1.0, 1.0),
+        description="Object Color (RGBA)"
+    )
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_popup(self, event)
+
+    def execute(self, context):
+        selected_objects = bpy.context.selected_objects
+
+        if not selected_objects:
+            self.report({'WARNING'}, "No objects selected")
+            return {'CANCELLED'}
+
+        for obj in selected_objects:
+            obj.color = self.color
+
+        return {'FINISHED'}
+
 class SUBPIE_MT_shadeObject(Menu):
     bl_label = "Shade/Display"
     def draw(self, context):
@@ -540,7 +576,7 @@ class SUBPIE_MT_shadeObject(Menu):
         # EAST
         pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Solid").display_type = 'SOLID'
         # SOUTH
-        pie.separator()
+        pie.operator(OBJECT_OT_edit_obj_color.bl_idname, text="Set Object Colour")
         # NORTH
         pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Bounding Box").display_type = 'BOUNDS'
         # NORTH-WEST
@@ -1485,6 +1521,7 @@ registry = [
     SUBPIE_MT_addMeshInteractive,
     SUBPIE_MT_applyTransform,
     OBJECT_OT_edit_display_type,
+    OBJECT_OT_edit_obj_color,
     SUBPIE_MT_shadeObject,
     SUBPIE_MT_LinkTransfer,
     SUBPIE_MT_CopyTransfer,
