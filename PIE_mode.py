@@ -215,6 +215,17 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             # SOUTH EAST
             pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
+        elif obj and sel and obj.type == 'EMPTY':
+            # WEST EAST SOUTH NORTH
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            # SOUTH WEST
+            pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
+            # SOUTH EAST
+            pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
 
     def draw_edit_mesh_mode(self, pie, context):
         # WEST
