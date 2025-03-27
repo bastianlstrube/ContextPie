@@ -237,12 +237,12 @@ class VIEW3D_PIE_MT_mode(Menu):
         # NORTH
         pie.operator('mesh.select_mode', text="Edge", icon="EDGESEL").type = 'EDGE'
         # NORTH WEST
-        pie.menu("VIEW3D_MT_edit_mesh_context_menu", text="Context Menu", icon="COLLAPSEMENU")
-        # NORTH EAST
         # --------------------- ADD NORMALS SUB PIE HERE -------------------------------
         pie.separator()
         # SOUTH WEST
+        # NORTH EAST
         pie.operator("wm.call_menu_pie", text='Split/Separate...').name = "SUBPIE_MT_separate"
+        pie.menu("VIEW3D_MT_edit_mesh_context_menu", text="Context Menu", icon="COLLAPSEMENU")
         # SOUTH EAST
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_meshSelect"
 
@@ -256,11 +256,11 @@ class VIEW3D_PIE_MT_mode(Menu):
         # NORTH
         pie.operator("curve.cyclic_toggle")
         # NORTH WEST
-        pie.menu("VIEW3D_MT_edit_curve_context_menu", text="Context Menu", icon="COLLAPSEMENU")
+        pie.separator()
         # NORTH EAST
         pie.separator()
         # SOUTH WEST
-        pie.separator()
+        pie.menu("VIEW3D_MT_edit_curve_context_menu", text="Context Menu", icon="COLLAPSEMENU")
         # SOUTH EAST
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_curveSelect"
 
@@ -275,6 +275,14 @@ class VIEW3D_PIE_MT_mode(Menu):
     def draw_edit_lattice_mode(self, pie, context):
         # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+        # EAST SOUTH NORTH N-W N-E
+        pie.separator()
+        pie.separator()
+        pie.separator()
+        pie.separator()
+        pie.separator()
+        # SOUTH WEST
+        pie.menu("VIEW3D_MT_edit_lattice_context_menu")
 
     def draw_edit_armature_mode(self, pie, context):
         # WEST
