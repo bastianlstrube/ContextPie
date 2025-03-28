@@ -339,6 +339,7 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
             ('DIFFERENCE', "Difference", "Subtract active from selected"),
             ('UNION', "Union", "Union active to selected"),
             ('INTERSECT', "Intersect", "Intersect active with selected"),
+            ('SPLIT', "Split", "Duplicate and split active from selected"),            
         ],
         default='DIFFERENCE',  # Set a default value
         )
@@ -357,48 +358,55 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
         self.report({'INFO'}, f"Objects linked to '{target_collection.name}'.")
         return {'FINISHED'}
 
+    def addModifier(self, obj, selobj, modType):
+        modname = "Modifier_" + modType.title()
+        mod = selobj.modifiers.get(modname)
+        if mod:
+            if not mod.operand_type == 'COLLECTION':
+                if obj.users_collection:
+                    sCollection = obj.users_collection[0]
+                else:
+                    sCollection = bpy.context.scene.collection
+                modCollection = bpy.data.collections.new(selobj.name + "_" + modname)
+                sCollection.children.link(modCollection)
+                olobj = mod.object
+                self.link_sole_collection(olobj, modCollection)
+                mod.operand_type = 'COLLECTION'
+                mod.collection = modCollection
+            else:
+                modCollection = mod.collection
+
+            self.link_sole_collection(obj, modCollection)
+            mod.operation = modType
+            obj.display_type = 'WIRE'
+        else:
+            mod = selobj.modifiers.new(modname, 'BOOLEAN')
+            mod.operation = modType
+            mod.object = obj
+            obj.display_type = 'WIRE'
 
     def execute(self, context):
         selected_objects = bpy.context.selected_objects
         obj = bpy.context.object
-
+        modType = self.boolean_type
+        
         if not selected_objects:
             self.report({'WARNING'}, "No objects selected")
             return {'CANCELLED'}
 
-        for s in selected_objects:
-            if s == obj or s.type != 'MESH':
+        if modType == 'SPLIT':
+            splitInstances = bpy.ops.object.duplicate_move_linked
+            for split in splitInstances:
+                split.name = split.name.split('.')[0] + '_Split'
+
+        for selobj in selected_objects:
+            if selobj == obj or selobj.type != 'MESH':
                 continue
-            modType = self.boolean_type
-            modname = "Modifier_" + modType.title()
 
-            if "Split" in modname:
-                splitInstance = bpy.ops.object.duplicate_move_linked
+
             else:
-                mod = s.modifiers.get(modname)
-                if mod:
-                    if not mod.operand_type == 'COLLECTION':
-                        if obj.users_collection:
-                            sCollection = obj.users_collection[0]
-                        else:
-                            sCollection = bpy.context.scene.collection
-                        modCollection = bpy.data.collections.new(s.name + "_" + modname)
-                        sCollection.children.link(modCollection)
-                        olobj = mod.object
-                        self.link_sole_collection(olobj, modCollection)
-                        mod.operand_type = 'COLLECTION'
-                        mod.collection = modCollection
-                    else:
-                        modCollection = mod.collection
+                self.addModifier(obj, selobj, modType)
 
-                    self.link_sole_collection(obj, modCollection)
-                    mod.operation = modType
-                    obj.display_type = 'WIRE'
-                else:
-                    mod = s.modifiers.new(modname, 'BOOLEAN')
-                    mod.operation = modType
-                    mod.object = obj
-                    obj.display_type = 'WIRE'
 
         return {'FINISHED'}
 
