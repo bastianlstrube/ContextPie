@@ -1,7 +1,5 @@
 schema_version = "1.0.0"
 
-# Example of manifest file for a Blender extension
-# Change the values according to your extension
 id = "ContextPie"
 version = "0.9.8"
 name = "Context Pie"

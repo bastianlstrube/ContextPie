@@ -137,7 +137,7 @@ class SUBPIE_MT_divide(Menu):
             # EAST
             pie.operator("mesh.subdivide", text='Subdivide')
             # SOUTH
-            pie.separator()
+            pie.operator("mesh.rip_move")
             # NORTH
             pie.operator("mesh.poke")
             # NORTH-WEST
@@ -173,7 +173,7 @@ class SUBPIE_MT_divide(Menu):
             # EAST
             pie.operator("mesh.bevel", text='Bevel')
             # SOUTH
-            pie.separator()
+            pie.operator("mesh.rip_move")
             # NORTH
             pie.operator("mesh.poke")
             # NORTH-WEST
@@ -183,7 +183,7 @@ class SUBPIE_MT_divide(Menu):
             # SOUTH-WEST
             pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
             # SOUTH-EAST
-            pie.separator()
+            pie.operator("mesh.split")
 
 # Sub Pie for mesh face extrusions
 class SUBPIE_MT_extrudeFaces(Menu):
@@ -1006,17 +1006,17 @@ class VIEW3D_PIE_MT_context(Menu):
                 # WEST
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
-                pie.operator("wm.call_menu_pie", text='Connect...', icon = "RIGHTARROW_THIN").name = "SUBPIE_MT_connect"
+                pie.operator("wm.call_menu_pie", text='Connect...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
                 # SOUTH
                 pie.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
                 # NORTH
-                pie.operator("wm.call_menu_pie", text='Merge...', icon = "RIGHTARROW_THIN").name = "SUBPIE_MT_merge"                
+                pie.operator("wm.call_menu_pie", text='Merge...', icon="TRIA_UP").name = "SUBPIE_MT_merge"                
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                pie.operator("wm.call_menu_pie", text='Divide...').name = "SUBPIE_MT_divide"
+                pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
-                pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN").name = "SUBPIE_MT_PieDelete"
+                pie.operator("wm.call_menu_pie", text='Delete...', icon="TRIA_DOWN").name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
                 pie.operator("transform.vert_slide", text="Slide Vertex")
                 
@@ -1037,17 +1037,17 @@ class VIEW3D_PIE_MT_context(Menu):
                 # WEST
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
-                pie.operator("wm.call_menu_pie", text='Connect...').name = "SUBPIE_MT_connect"
+                pie.operator("wm.call_menu_pie", text='Connect...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
                 # SOUTH
                 pie.operator("mesh.extrude_edges_move", text="Extrude Edges")
                 # NORTH
-                pie.operator("wm.call_menu_pie", text='Merge...').name = "SUBPIE_MT_merge"
+                pie.operator("wm.call_menu_pie", text='Merge...', icon="TRIA_UP").name = "SUBPIE_MT_merge"
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                pie.operator("wm.call_menu_pie", text='Divide...').name = "SUBPIE_MT_divide"
+                pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
-                pie.operator("wm.call_menu_pie", text='Delete...').name = "SUBPIE_MT_PieDelete"
+                pie.operator("wm.call_menu_pie", text='Delete...', icon="TRIA_LEFT").name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
                 pie.operator("transform.edge_slide", text="Slide Edge")
                 
@@ -1076,21 +1076,21 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.knife_tool", text="Knife")
                 # EAST
                 if  "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
-                    pie.operator("wm.call_menu_pie", text='LoopTools...').name = "SUBPIE_MT_edit_mesh_looptools"
+                    pie.operator("wm.call_menu_pie", text='LoopTools...', icon="TRIA_RIGHT").name = "SUBPIE_MT_edit_mesh_looptools"
                 else:
                     pie.separator()
                 # SOUTH
-                pie.operator("wm.call_menu_pie", text='Extrude Faces...').name = "SUBPIE_MT_extrudeFaces"
+                pie.operator("wm.call_menu_pie", text='Extrude Faces...', icon="TRIA_DOWN").name = "SUBPIE_MT_extrudeFaces"
                 # NORTH
-                pie.operator("wm.call_menu_pie", text='Merge...').name = "SUBPIE_MT_merge"
+                pie.operator("wm.call_menu_pie", text='Merge...', icon="TRIA_UP").name = "SUBPIE_MT_merge"
                 #pie.operator("mesh.merge", text="Merge")
                 
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
                 # NORTH-EAST
-                pie.operator("wm.call_menu_pie", text='Divide...').name = "SUBPIE_MT_divide"
+                pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
-                pie.operator("wm.call_menu_pie", text='Delete...').name = "SUBPIE_MT_PieDelete"
+                pie.operator("wm.call_menu_pie", text='Delete...', icon="TRIA_LEFT").name = "SUBPIE_MT_PieDelete"
                 # SOUTH-EAST
                 pie.operator("transform.shrink_fatten")
 
