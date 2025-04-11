@@ -21,6 +21,7 @@ from .hotkeys import register_hotkey
 from bpy.app.translations import contexts as i18n_contexts
 from bl_ui.properties_paint_common import BrushAssetShelf
 
+# MESH SUB MENUS ######################################################################
 # Edit Mesh merge operators
 class SUBPIE_MT_merge(Menu):
     bl_label = "Merge"
@@ -292,7 +293,7 @@ class SUBPIE_MT_curveDelete(Menu):
         # SOUTH-EAST
         pie.separator()
 
-# OBJECT MODE SUB MENUS
+# OBJECT MODE SUB MENUS ######################################################################
 class SUBPIE_MT_parent(Menu):
     bl_label = "Parent"
     def draw(self, context):
@@ -647,7 +648,7 @@ class SUBPIE_MT_CopyTransfer(Menu):
         # SOUTH-EAST
         pie.separator()
 
-# POSE MODE SUB MENUS
+# POSE MODE SUB MENUS ######################################################################
 # Sub Pie Menu for animation inbetween ops
 class SUBPIE_MT_inbetweens(Menu):
     bl_label = "Inbetweens"
