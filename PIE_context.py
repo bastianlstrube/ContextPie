@@ -332,6 +332,7 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
     bl_idname = "object.add_pie_boolean"
     bl_label = "Set Display Type"
     bl_description = "Sets the display type for selected objects"
+    bl_options = {'REGISTER', 'UNDO'}           # Enable undo for the operation
 
     boolean_type: bpy.props.EnumProperty(
         name="Boolean Type",
