@@ -394,16 +394,27 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
             self.report({'WARNING'}, "No objects selected")
             return {'CANCELLED'}
 
+        # If split, create duplicate of selection and rename
         if modType == 'SPLIT':
-            splitInstances = bpy.ops.object.duplicate_move_linked
+            obj.select_set(False)
+            bpy.ops.object.duplicate_move_linked()
+            splitInstances = bpy.context.selected_objects
             for split in splitInstances:
-                split.name = split.name.split('.')[0] + '_Split'
+                splitname = split.name.split('.')[0] + '_Inside'
+                olsplit = bpy.data.objects.get(splitname)
+                if olsplit:
+                    bpy.data.objects.remove(split, do_unlink=True)
+                    self.addModifier(obj, olsplit, 'INTERSECT')
+                else:
+                    split.name = splitname
+                    self.addModifier(obj, split, 'INTERSECT')
 
         for selobj in selected_objects:
             if selobj == obj or selobj.type != 'MESH':
                 continue
 
-
+            if modType == 'SPLIT':
+                self.addModifier(obj, selobj, 'DIFFERENCE')
             else:
                 self.addModifier(obj, selobj, modType)
 
@@ -445,7 +456,10 @@ class SUBPIE_MT_joinMeshes(Menu):
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST
-        pie.separator()
+        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
+            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Split ").boolean_type = 'SPLIT'
+        else:
+            pie.separator()
 
 class SUBPIE_MT_addMeshInteractive(Menu):
     bl_label = "Add Mesh Interactively"
