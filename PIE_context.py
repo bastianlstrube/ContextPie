@@ -458,10 +458,11 @@ class SUBPIE_MT_joinMeshes(Menu):
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST
-        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
-            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Split ").boolean_type = 'SPLIT'
-        else:
-            pie.separator()
+        pie.separator()
+        #if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
+        #    pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Split ").boolean_type = 'SPLIT'
+        #else:
+        #    pie.separator()
 
 class SUBPIE_MT_addMeshInteractive(Menu):
     bl_label = "Add Mesh Interactively"
