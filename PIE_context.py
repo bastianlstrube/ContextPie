@@ -423,31 +423,58 @@ class SUBPIE_MT_joinMeshes(Menu):
         obj = context.object
         sel = context.selected_objects
 
-        # WEST
         if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
-            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Difference").boolean_type = 'DIFFERENCE'
+            if any(name.endswith("bool_tool") for name, addon in bpy.context.preferences.addons.items()):
+                # WEST
+                pie.operator("object.boolean_brush_difference", text="Difference", icon='SELECT_SUBTRACT')
+                # EAST
+                pie.operator("object.boolean_brush_union", text="Union", icon='SELECT_EXTEND')
+                # SOUTH
+                pie.operator("object.boolean_brush_intersect", text="Intersect", icon='SELECT_INTERSECT')
+                # NORTH
+                pie.operator("object.join")
+                # NORTH-WEST
+                pie.separator()
+                # NORTH-EAST
+                pie.separator()
+                # SOUTH-WEST
+                pie.operator("object.boolean_brush_slice", text="Slice", icon='SELECT_DIFFERENCE')
+                # SOUTH-EAST
+                pie.separator()
+            else:
+                # WEST
+                pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Difference", icon='SELECT_SUBTRACT').boolean_type = 'DIFFERENCE'
+                # EAST
+                pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Union", icon='SELECT_EXTEND').boolean_type = 'UNION'
+                # SOUTH
+                pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Intersect", icon='SELECT_INTERSECT').boolean_type = 'INTERSECT'
+                # NORTH
+                pie.operator("object.join")
+                # NORTH-WEST
+                pie.separator()
+                # NORTH-EAST
+                pie.separator()
+                # SOUTH-WEST
+                pie.separator()
+                # SOUTH-EAST
+                pie.separator()
         else:
+            # WEST
             pie.separator()
-        # EAST
-        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
-            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Union").boolean_type = 'UNION'
-        else:
+            # EAST
             pie.separator()
-        # SOUTH
-        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
-            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Intersect").boolean_type = 'INTERSECT'
-        else:
+            # SOUTH
             pie.separator()
-        # NORTH
-        pie.operator("object.join")
-        # NORTH-WEST
-        pie.separator()
-        # NORTH-EAST
-        pie.separator()
-        # SOUTH-WEST
-        pie.separator()
-        # SOUTH-EAST
-        pie.separator()
+            # NORTH
+            pie.operator("object.join")
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.separator()
+            # SOUTH-WEST
+            pie.separator()
+            # SOUTH-EAST
+            pie.separator()
 
 class SUBPIE_MT_addMeshInteractive(Menu):
     bl_label = "Add Mesh Interactively"
@@ -1162,7 +1189,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # NORTH
                 if len(sel) > 1:
                     if obj.type == 'MESH':
-                        pie.operator("wm.call_menu_pie", text='Join...').name = "SUBPIE_MT_joinMeshes"
+                        pie.operator("wm.call_menu_pie", text='Join/Bool...').name = "SUBPIE_MT_joinMeshes"
                     else:
                         pie.operator("object.join")
                 elif obj.type in {'MESH', 'CURVE', 'SURFACE'}:
