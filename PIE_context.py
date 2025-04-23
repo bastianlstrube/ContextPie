@@ -396,16 +396,27 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
             self.report({'WARNING'}, "No objects selected")
             return {'CANCELLED'}
 
+        # If split, create duplicate of selection and rename
         if modType == 'SPLIT':
-            splitInstances = bpy.ops.object.duplicate_move_linked
+            obj.select_set(False)
+            bpy.ops.object.duplicate_move_linked()
+            splitInstances = bpy.context.selected_objects
             for split in splitInstances:
-                split.name = split.name.split('.')[0] + '_Split'
+                splitname = split.name.split('.')[0] + '_Inside'
+                olsplit = bpy.data.objects.get(splitname)
+                if olsplit:
+                    bpy.data.objects.remove(split, do_unlink=True)
+                    self.addModifier(obj, olsplit, 'INTERSECT')
+                else:
+                    split.name = splitname
+                    self.addModifier(obj, split, 'INTERSECT')
 
         for selobj in selected_objects:
             if selobj == obj or selobj.type != 'MESH':
                 continue
 
-
+            if modType == 'SPLIT':
+                self.addModifier(obj, selobj, 'DIFFERENCE')
             else:
                 self.addModifier(obj, selobj, modType)
 
@@ -420,51 +431,30 @@ class SUBPIE_MT_joinMeshes(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
         
-        obj = context.object
-        sel = context.selected_objects
-
-        if obj is not None and len(sel) > 1 and obj.type in {'MESH'}:
-            if any(name.endswith("bool_tool") for name, addon in bpy.context.preferences.addons.items()):
-                # WEST
-                pie.operator("object.boolean_brush_difference", text="Difference", icon='SELECT_SUBTRACT')
-                # EAST
-                pie.operator("object.boolean_brush_union", text="Union", icon='SELECT_EXTEND')
-                # SOUTH
-                pie.operator("object.boolean_brush_intersect", text="Intersect", icon='SELECT_INTERSECT')
-                # NORTH
-                pie.operator("object.join")
-                # NORTH-WEST
-                pie.separator()
-                # NORTH-EAST
-                pie.separator()
-                # SOUTH-WEST
-                pie.operator("object.boolean_brush_slice", text="Slice", icon='SELECT_DIFFERENCE')
-                # SOUTH-EAST
-                pie.separator()
-            else:
-                # WEST
-                pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Difference", icon='SELECT_SUBTRACT').boolean_type = 'DIFFERENCE'
-                # EAST
-                pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Union", icon='SELECT_EXTEND').boolean_type = 'UNION'
-                # SOUTH
-                pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Intersect", icon='SELECT_INTERSECT').boolean_type = 'INTERSECT'
-                # NORTH
-                pie.operator("object.join")
-                # NORTH-WEST
-                pie.separator()
-                # NORTH-EAST
-                pie.separator()
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
+        if any(name.endswith("bool_tool") for name, addon in bpy.context.preferences.addons.items()):
+            # WEST
+            pie.operator("object.boolean_brush_difference", text="Difference", icon='SELECT_SUBTRACT')
+            # EAST
+            pie.operator("object.boolean_brush_union", text="Union", icon='SELECT_EXTEND')
+            # SOUTH
+            pie.operator("object.boolean_brush_intersect", text="Intersect", icon='SELECT_INTERSECT')
+            # NORTH
+            pie.operator("object.join")
+            # NORTH-WEST
+            pie.separator()
+            # NORTH-EAST
+            pie.separator()
+            # SOUTH-WEST
+            pie.operator("object.boolean_brush_slice", text="Slice", icon='SELECT_DIFFERENCE')
+            # SOUTH-EAST
+            pie.separator()
         else:
             # WEST
-            pie.separator()
+            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Difference", icon='SELECT_SUBTRACT').boolean_type = 'DIFFERENCE'
             # EAST
-            pie.separator()
+            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Union", icon='SELECT_EXTEND').boolean_type = 'UNION'
             # SOUTH
-            pie.separator()
+            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Intersect", icon='SELECT_INTERSECT').boolean_type = 'INTERSECT'
             # NORTH
             pie.operator("object.join")
             # NORTH-WEST
