@@ -1097,12 +1097,11 @@ class VIEW3D_PIE_MT_context(Menu):
                 if  "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
                     pie.operator("wm.call_menu_pie", text='LoopTools...', icon="TRIA_RIGHT").name = "SUBPIE_MT_edit_mesh_looptools"
                 else:
-                    pie.separator()
+                    pie.operator("mesh.bridge_edge_loops", text="Bridge Faces")
                 # SOUTH
                 pie.operator("wm.call_menu_pie", text='Extrude Faces...', icon="TRIA_DOWN").name = "SUBPIE_MT_extrudeFaces"
                 # NORTH
                 pie.operator("wm.call_menu_pie", text='Merge...', icon="TRIA_UP").name = "SUBPIE_MT_merge"
-                #pie.operator("mesh.merge", text="Merge")
                 
                 # NORTH-WEST
                 pie.operator("mesh.loopcut_slide", text="Insert Loop")
