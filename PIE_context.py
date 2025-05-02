@@ -866,7 +866,7 @@ class SUBPIE_MT_sculpt_brush_select_transform(Menu):
         pie = self.layout.menu_pie()
 
         # 4 - LEFT
-        draw_brush_operator(pie, 'Elastic Deform', 'elastic_deform')
+        draw_brush_operator(pie, 'Elastic Grab', 'elastic_deform')
         # 6 - RIGHT
         draw_brush_operator(pie, 'Nudge', 'nudge')
         # 2 - BOTTOM
