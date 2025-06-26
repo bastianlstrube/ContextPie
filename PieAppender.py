@@ -2,7 +2,7 @@
 import bpy
 
 # A function to add the operator to a menu (optional)
-# This example adds it to the 3D Viewport's "View" menu
+# This adds it to the 3D Viewport's "Shading" menu
 def menu_func(self, context):
     layout = self.layout
     pie = layout.menu_pie()
@@ -21,21 +21,4 @@ def register():
 # Function to unregister the operator and remove the menu item
 def unregister():
     # Remove the menu item first
-    bpy.types.VIEW3D_MT_view.remove(menu_func)
-
-
-# --- Script Execution ---
-
-# This allows the script to be run directly in Blender's Text Editor
-# to test the registration.
-if __name__ == "__main__":
-    # Attempt to unregister first in case the script was run before
-    try:
-        unregister()
-    except Exception:
-        pass
-    # Register the operator
-    register()
-
-    # You can optionally print a confirmation message to the system console
-    # print(f"Operator '{VIEW3D_OT_toggle_face_orientation.bl_idname}' registered.")
+    bpy.types.VIEW3D_MT_shading_ex_pie.remove(menu_func)
