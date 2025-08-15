@@ -18,8 +18,9 @@ from .hotkeys import register_hotkey
 from bl_ui.properties_paint_common import (
     UnifiedPaintPanel,
 )
-from bpy.app.translations import contexts as i18n_contexts
+#from bpy.app.translations import contexts as i18n_contexts
 
+from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
 class SUBPIE_MT_objectSelect(Menu):
     bl_label = "Select"
@@ -152,6 +153,7 @@ class SUBPIE_MT_curveTypeHandles(Menu):
         pie.operator("curve.spline_type_set", text='NURBS Curve').type = 'NURBS'
 
 class VIEW3D_PIE_MT_mode(Menu):
+    bl_idname = "PIE_MT_context_mode"
     bl_label = "Mode Selection"
 
     def draw(self, context):
@@ -847,10 +849,8 @@ def register():
     ]
 
     for cat in categories:
-        register_hotkey(
-            'wm.call_menu_pie_drag_only_cpie',
-            op_kwargs={'name': 'VIEW3D_PIE_MT_mode'},
+        WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
+            pie_name=VIEW3D_PIE_MT_mode.bl_idname,
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
-            key_cat=cat,
+            keymap_name=cat,
         )
-

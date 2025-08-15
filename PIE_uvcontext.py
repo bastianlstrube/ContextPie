@@ -15,8 +15,9 @@ bl_info = {
 import bpy
 from bpy.types import Menu
 from .hotkeys import register_hotkey
-from bpy.app.translations import contexts as i18n_contexts
+#from bpy.app.translations import contexts as i18n_contexts
 
+from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
 # Sub Sub Pie Menu for UV Unwrap
 class SUBPIE_MT_uvPrimUnwrap(Menu):
@@ -76,6 +77,7 @@ class SUBPIE_MT_uvUnwrap(Menu):
 
 # Reference context menu: IMAGE_MT_uvs_context_menu
 class IMAGE_PIE_MT_uvContext(Menu):
+    bl_idname = "PIE_MT_context_uv"
     bl_label    = "UV Context"
 
     def draw(self, context):
@@ -126,9 +128,8 @@ registry = [
 
 def register():
 
-    register_hotkey(
-        'wm.call_menu_pie_drag_only_cpie',
-        op_kwargs={'name': 'IMAGE_PIE_MT_uvContext'},
+    WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
+        pie_name=IMAGE_PIE_MT_uvContext.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
-        key_cat="UV Editor",
+        keymap_name="UV Editor",
     )

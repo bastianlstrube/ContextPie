@@ -2,192 +2,130 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# liberally borrowed from Blenders Community Extension: Viewports Pie Menu
-
-import bpy, json
 import io, platform, struct, urllib
-from pathlib import Path
-from bpy.types import AddonPreferences
+
+import bpy
+from bpy.types import AddonPreferences, Operator
 from bpy.props import BoolProperty
 from bl_ui.space_userpref import USERPREF_PT_interface_menus_pie
-from .hotkeys import draw_hotkey_list, PIE_ADDON_KEYMAPS, find_kmi_in_km_by_hash, print_kmi, get_kmi_ui_info
-from . import __package__ as base_package
+from .prefs_save_load import PrefsFileSaveLoadMixin, props_to_dict_recursive, update_prefs_on_file
+from . import get_addon_prefs
 
+from .hotkeys import (
+    draw_hotkey_list,
+    get_user_kmis_of_addon,
+    get_user_kmi_of_addon,
+)
+from . import bl_info_copy
 
-def get_addon_prefs(context=None):
-    if not context:
-        context = bpy.context
-    if base_package.startswith('bl_ext'):
-        # 4.2
-        return context.preferences.addons[base_package].preferences
-    else:
-        return context.preferences.addons[base_package.split(".")[0]].preferences
-
-
-def update_prefs_on_file(self=None, context=None):
-    prefs = get_addon_prefs(context)
-    if not type(prefs).loading:
-        prefs.save_prefs_to_file()
-
-
-class PrefsFileSaveLoadMixin:
-    """Mix-in class that can be used by any add-on to store their preferences in a file,
-    so that they don't get lost when the add-on is disabled.
-    To use it, copy this class and the two functions above it, and do this in your code:
-
-    ```
-    import bpy, json
-    from pathlib import Path
-
-    class MyAddonPrefs(PrefsFileSaveLoadMixin, bpy.types.AddonPreferences):
-        some_prop: bpy.props.IntProperty(update=update_prefs_on_file)
-
-    def register():
-        bpy.utils.register_class(MyAddonPrefs)
-        MyAddonPrefs.register_autoload_from_file()
-    ```
-
-    """
-
-    loading = False
-
-    @staticmethod
-    def register_autoload_from_file(delay=0.1):
-        def timer_func(_scene=None):
-            prefs = get_addon_prefs()
-            prefs.load_prefs_from_file()
-        bpy.app.timers.register(timer_func, first_interval=delay)
-
-    def prefs_to_dict_recursive(self, propgroup: 'IDPropertyGroup') -> dict:
-        """Recursively convert AddonPreferences to a dictionary.
-        Note that AddonPreferences don't support PointerProperties,
-        so this function doesn't either."""
-        from rna_prop_ui import IDPropertyGroup
-        ret = {}
-        
-        if hasattr(propgroup, 'bl_rna'):
-            rna_class = propgroup.bl_rna
-        else:
-            property_group_class_name = type(propgroup).__name__
-            rna_class = bpy.types.PropertyGroup.bl_rna_get_subclass_py(property_group_class_name)
-
-        for key, value in propgroup.items():
-            if type(value) == list:
-                ret[key] = [self.prefs_to_dict_recursive(elem) for elem in value]
-            elif type(value) == IDPropertyGroup:
-                ret[key] = self.prefs_to_dict_recursive(value)
-            else:
-                if (
-                    rna_class and 
-                    key in rna_class.properties and 
-                    hasattr(rna_class.properties[key], 'enum_items')
-                ):
-                    # Save enum values as string, not int.
-                    ret[key] = rna_class.properties[key].enum_items[value].identifier
-                else:
-                    ret[key] = value
-        return ret
-
-    def apply_prefs_from_dict_recursive(self, propgroup, data):
-        for key, value in data.items():
-            if not hasattr(propgroup, key):
-                # Property got removed or renamed in the implementation.
-                continue
-            if type(value) == list:
-                for elem in value:
-                    collprop = getattr(propgroup, key)
-                    entry = collprop.get(elem['name'])
-                    if not entry:
-                        entry = collprop.add()
-                    self.apply_prefs_from_dict_recursive(entry, elem)
-            elif type(value) == dict:
-                self.apply_prefs_from_dict_recursive(getattr(propgroup, key), value)
-            else:
-                setattr(propgroup, key, value)
-
-    @staticmethod
-    def get_prefs_filepath() -> Path:
-        addon_name = __package__.split(".")[-1]
-        return Path(bpy.utils.user_resource('CONFIG')) / Path(addon_name + ".txt")
-
-    def save_prefs_to_file(self, _context=None):
-        data_dict = self.prefs_to_dict_recursive(propgroup=self)
-
-        with open(self.get_prefs_filepath(), "w") as f:
-            json.dump(data_dict, f, indent=4)
-
-    def load_prefs_from_file(self):
-        filepath = self.get_prefs_filepath()
-        if not filepath.exists():
-            return
-
-        with open(filepath, "r") as f:
-            addon_data = json.load(f)
-            type(self).loading = True
-            try:
-                self.apply_prefs_from_dict_recursive(self, addon_data)
-            except Exception as exc:
-                # If we get an error raised here, and it isn't handled,
-                # the add-on seems to break.
-                print(f"Failed to load {__package__} preferences from file.")
-                raise exc
-            type(self).loading = False
-
-
-class ExtraPies_AddonPrefs(PrefsFileSaveLoadMixin, AddonPreferences, USERPREF_PT_interface_menus_pie):
+class ContextPie_AddonPrefs(
+    PrefsFileSaveLoadMixin,
+    AddonPreferences,
+    USERPREF_PT_interface_menus_pie, # We use this class's `draw_centered` function to draw built-in pie settings.
+):
     bl_idname = __package__
 
-    show_in_sidebar: BoolProperty(
-        name="Show in Sidebar",
-        default=False, 
-        description="Show a compact version of the preferences in the sidebar. Useful when picking up the add-on for the first time to learn and customize it to your liking",
+    debug: BoolProperty(
+        name="Debug Mode",
+        default=False,
+        description="Enable some (ugly) debugging UI",
     )
 
     def draw(self, context):
         draw_prefs(self.layout, context, compact=False)
 
-    def prefs_to_dict_recursive(self, propgroup: 'IDPropertyGroup') -> dict:
-        ret = super().prefs_to_dict_recursive(propgroup)
+    def to_dict(self) -> dict:
+        ret = props_to_dict_recursive(self)
 
-        keymap_data = list(PIE_ADDON_KEYMAPS.items())
-        keymap_data = sorted(keymap_data, key=lambda tup: "".join(get_kmi_ui_info(tup[1][1], tup[1][2])))
+        all_keymap_data = []
+        for user_km, user_kmi in get_user_kmis_of_addon(bpy.context):
+            data = {}
+            data['keymap'] = user_km.name
+            data['operator'] = user_kmi.idname
 
-        hotkeys = {}
-        for kmi_hash, kmi_tup in keymap_data:
-            _addon_kc, addon_km, addon_kmi = kmi_tup
-            context = bpy.context
-            user_kc = context.window_manager.keyconfigs.user
-            user_km = user_kc.keymaps.get(addon_km.name)
-            if not user_km:
-                continue
-            user_kmi = find_kmi_in_km_by_hash(user_km, kmi_hash)
-            if not user_kmi:
-                print(base_package + ": Failed to find UserKeymapItem to store: ")
-                print_kmi(addon_kmi)
-                continue
+            NO_SAVE_OP_KWARGS = ('fallback_operator', 'fallback_op_kwargs')
 
-            hotkeys[kmi_hash] = {key:getattr(user_kmi, key) for key in ('idname', 'active', 'type', 'value', 'shift_ui', 'ctrl_ui', 'alt_ui', 'oskey_ui', 'any', 'map_type', 'key_modifier')}
-            hotkeys[kmi_hash]["key_cat"] = addon_km.name
+            op_kwargs = {}
             if user_kmi.properties:
-                hotkeys[kmi_hash]["properties"] = {key:getattr(user_kmi.properties, key) for key in user_kmi.properties.keys() if hasattr(user_kmi.properties, key)}
+                op_kwargs = {
+                    key: getattr(user_kmi.properties, key)
+                    for key in user_kmi.properties.keys()
+                    if hasattr(user_kmi.properties, key) and key not in NO_SAVE_OP_KWARGS
+                }
 
-        ret["hotkeys"] = hotkeys
+            data['op_kwargs'] = op_kwargs
+
+            data['key_kwargs'] = {
+                'type' : user_kmi.type,
+                'value' : user_kmi.value,
+                'ctrl' : bool(user_kmi.ctrl),
+                'shift' : bool(user_kmi.shift),
+                'alt' : bool(user_kmi.alt),
+                'any' : bool(user_kmi.any),
+                'oskey' : bool(user_kmi.oskey),
+                'key_modifier' : user_kmi.key_modifier,
+                'active' : user_kmi.active
+            }
+
+            all_keymap_data.append(data)
+
+        ret["hotkeys"] = all_keymap_data
 
         return ret
 
     def apply_prefs_from_dict_recursive(self, propgroup, data):
-        hotkeys = data.pop("hotkeys")
+        success = True
+        if 'hotkeys' in data:
+            hotkeys = data.pop("hotkeys")
+            if type(hotkeys) == dict:
+                # Pre-1.6.8 code, with the keymap hash system.
+                if not(self.apply_hotkeys_pre_v168(hotkeys)):
+                    success = False
+            else:
+                # v1.6.8 and beyond.
+                for hotkey in hotkeys:
+                    op_kwargs = {}
+                    if 'name' in hotkey['op_kwargs']:
+                        op_kwargs['name'] = hotkey['op_kwargs']['name']
+                    _user_km, user_kmi = get_user_kmi_of_addon(bpy.context, hotkey['keymap'], hotkey['operator'], op_kwargs)
+                    if not user_kmi:
+                        print("Failed to apply Keymap: ", hotkey['keymap'], hotkey['operator'], op_kwargs)
+                        success = False
+                        continue
+                    op_kwargs = hotkey.pop('op_kwargs')
+                    for key, value in op_kwargs.items():
+                        setattr(user_kmi.properties, key, value)
+                    for key, value in hotkey['key_kwargs'].items():
+                        if key == "any" and not value:
+                            continue
+                        setattr(user_kmi, key, value)
+        super().apply_prefs_from_dict_recursive(propgroup, data)
+        return success
+
+    def apply_hotkeys_pre_v168(self, hotkeys):
+        """Best effort to read the old, hash-based keymap storage format. 
+        This caused issues so it had to be re-worked, and versioned."""
 
         context = bpy.context
-        user_kc = context.window_manager.keyconfigs.user
 
-        for kmi_hash, kmi_props in hotkeys.items():
-            key_cat = kmi_props.pop("key_cat")
-            user_km = user_kc.keymaps.get(key_cat)
-            if not user_km:
-                continue
-            user_kmi = find_kmi_in_km_by_hash(user_km, kmi_hash)
+        complete_success = True
+
+        for _kmi_hash, kmi_props in hotkeys.items():
+            if 'key_cat' in kmi_props:
+                keymap_name = kmi_props.pop('key_cat')
+
+            op_kwargs = {}
+            if 'name' in kmi_props['properties']:
+                op_kwargs['name'] = kmi_props['properties']['name']
+
+            idname = kmi_props['idname']
+            if idname in ('wm.call_menu_pie', 'wm.call_menu_pie_wrapper'):
+                idname = 'wm.call_menu_pie_drag_only_cpie'
+
+            _user_km, user_kmi = get_user_kmi_of_addon(context, keymap_name, idname, op_kwargs)
             if not user_kmi:
+                complete_success = False
+                # print("No such user KeymapItem: ", keymap_name, idname, op_kwargs)
                 continue
 
             if "properties" in kmi_props:
@@ -197,36 +135,135 @@ class ExtraPies_AddonPrefs(PrefsFileSaveLoadMixin, AddonPreferences, USERPREF_PT
                         setattr(user_kmi.properties, key, value)
 
             for key, value in kmi_props.items():
-                if key=="any" and not value:
+                if key == "any" and not value:
                     continue
-                setattr(user_kmi, key, value)
+                if key == "name":
+                    continue
+                if key == "idname":
+                    continue
+                try:
+                    setattr(user_kmi, key, value)
+                except:
+                    # print("Failed to load keymap item:")
+                    # print_kmi(user_kmi)
+                    pass
 
-        super().apply_prefs_from_dict_recursive(propgroup, data)
+        return complete_success
 
 
 def draw_prefs(layout, context, compact=False):
     prefs = get_addon_prefs(context)
 
+
     layout.use_property_split = True
     layout.use_property_decorate = False
-    layout.operator('wm.url_open', text="Report Bug", icon='URL').url="https://github.com/bastianlstrube/ContextPie/issues"
-    if not compact:
-        layout.prop(prefs, 'show_in_sidebar')
 
-    header, builtins_panel = layout.panel(idname="Extra Pies Builtin Prefs")
+    if not compact:
+        col = layout.column()
+        row = col.row()
+        row.operator('wm.url_open', text="Report Bug", icon='URL').url = (
+            get_bug_report_url()
+        )
+        row.prop(prefs, 'debug', icon='BLANK1', text="", emboss=False)
+        col.prop(prefs, 'use_auto_save')
+
+    header, builtins_panel = layout.panel(idname="Context Pie Builtin Prefs")
     header.label(text="Pie Preferences")
     if builtins_panel:
         prefs.draw_centered(context, layout)
 
-    header, hotkeys_panel = layout.panel(idname="Extra Pies Hotkeys")
+    compact = context.area.width < 600
+    header, hotkeys_panel = layout.panel(idname="Context Pie Hotkeys")
     header.label(text="Hotkeys")
     if hotkeys_panel:
-        draw_hotkey_list(hotkeys_panel, context, compact=compact)
+        hotkeys_panel.operator('window.restore_deleted_hotkeys_v3pm', icon='KEY_RETURN')
+        draw_hotkey_list(hotkeys_panel, context, prefs, compact=compact)
+
+
+def get_bug_report_url(stack_trace=""):
+    fh = io.StringIO()
+
+    fh.write("**System Information**\n")
+    fh.write(
+        "Operating system: %s %d Bits\n"
+        % (
+            platform.platform(),
+            struct.calcsize("P") * 8,
+        )
+    )
+    fh.write("\n" "**Blender Version:** ")
+    fh.write(
+        "%s, branch: %s, commit: [%s](https://projects.blender.org/blender/blender/commit/%s)\n"
+        % (
+            bpy.app.version_string,
+            bpy.app.build_branch.decode('utf-8', 'replace'),
+            bpy.app.build_commit_date.decode('utf-8', 'replace'),
+            bpy.app.build_hash.decode('ascii'),
+        )
+    )
+
+    addon_version = bl_info_copy['version']
+    fh.write(f"**Add-on Version**: {addon_version}\n")
+
+    if stack_trace != "":
+        fh.write("\nStack trace\n```\n" + stack_trace + "\n```\n")
+
+    fh.write("\n" "---")
+
+    fh.write("\n" "Description of the problem:\n" "\n")
+
+    fh.seek(0)
+
+    # Use the GitHub issue URL with the 'body' query parameter
+    github_url = "https://github.com/bastianlstrube/ContextPie/issues/new"
+    params = {'body': fh.read()}
+    
+    # Optional: You can also pre-fill the issue title and labels
+    # params['title'] = 'New bug report from ContextPie'
+    # params['labels'] = 'bug'
+
+    return github_url + "?" + urllib.parse.urlencode(params)
+
+
+class WINDOW_OT_context_pie_prefs_save(Operator):
+    """Save Context Pie add-on preferences"""
+
+    bl_idname = "window.context_pie_prefs_save"
+    bl_label = "Save Pie Hotkeys"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        filepath, data = update_prefs_on_file(context)
+        self.report({'INFO'}, f"Saved Pie Prefs to {filepath}.")
+        return {'FINISHED'}
+
+
+class WINDOW_OT_context_pie_prefs_load(Operator):
+    """Load Context Pie add-on preferences"""
+
+    bl_idname = "window.context_pie_prefs_load"
+    bl_label = "Load Pie Hotkeys"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        prefs = get_addon_prefs(context)
+        filepath = prefs.get_prefs_filepath()
+        success = prefs.load_and_apply_prefs_from_file()
+
+        if success:
+            self.report({'INFO'}, f"Loaded pie preferences from {filepath}.")
+        else:
+            self.report({'ERROR'}, "Failed to load Pie preferences.")
+
+        return {'FINISHED'}
+
+
+registry = [
+    ContextPie_AddonPrefs,
+    WINDOW_OT_context_pie_prefs_save,
+    WINDOW_OT_context_pie_prefs_load,
+]
+
 
 def register():
-    bpy.utils.register_class(ExtraPies_AddonPrefs)
-    ExtraPies_AddonPrefs.register_autoload_from_file()
-
-
-def unregister():
-    bpy.utils.unregister_class(ExtraPies_AddonPrefs)
+    ContextPie_AddonPrefs.register_autoload_from_file()

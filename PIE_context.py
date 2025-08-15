@@ -2,24 +2,18 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-bl_info = {
-    "name": "Context Pie: 'Shift + Right Mouse'",
-    "blender": (4, 2, 0),
-    "category": "Interface",
-    "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube",
-    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
-}
 
 import os
 from pathlib import Path
 
 import bpy
 from bpy.types import Menu
-from .hotkeys import register_hotkey
-
-from bpy.app.translations import contexts as i18n_contexts
+#from .hotkeys import register_hotkey
+#from bpy.app.translations import contexts as i18n_contexts
 from bl_ui.properties_paint_common import BrushAssetShelf
+
+from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
+
 
 # MESH SUB MENUS ######################################################################
 # Edit Mesh merge operators
@@ -993,6 +987,7 @@ class SUBPIE_MT_add_forcefield(Menu):
 
 # Main Context Sensitive Pie Menu
 class VIEW3D_PIE_MT_context(Menu):
+    bl_idname = "PIE_MT_context_pie"
     bl_label    = "Context Pie"
 
     def draw(self, context):
@@ -1579,17 +1574,15 @@ if  "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
 def register():
     create_icons()
 
-    register_hotkey(
-        'wm.call_menu_pie_drag_only_cpie',
-        op_kwargs={'name': 'VIEW3D_PIE_MT_context'},
+    WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
+        pie_name=VIEW3D_PIE_MT_context.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
-        key_cat="3D View",
+        keymap_name="3D View",
     )
-    register_hotkey(
-        'wm.call_menu_pie_drag_only_cpie',
-        op_kwargs={'name': 'VIEW3D_PIE_MT_context'},
+    WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
+        pie_name=VIEW3D_PIE_MT_context.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
-        key_cat="Sculpt",
+        keymap_name="Sculpt",
     )
 
 def unregister():
