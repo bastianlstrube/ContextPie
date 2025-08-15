@@ -925,25 +925,25 @@ class SUBPIE_MT_add_mesh(Menu):
     bl_label = "Mesh"
     def draw(self, context):
         mesh_pie = self.layout.menu_pie()
-        mesh_pie.operator("mesh.primitive_cube_add", text="Cube")
-        mesh_pie.operator("mesh.primitive_plane_add", text="Plane")
-        mesh_pie.operator("mesh.primitive_uv_sphere_add", text="UV Sphere")
-        mesh_pie.operator("mesh.primitive_ico_sphere_add", text="Ico Sphere")
-        mesh_pie.operator("mesh.primitive_cylinder_add", text="Cylinder")
-        mesh_pie.operator("mesh.primitive_cone_add", text="Cone")
-        mesh_pie.operator("mesh.primitive_torus_add", text="Torus")
-        mesh_pie.operator("mesh.primitive_grid_add", text="Grid")
+        mesh_pie.operator("mesh.primitive_cube_add", text="Cube", icon='MESH_CUBE')
+        mesh_pie.operator("mesh.primitive_plane_add", text="Plane", icon='MESH_PLANE')
+        mesh_pie.operator("mesh.primitive_uv_sphere_add", text="UV Sphere", icon='MESH_UVSPHERE')
+        mesh_pie.operator("mesh.primitive_ico_sphere_add", text="Ico Sphere", icon='MESH_ICOSPHERE')
+        mesh_pie.operator("mesh.primitive_cylinder_add", text="Cylinder", icon='MESH_CYLINDER')
+        mesh_pie.operator("mesh.primitive_cone_add", text="Cone", icon='MESH_CONE')
+        mesh_pie.operator("mesh.primitive_torus_add", text="Torus", icon='MESH_TORUS')
+        mesh_pie.operator("mesh.primitive_grid_add", text="Grid", icon='MESH_GRID')
 
 class SUBPIE_MT_add_curves_text(Menu):
     bl_label = "Curves & Text"
     def draw(self, context):
         curves_text_pie = self.layout.menu_pie()
-        curves_text_pie.operator("curve.primitive_bezier_curve_add", text="Bezier")
-        curves_text_pie.operator("curve.primitive_bezier_circle_add", text="Circle")
-        curves_text_pie.operator("curve.primitive_nurbs_circle_add", text="NURBS Circle")
-        curves_text_pie.operator("curve.primitive_nurbs_curve_add", text="NURBS Curve")
-        curves_text_pie.operator("curve.primitive_nurbs_path_add", text="NURBS Path")
-        curves_text_pie.operator("object.text_add", text="Text")
+        curves_text_pie.operator("curve.primitive_bezier_curve_add", text="Bezier", icon='CURVE_BEZCURVE')
+        curves_text_pie.operator("curve.primitive_bezier_circle_add", text="Circle", icon='CURVE_BEZCIRCLE')
+        curves_text_pie.operator("curve.primitive_nurbs_circle_add", text="NURBS Circle", icon='CURVE_NCIRCLE')
+        curves_text_pie.operator("curve.primitive_nurbs_curve_add", text="NURBS Curve", icon='CURVE_NCURVE')
+        curves_text_pie.operator("curve.primitive_nurbs_path_add", text="NURBS Path", icon='CURVE_PATH')
+        curves_text_pie.operator("object.text_add", text="Text", icon='FONT_DATA')
 
 class SUBPIE_MT_add_empties(Menu):
     bl_label = "Empties"
@@ -962,11 +962,11 @@ class SUBPIE_MT_add_cameras_speakers(Menu):
     bl_label = "Camera, Images & Speakers"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("object.camera_add", text="Camera")
-        pie.operator("object.speaker_add", text="Speaker")
-        pie.operator("object.empty_image_add", text="Reference").background = False
-        pie.operator("object.empty_image_add", text="Background").background = True
-        pie.operator("image.import_as_mesh_planes", text="Image Mesh Plane")
+        pie.operator("object.camera_add", text="Camera", icon='CAMERA_DATA')
+        pie.operator("object.speaker_add", text="Speaker", icon='SPEAKER')
+        pie.operator("object.empty_image_add", text="Reference", icon='IMAGE_REFERENCE').background = False
+        pie.operator("object.empty_image_add", text="Background", icon='IMAGE_BACKGROUND').background = True
+        pie.operator("image.import_as_mesh_planes", text="Image Mesh Plane", icon='IMAGE_PLANE')
 
 class SUBPIE_MT_add_greasepencil(Menu):
     bl_label = "Grease Pencil"
@@ -1190,14 +1190,14 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
   
             else:
-                pie.operator("wm.call_menu_pie", text="Mesh...").name = "SUBPIE_MT_add_mesh"
-                pie.operator("wm.call_menu_pie", text="Curves & Text...").name = "SUBPIE_MT_add_curves_text"
-                pie.operator("wm.call_menu_pie", text="Empties...").name = "SUBPIE_MT_add_empties"
-                pie.operator("wm.call_menu_pie", text="Lights & Probes...").name = "SUBPIE_MT_add_lights_probes"
-                pie.operator("wm.call_menu_pie", text="Camera & Images...").name = "SUBPIE_MT_add_cameras_speakers"
-                pie.operator("wm.call_menu_pie", text="Grease Pencil...").name = "SUBPIE_MT_add_greasepencil"
-                pie.operator("wm.call_menu_pie", text="Force Fields...").name = "SUBPIE_MT_add_forcefield"
-                pie.operator("object.armature_add", text="Armature")
+                pie.operator("wm.call_menu_pie", text="Mesh...", icon='MESH_CUBE').name = "SUBPIE_MT_add_mesh"
+                pie.operator("wm.call_menu_pie", text="Curves & Text...", icon='CURVE_DATA').name = "SUBPIE_MT_add_curves_text"
+                pie.operator("wm.call_menu_pie", text="Empties...", icon='EMPTY_DATA').name = "SUBPIE_MT_add_empties"
+                pie.operator("wm.call_menu_pie", text="Lights & Probes...", icon='LIGHT').name = "SUBPIE_MT_add_lights_probes"
+                pie.operator("wm.call_menu_pie", text="Camera & Images...", icon='CAMERA_DATA').name = "SUBPIE_MT_add_cameras_speakers"
+                pie.operator("wm.call_menu_pie", text="Grease Pencil...", icon='OUTLINER_OB_GREASEPENCIL').name = "SUBPIE_MT_add_greasepencil"
+                pie.operator("wm.call_menu_pie", text="Force Fields...", icon='FORCE_DRAG').name = "SUBPIE_MT_add_forcefield"
+                pie.operator("object.armature_add", text="Armature", icon='ARMATURE_DATA')
 
         # Straight from Blenders Pie Addon Sculpt 'W' Menu
         if context.mode == 'SCULPT':
