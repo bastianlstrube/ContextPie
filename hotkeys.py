@@ -12,12 +12,20 @@ KEYMAP_ICONS = {
     'Window': 'WINDOW',
     '3D View': 'VIEW3D',
     'Mesh': 'OUTLINER_DATA_MESH',
+    'Curve': 'CURVE_DATA',
     'Outliner': 'OUTLINER',
     'Object Non-modal': 'OBJECT_DATAMODE',
     'Sculpt': 'SCULPTMODE_HLT',
     'Armature': 'ARMATURE_DATA',
     'Pose': 'POSE_HLT',
     'Weight Paint': 'WPAINT_HLT',
+    'UV Editor': 'UV',
+    'Grease Pencil Edit Mode': 'OUTLINER_DATA_GREASEPENCIL',
+    'Grease Pencil Paint Mode': 'GREASEPENCIL',
+    'Grease Pencil Sculpt Mode': 'GP_SELECT_STROKES',
+    'Image Paint': 'IMAGE',
+    'Lattice': 'LATTICE_DATA',
+    'Vertex Paint': 'VPAINT_HLT'
 }
 
 KEYMAP_UI_NAMES = {

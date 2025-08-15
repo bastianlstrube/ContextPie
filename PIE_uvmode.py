@@ -11,10 +11,7 @@ bl_info = {
     "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
 }
 
-import bpy
 from bpy.types import Menu
-from .hotkeys import register_hotkey
-#from bpy.app.translations import contexts as i18n_contexts
 
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 

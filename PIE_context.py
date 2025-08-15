@@ -8,8 +8,6 @@ from pathlib import Path
 
 import bpy
 from bpy.types import Menu
-#from .hotkeys import register_hotkey
-#from bpy.app.translations import contexts as i18n_contexts
 from bl_ui.properties_paint_common import BrushAssetShelf
 
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
