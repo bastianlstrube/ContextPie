@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 bl_info = {
-    "name": "Context Pie",
+    "name": "ContextPie",
     "version": (0, 9, 12),
     "blender": (4, 2, 0),
     "category": "Interface",
