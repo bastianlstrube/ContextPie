@@ -31,10 +31,10 @@ class ContextPie_AddonPrefs(
         description="Enable some (ugly) debugging UI",
     )
 
-    toolmode: BoolProperty(
-        name="Set 'Knife' and 'Insert Edge Loop' as active tools",
+    persistent_tools: BoolProperty(
+        name="Persistent 'Knife' and 'Edge Loop' tools",
         default=False,
-        description="Keeps 'Knife' and 'Insert Edge Loop' in Context Pie menu as the active tools after operation"
+        description="Keeps 'Knife' and 'Insert Edge Loop' as the active tools after operation"
     )
 
     def draw(self, context):
@@ -172,7 +172,7 @@ def draw_prefs(layout, context, compact=False):
         )
         row.prop(prefs, 'debug', icon='BLANK1', text="", emboss=False)
         col.prop(prefs, 'use_auto_save')
-        col.prop(prefs, 'toolmode') #, icon='TOOL_SETTINGS')
+        col.prop(prefs, 'persistent_tools') #, icon='TOOL_SETTINGS')
 
     header, builtins_panel = layout.panel(idname="Context Pie Builtin Prefs")
     header.label(text="Pie Preferences")

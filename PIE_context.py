@@ -12,6 +12,49 @@ from bl_ui.properties_paint_common import BrushAssetShelf
 
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
+# CUSTOM OPERATORS ######################################################################
+# Knife Tool Operator
+class SetKnifeTool(bpy.types.Operator):
+    bl_idname = "mesh.set_knife_tool"
+    bl_label = "Knife Tool"
+    bl_description = "Activate the Knife tool, for one operation or as active tool"
+    
+    def execute(self, context):
+        # Get your addon's preferences
+        addon_name = __package__
+        addon_prefs = context.preferences.addons[addon_name].preferences
+
+        if addon_prefs.persistent_tools:
+            # Set knife as active tool (persistent)
+            bpy.ops.wm.tool_set_by_id(name="builtin.knife")
+        else:
+            # Run knife operation once (temporary)
+            bpy.ops.mesh.knife_tool('INVOKE_DEFAULT')
+
+
+        return {'FINISHED'}
+
+# Insert Edge Loop Tool Operator
+class SetLoopCutTool(bpy.types.Operator):
+    bl_idname = "mesh.set_loopcut_tool"
+    bl_label = "Loop Cut'n'Slide Tool"
+    bl_description = "Activate the Loop Cut'n'Slide Tool, for one operation or as active tool"
+    
+    def execute(self, context):
+        # Get your addon's preferences
+        addon_name = __package__
+        addon_prefs = context.preferences.addons[addon_name].preferences
+
+        # Choose behavior based on preference
+        if addon_prefs.persistent_tools:
+            # Set loop cut as active tool (persistent)
+            bpy.ops.wm.tool_set_by_id(name="builtin.loop_cut")
+        else:
+            # Run loop cut operation once (temporary)
+            bpy.ops.mesh.loopcut_slide('INVOKE_DEFAULT')
+
+
+        return {'FINISHED'}
 
 # MESH SUB MENUS ######################################################################
 # Edit Mesh merge operators
@@ -1016,7 +1059,7 @@ class VIEW3D_PIE_MT_context(Menu):
             if is_vert_mode:
                 
                 # WEST
-                pie.operator("mesh.knife_tool", text="Knife")
+                pie.operator("mesh.set_knife_tool", text="Knife")
                 # EAST
                 pie.operator("wm.call_menu_pie", text='Connect...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
                 # SOUTH
@@ -1024,7 +1067,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # NORTH
                 pie.operator("wm.call_menu_pie", text='Merge...', icon="TRIA_UP").name = "SUBPIE_MT_merge"                
                 # NORTH-WEST
-                pie.operator("mesh.loopcut_slide", text="Insert Loop")
+                pie.operator("mesh.set_loopcut_tool", text="Insert Loop")
                 # NORTH-EAST
                 pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
@@ -1047,7 +1090,7 @@ class VIEW3D_PIE_MT_context(Menu):
             elif is_edge_mode:
 
                 # WEST
-                pie.operator("mesh.knife_tool", text="Knife")
+                pie.operator("mesh.set_knife_tool", text="Knife")
                 # EAST
                 pie.operator("wm.call_menu_pie", text='Connect...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
                 # SOUTH
@@ -1055,7 +1098,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 # NORTH
                 pie.operator("wm.call_menu_pie", text='Merge...', icon="TRIA_UP").name = "SUBPIE_MT_merge"
                 # NORTH-WEST
-                pie.operator("mesh.loopcut_slide", text="Insert Loop")
+                pie.operator("mesh.set_loopcut_tool", text="Insert Loop")
                 # NORTH-EAST
                 pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
@@ -1085,7 +1128,7 @@ class VIEW3D_PIE_MT_context(Menu):
             elif is_face_mode:
 
                 # WEST
-                pie.operator("mesh.knife_tool", text="Knife")
+                pie.operator("mesh.set_knife_tool", text="Knife")
                 # EAST
                 if  "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
                     pie.operator("wm.call_menu_pie", text='LoopTools...', icon="TRIA_RIGHT").name = "SUBPIE_MT_edit_mesh_looptools"
@@ -1097,7 +1140,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("wm.call_menu_pie", text='Merge...', icon="TRIA_UP").name = "SUBPIE_MT_merge"
                 
                 # NORTH-WEST
-                pie.operator("mesh.loopcut_slide", text="Insert Loop")
+                pie.operator("mesh.set_loopcut_tool", text="Insert Loop")
                 # NORTH-EAST
                 pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
                 # SOUTH-WEST
@@ -1527,6 +1570,8 @@ def release_icons():
 
 
 registry = [
+    SetKnifeTool,
+    SetLoopCutTool,
     SUBPIE_MT_merge, 
     SUBPIE_MT_connect, 
     SUBPIE_MT_extrudeFaces,
