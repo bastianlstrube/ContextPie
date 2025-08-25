@@ -1052,7 +1052,7 @@ class VIEW3D_PIE_MT_context(Menu):
                 pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
                 # NORTH
                 if len(sel) > 1:
-                    if obj.type == 'MESH':
+                    if obj.type in {'MESH', 'CURVE'}:
                         pie.operator("wm.call_menu_pie", text='Join/Bool...').name = "SUBPIE_MT_joinMeshes"
                     else:
                         pie.operator("object.join")
