@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-
 import os
 from pathlib import Path
 
@@ -380,7 +379,7 @@ class SUBPIE_MT_joinMeshes(Menu):
             # NORTH
             pie.operator("object.join")
             # NORTH-WEST
-            pie.operator("object.compound_object")
+            pie.operator("object.join_modifier")
             # NORTH-EAST
             pie.separator()
             # SOUTH-WEST
@@ -397,7 +396,7 @@ class SUBPIE_MT_joinMeshes(Menu):
             # NORTH
             pie.operator("object.join")
             # NORTH-WEST
-            pie.operator("object.compound_object")
+            pie.operator("object.join_modifier")
             # NORTH-EAST
             pie.separator()
             # SOUTH-WEST

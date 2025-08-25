@@ -3,108 +3,133 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import bpy
+import math
 
-# Join selected objects non-destructively to a object with geo nodes
-class OBJECT_OT_compound_object(bpy.types.Operator):
+def create_joiner_node_group(name, slot_count):
     """
-    Joins selected objects with a non-destructive Geo Nodes modifier.
-    Exposes object inputs and provides options for location and transform space.
+    Creates a new Geometry Node group with a specified number of object inputs
+    organized into a collapsible panel. Designed for Blender 4.2+.
     """
-    bl_idname = "object.compound_object"
-    bl_label = "Compound Object"
+    node_group = bpy.data.node_groups.new(name=name, type='GeometryNodeTree')
+    nodes = node_group.nodes
+    links = node_group.links
+    
+    # Clear any default nodes FIRST to ensure a clean slate
+    nodes.clear()
+    
+    # --- 1. DEFINE THE MODIFIER INTERFACE ---
+    
+    # Create the final 'Geometry' output socket
+    node_group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    
+    # Create a collapsible panel for all the object inputs
+    panel = node_group.interface.new_panel("Object Inputs")
+    
+    # Create all the object input sockets and assign them to the panel
+    for i in range(slot_count):
+        socket_name = f"Object {i+1}"
+        socket = node_group.interface.new_socket(name=socket_name, in_out="INPUT", socket_type='NodeSocketObject', parent=panel)
+
+    # --- 2. CREATE AND ARRANGE THE NODES ---
+
+    # Core nodes
+    input_node = nodes.new(type='NodeGroupInput')
+    output_node = nodes.new(type='NodeGroupOutput')
+    join_node = nodes.new(type='GeometryNodeJoinGeometry')
+    
+    input_node.location = (-400, 0)
+    join_node.location = (150, 0)
+    output_node.location = (400, 0)
+    
+    links.new(join_node.outputs['Geometry'], output_node.inputs['Geometry'])
+
+    # --- 3. CREATE OBJECT INFO NODES AND LINK THEM ---
+    
+    node_y_pos_start = (slot_count - 1) * 120
+
+    for i in range(slot_count):
+        socket_name = f"Object {i+1}"
+        obj_info_node = nodes.new(type='GeometryNodeObjectInfo')
+        obj_info_node.location = (-150, node_y_pos_start - (i * 230))
+        links.new(input_node.outputs[socket_name], obj_info_node.inputs['Object'])
+        links.new(obj_info_node.outputs['Geometry'], join_node.inputs['Geometry'])
+        
+    return node_group
+
+
+class OBJECT_OT_join_modifier(bpy.types.Operator):
+    """
+    Join selection non-destructively to a new object with a Geo Nodes modifier.
+    """
+    bl_idname = "object.join_modifier"
+    bl_label = "Join with Modifier"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # --- NEW PROPERTY FOR INITIAL LOCATION ---
+    # Operator properties for the Redo Panel
     initial_location: bpy.props.EnumProperty(
         name="Initial Location",
         description="Where to place the newly created object",
-        items=[
-            ('CURSOR', "3D Cursor", "Place the new object at the 3D Cursor"),
-            ('ACTIVE', "Active Object", "Place the new object at the active object's location")
-        ],
+        items=[('CURSOR', "3D Cursor", "Place at 3D Cursor"), ('ACTIVE', "Active Object", "Place at Active Object")],
         default='CURSOR'
     )
     
-    # Property for the transform space
     transform_space: bpy.props.EnumProperty(
         name="Transform Space",
         description="Choose how object coordinates are imported",
-        items=[
-            ('RELATIVE', "Relative", "Import geometry relative to the modifier object's transform"),
-            ('ORIGINAL', "Original", "Import geometry in its original world space location")
-        ],
+        items=[('RELATIVE', "Relative", "Relative to modifier object"), ('ORIGINAL', "Original", "Original world space")],
         default='RELATIVE'
     )
 
     @classmethod
     def poll(cls, context):
-        # Operator can run if at least one object is selected
         return len(context.selected_objects) >= 1
 
     def execute(self, context):
         selected_objects = context.selected_objects[:]
-        if not selected_objects:
-            self.report({'WARNING'}, "No objects selected to join.")
-            return {'CANCELLED'}
-            
-        # --- USE THE NEW PROPERTY TO DETERMINE LOCATION ---
+        
+        # --- 1. DETERMINE NODE GROUP NAME AND SIZE ---
+        num_selected = len(selected_objects) + 2
+        slot_count = max(6, math.ceil(num_selected / 6.0) * 6)
+        node_group_name = f"GeoJoiner_{slot_count}"
+        
+        # --- 2. FIND OR CREATE THE NODE GROUP ---
+        node_group = bpy.data.node_groups.get(node_group_name)
+        if not node_group:
+            self.report({'INFO'}, f"Creating new node group: {node_group_name}")
+            node_group = create_joiner_node_group(node_group_name, slot_count)
+        else:
+            self.report({'INFO'}, f"Reusing existing node group: {node_group_name}")
+
+        # Determine location for the new object based on user choice
         if self.initial_location == 'CURSOR':
             new_obj_location = context.scene.cursor.location.copy()
-        else:  # 'ACTIVE'
+        else:
             active_obj = context.active_object
-            if active_obj:
-                new_obj_location = active_obj.location.copy()
-            else:
-                # Fallback in case there is no active object
-                self.report({'WARNING'}, "No active object; defaulting to 3D Cursor location")
-                new_obj_location = context.scene.cursor.location.copy()
+            new_obj_location = active_obj.location.copy() if active_obj else context.scene.cursor.location.copy()
 
-        # Create the new object that will host the modifier
-        mesh = bpy.data.meshes.new(name="GeoJoinerMesh")
-        joiner_obj = bpy.data.objects.new("GeoJoiner", mesh)
+        # Create the new object and add the modifier
+        mesh = bpy.data.meshes.new(name="JoinedMesh")
+        joiner_obj = bpy.data.objects.new("JoinedObject", mesh)
         joiner_obj.location = new_obj_location
         context.collection.objects.link(joiner_obj)
-
-        # Add and configure the Geometry Nodes modifier
-        geo_mod = joiner_obj.modifiers.new(name="GeoJoiner", type='NODES')
-        node_group = bpy.data.node_groups.new(name=f"{joiner_obj.name} Nodes", type='GeometryNodeTree')
+        geo_mod = joiner_obj.modifiers.new(name="Joiner", type='NODES')
         geo_mod.node_group = node_group
+
+        # --- 3. POPULATE MODIFIER INPUTS AND SETTINGS ---
         
-        nodes = node_group.nodes
-        links = node_group.links
-        nodes.clear()
-
-        # Create core nodes and position them
-        input_node = nodes.new(type='NodeGroupInput')
-        output_node = nodes.new(type='NodeGroupOutput')
-        join_node = nodes.new(type='GeometryNodeJoinGeometry')
+        # Find the panel by its name to access its child sockets
+        panel = node_group.interface.items_tree.get("Object Inputs")
+        if panel:
+            # Assign selected objects to the sockets inside the panel
+            for i, obj in enumerate(selected_objects):
+                if i < len(panel.interface_items):
+                    socket_identifier = panel.interface_items[i].identifier
+                    geo_mod[socket_identifier] = obj
         
-        input_node.location = (-400, 0)
-        join_node.location = (0, 0)
-        output_node.location = (400, 0)
-
-        # Declare the 'Geometry' output socket for the node group
-        node_group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-        links.new(join_node.outputs['Geometry'], output_node.inputs['Geometry'])
-
-        # Create interface inputs and corresponding nodes
-        objects_to_add = selected_objects + [None] * 4
-        node_y_pos_start = (len(objects_to_add) - 1) * 120
-
-        for i, obj in enumerate(objects_to_add):
-            socket_name = f"Object {i+1}"
-            node_group.interface.new_socket(name=socket_name, in_out="INPUT", socket_type='NodeSocketObject')
-            
-            if obj:
-                socket_identifier = node_group.interface.items_tree[-1].identifier
-                geo_mod[socket_identifier] = obj
-
-            obj_info_node = nodes.new(type='GeometryNodeObjectInfo')
-            obj_info_node.location = (-50, node_y_pos_start - (i * 260))
-            obj_info_node.transform_space = self.transform_space 
-            
-            links.new(input_node.outputs[socket_name], obj_info_node.inputs['Object'])
-            links.new(obj_info_node.outputs['Geometry'], join_node.inputs['Geometry'])
+        # Update the transform space on ALL Object Info nodes inside the group
+        for node in node_group.nodes:
+            if node.type == 'OBJECT_INFO':
+                node.transform_space = self.transform_space
 
         # Final scene cleanup
         bpy.ops.object.select_all(action='DESELECT')
@@ -276,7 +301,7 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
 
 
 registry = [
-    OBJECT_OT_compound_object,
+    OBJECT_OT_join_modifier,
     OBJECT_OT_edit_display_type,
     OBJECT_OT_edit_obj_color,
     OBJECT_OT_add_pie_boolean,
