@@ -362,102 +362,6 @@ class SUBPIE_MT_convert(Menu):
 
         pie.operator_enum("object.convert", "target")
 
-# Add Boolean Operator with collection managing
-class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
-    bl_idname = "object.add_pie_boolean"
-    bl_label = "Set Display Type"
-    bl_description = "Sets the display type for selected objects"
-    bl_options = {'REGISTER', 'UNDO'}           # Enable undo for the operation
-
-    boolean_type: bpy.props.EnumProperty(
-        name="Boolean Type",
-        description="Which type of boolean modifier",
-        items=[
-            ('DIFFERENCE', "Difference", "Subtract active from selected"),
-            ('UNION', "Union", "Union active to selected"),
-            ('INTERSECT', "Intersect", "Intersect active with selected"),
-            ('SPLIT', "Split", "Duplicate and split active from selected"),            
-        ],
-        default='DIFFERENCE',  # Set a default value
-        )
-
-    def link_sole_collection(self, obj, target_collection):
-        "links object only to given collection"
-        if not isinstance(target_collection, bpy.types.Collection):
-            self.report({'WARNING'}, "Invalid collection object provided.")
-            return {'CANCELLED'}
-
-        collections_copy = list(obj.users_collection)
-        for collection in collections_copy:
-            collection.objects.unlink(obj)
-        target_collection.objects.link(obj)
-
-        self.report({'INFO'}, f"Objects linked to '{target_collection.name}'.")
-        return {'FINISHED'}
-
-    def addModifier(self, obj, selobj, modType):
-        modname = "Modifier_" + modType.title()
-        mod = selobj.modifiers.get(modname)
-        if mod:
-            if not mod.operand_type == 'COLLECTION':
-                if obj.users_collection:
-                    sCollection = obj.users_collection[0]
-                else:
-                    sCollection = bpy.context.scene.collection
-                modCollection = bpy.data.collections.new(selobj.name + "_" + modname)
-                sCollection.children.link(modCollection)
-                olobj = mod.object
-                self.link_sole_collection(olobj, modCollection)
-                mod.operand_type = 'COLLECTION'
-                mod.collection = modCollection
-            else:
-                modCollection = mod.collection
-
-            self.link_sole_collection(obj, modCollection)
-            mod.operation = modType
-            obj.display_type = 'WIRE'
-        else:
-            mod = selobj.modifiers.new(modname, 'BOOLEAN')
-            mod.operation = modType
-            mod.object = obj
-            obj.display_type = 'WIRE'
-
-    def execute(self, context):
-        selected_objects = bpy.context.selected_objects
-        obj = bpy.context.object
-        modType = self.boolean_type
-        
-        if not selected_objects:
-            self.report({'WARNING'}, "No objects selected")
-            return {'CANCELLED'}
-
-        # If split, create duplicate of selection and rename
-        if modType == 'SPLIT':
-            obj.select_set(False)
-            bpy.ops.object.duplicate_move_linked()
-            splitInstances = bpy.context.selected_objects
-            for split in splitInstances:
-                splitname = split.name.split('.')[0] + '_Inside'
-                olsplit = bpy.data.objects.get(splitname)
-                if olsplit:
-                    bpy.data.objects.remove(split, do_unlink=True)
-                    self.addModifier(obj, olsplit, 'INTERSECT')
-                else:
-                    split.name = splitname
-                    self.addModifier(obj, split, 'INTERSECT')
-
-        for selobj in selected_objects:
-            if selobj == obj or selobj.type != 'MESH':
-                continue
-
-            if modType == 'SPLIT':
-                self.addModifier(obj, selobj, 'DIFFERENCE')
-            else:
-                self.addModifier(obj, selobj, modType)
-
-
-        return {'FINISHED'}
-
 # Join/Boolean Pie using above custom operator
 class SUBPIE_MT_joinMeshes(Menu):
     bl_label = "Join/Boolean"
@@ -476,7 +380,7 @@ class SUBPIE_MT_joinMeshes(Menu):
             # NORTH
             pie.operator("object.join")
             # NORTH-WEST
-            pie.separator()
+            pie.operator("object.compound_object")
             # NORTH-EAST
             pie.separator()
             # SOUTH-WEST
@@ -485,15 +389,15 @@ class SUBPIE_MT_joinMeshes(Menu):
             pie.separator()
         else:
             # WEST
-            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Difference", icon='SELECT_SUBTRACT').boolean_type = 'DIFFERENCE'
+            pie.operator("object.add_pie_boolean", text="Difference", icon='SELECT_SUBTRACT').boolean_type = 'DIFFERENCE'
             # EAST
-            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Union", icon='SELECT_EXTEND').boolean_type = 'UNION'
+            pie.operator("object.add_pie_boolean", text="Union", icon='SELECT_EXTEND').boolean_type = 'UNION'
             # SOUTH
-            pie.operator(OBJECT_OT_add_pie_boolean.bl_idname, text="Intersect", icon='SELECT_INTERSECT').boolean_type = 'INTERSECT'
+            pie.operator("object.add_pie_boolean", text="Intersect", icon='SELECT_INTERSECT').boolean_type = 'INTERSECT'
             # NORTH
             pie.operator("object.join")
             # NORTH-WEST
-            pie.separator()
+            pie.operator("object.compound_object")
             # NORTH-EAST
             pie.separator()
             # SOUTH-WEST
@@ -562,70 +466,6 @@ class SUBPIE_MT_applyTransform(Menu):
         # SOUTH-EAST
         pie.separator()
 
-# Custom Operator for change display type for multiple selected objects
-class OBJECT_OT_edit_display_type(bpy.types.Operator):
-    bl_idname = "object.edit_display_type"
-    bl_label = "Set Display Type"
-    bl_description = "Sets the display type for selected objects"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    display_type: bpy.props.EnumProperty(
-        name="Display Type",
-        description="How to display the object",
-        items=[
-            ('SOLID', "Solid", "Rendered normally"),
-            ('WIRE', "Wireframe", "Display as wireframe"),
-            ('BOUNDS', "Bounding Box", "Display as bounding box"),
-            ('TEXTURED', "Textured", "Display with textures (if available)"),
-        ],
-        default='SOLID',  # Set a default value
-    )
-
-    def execute(self, context):
-        selected_objects = bpy.context.selected_objects
-
-        if not selected_objects:
-            self.report({'WARNING'}, "No objects selected")
-            return {'CANCELLED'}
-
-        for obj in selected_objects:
-            obj.display_type = self.display_type
-
-        return {'FINISHED'}
-
-# Custom Operator for change object colour for multiple selected objects
-class OBJECT_OT_edit_obj_color(bpy.types.Operator):
-    bl_idname = "object.edit_obj_color"
-    bl_label = "Set Object Colour"
-    bl_description = "Sets the object colour for selected objects"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    color: bpy.props.FloatVectorProperty(
-        name="Color",
-        subtype='COLOR',
-        size=4,
-        min=0.0,
-        max=1.0,
-        default=(1.0, 1.0, 1.0, 1.0),
-        description="Object Color (RGBA)"
-    )
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_popup(self, event)
-
-    def execute(self, context):
-        selected_objects = bpy.context.selected_objects
-
-        if not selected_objects:
-            self.report({'WARNING'}, "No objects selected")
-            return {'CANCELLED'}
-
-        for obj in selected_objects:
-            obj.color = self.color
-
-        return {'FINISHED'}
-
 class SUBPIE_MT_shadeObject(Menu):
     bl_label = "Shade/Display"
     def draw(self, context):
@@ -636,19 +476,19 @@ class SUBPIE_MT_shadeObject(Menu):
         # WEST
         pie.operator("object.shade_smooth")
         # EAST
-        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Solid").display_type = 'SOLID'
+        pie.operator("object.edit_display_type", text="Solid").display_type = 'SOLID'
         # SOUTH
-        pie.operator(OBJECT_OT_edit_obj_color.bl_idname, text="Set Object Colour")
+        pie.operator("object.edit_obj_color", text="Set Object Colour")
         # NORTH
-        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Bounding Box").display_type = 'BOUNDS'
+        pie.operator("object.edit_display_type", text="Bounding Box").display_type = 'BOUNDS'
         # NORTH-WEST
         pie.operator("object.shade_auto_smooth")
         # NORTH-EAST
-        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Wireframe").display_type = 'WIRE'
+        pie.operator("object.edit_display_type", text="Wireframe").display_type = 'WIRE'
         # SOUTH-WEST
         pie.operator("object.shade_flat")
         # SOUTH-EAST
-        pie.operator(OBJECT_OT_edit_display_type.bl_idname, text="Textured").display_type = 'TEXTURED'
+        pie.operator("object.edit_display_type", text="Textured").display_type = 'TEXTURED'
 
         # OLD NATIVE WAY THAT DOESNT WORK ON MULTIPLE OBJECTS:
         #pie.prop(context.object, "display_type", expand=True)
@@ -1580,12 +1420,9 @@ registry = [
     SUBPIE_MT_curveDelete,
     SUBPIE_MT_parent,
     SUBPIE_MT_convert,
-    OBJECT_OT_add_pie_boolean,
     SUBPIE_MT_joinMeshes,
     SUBPIE_MT_addMeshInteractive,
     SUBPIE_MT_applyTransform,
-    OBJECT_OT_edit_display_type,
-    OBJECT_OT_edit_obj_color,
     SUBPIE_MT_shadeObject,
     SUBPIE_MT_LinkTransfer,
     SUBPIE_MT_CopyTransfer,

@@ -37,6 +37,7 @@ def get_addon_prefs(context=None):
         return addons[name].preferences
 
 module_names = (
+    "op_object_utils",
     "op_pie_wrappers",
     "op_restore_deleted_hotkeys",
     "hotkeys",
