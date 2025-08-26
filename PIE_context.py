@@ -55,6 +55,77 @@ class SetLoopCutTool(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# Clear Curve Radius Operator
+class CURVE_OT_clear_radius(bpy.types.Operator):
+    """
+    Operator to reset the radius of selected control points to 1.0.
+    This works on all selected curve objects in Edit Mode.
+    """
+    bl_idname = "curve.clear_radius"
+    bl_label = "Clear Radius"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        """
+        Check if the operator can be run in the current context.
+        The operator is only active if there is an active object,
+        it's in Edit Mode, and the object is a Curve. This is sufficient
+        for multi-object edit mode.
+        """
+        return (context.active_object is not None and
+                context.mode == 'EDIT_CURVE' and
+                context.active_object.type == 'CURVE')
+
+    def execute(self, context):
+        """
+        Main execution logic for the operator.
+        This method is called when the operator is invoked.
+        It will operate on all selected, editable curve objects.
+        """
+        # Get all selected objects that are in the current edit mode session
+        selected_curves = [obj for obj in context.selected_editable_objects if obj.type == 'CURVE']
+        
+        points_changed = 0
+
+        # Check if any curves were actually selected
+        if not selected_curves:
+            self.report({'WARNING'}, "No curve objects selected in Edit Mode.")
+            return {'CANCELLED'}
+
+        # Iterate over each selected curve object
+        for obj in selected_curves:
+            curve_data = obj.data
+
+            # Check if the object has curve data and splines
+            if curve_data and hasattr(curve_data, 'splines'):
+                # Iterate over each spline in the curve data
+                for spline in curve_data.splines:
+                    # Handle different spline types, as they store points differently
+                    
+                    # For Bezier curves, check if the point or its handles are selected
+                    if spline.type == 'BEZIER':
+                        for point in spline.bezier_points:
+                            if point.select_control_point or point.select_left_handle or point.select_right_handle:
+                                point.radius = 1.0
+                                points_changed += 1
+                    
+                    # For NURBS and Poly curves, check the point's select attribute
+                    elif spline.type in ['NURBS', 'POLY']:
+                        for point in spline.points:
+                            if point.select:
+                                point.radius = 1.0
+                                points_changed += 1
+        
+        # Report success to the user, indicating how many points were affected
+        if points_changed > 0:
+            self.report({'INFO'}, f"Reset radius for {points_changed} selected control point(s).")
+        else:
+            self.report({'INFO'}, "No control points were selected.")
+
+        # Return {'FINISHED'} to indicate successful completion
+        return {'FINISHED'}
+
 # MESH SUB MENUS ######################################################################
 # Edit Mesh merge operators
 class SUBPIE_MT_merge(Menu):
@@ -321,7 +392,7 @@ class SUBPIE_MT_curveDelete(Menu):
         # NORTH-WEST
         pie.separator()
         # NORTH-EAST
-        pie.separator()
+        pie.operator("curve.clear_radius")
         # SOUTH-WEST
         pie.operator("curve.delete", text="Delete Vert").type = 'VERT'
         # SOUTH-EAST
@@ -1014,8 +1085,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # NORTH-EAST
             pie.operator("curve.subdivide")
             # SOUTH-WEST
-            deletePie = pie.operator("wm.call_menu_pie", text='Delete...', icon = "RIGHTARROW_THIN")
-            deletePie.name = "SUBPIE_MT_curveDelete"
+            deletePie = pie.operator("wm.call_menu_pie", text='Delete/Clear...').name = "SUBPIE_MT_curveDelete"
             # SOUTH-EAST
             pie.operator("curve.separate")
 
@@ -1411,6 +1481,7 @@ def release_icons():
 registry = [
     SetKnifeTool,
     SetLoopCutTool,
+    CURVE_OT_clear_radius,
     SUBPIE_MT_merge, 
     SUBPIE_MT_connect, 
     SUBPIE_MT_extrudeFaces,
