@@ -33,12 +33,28 @@ def create_geo_joiner_group():
     input_node = nodes.new(type='NodeGroupInput')
     output_node = nodes.new(type='NodeGroupOutput')
     join_node = nodes.new(type='GeometryNodeJoinGeometry')
-    
+    self_node = nodes.new(type='GeometryNodeSelfObject')
+    info_node = nodes.new(type='GeometryNodeObjectInfo')
+    trans_node = nodes.new(type='GeometryNodeTransform')
+
+    info_node.name = 'Self Object Info'
+
     input_node.location = (-350, 0)
     join_node.location = (140, 0)
-    output_node.location = (300, 0)
+    self_node.location = (140, -276)
+    info_node.location = (340, -140)
+    trans_node.location = (560, 0)
+    output_node.location = (760, 0)
     
-    links.new(join_node.outputs['Geometry'], output_node.inputs['Geometry'])
+    # Connect Geometries
+    links.new(join_node.outputs['Geometry'], trans_node.inputs['Geometry'])
+    links.new(trans_node.outputs['Geometry'], output_node.inputs['Geometry'])
+
+    # Connect Objects transform to a transform node.
+    links.new(self_node.outputs['Self Object'], info_node.inputs['Object'])
+    links.new(info_node.outputs['Location'], trans_node.inputs['Translation'])
+    links.new(info_node.outputs['Rotation'], trans_node.inputs['Rotation'])
+    links.new(info_node.outputs['Scale'], trans_node.inputs['Scale'])
 
     # --- 3. CREATE OBJECT INFO NODES AND LINK THEM ---
     
@@ -82,12 +98,12 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
     transform_space: bpy.props.EnumProperty(
         name="Transform Space",
         items=[('RELATIVE', "Relative", "Use relative coordinates"), ('ORIGINAL', "Original", "Use world coordinates")],
-        default='RELATIVE'
+        default='RELATIVE',
     )
 
     @classmethod
     def poll(cls, context):
-        return True # Allow running with no selection to create an empty joiner
+        return len(context.selected_objects) >= 1
 
     def execute(self, context):
         selected_objects = context.selected_objects[:]
@@ -151,7 +167,11 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
         # --- 5. APPLY FINAL SETTINGS ---
         for node in node_group.nodes:
             if node.type == 'OBJECT_INFO':
-                node.transform_space = self.transform_space
+                if node.name == 'Self Object Info':
+                    inverse_space = [p.identifier for p in node.bl_rna.properties['transform_space'].enum_items if p.identifier != self.transform_space][0]
+                    node.transform_space = inverse_space
+                else:
+                    node.transform_space = self.transform_space
 
         bpy.ops.object.select_all(action='DESELECT')
         context.view_layer.objects.active = joiner_obj

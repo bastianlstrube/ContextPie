@@ -58,8 +58,7 @@ class SetLoopCutTool(bpy.types.Operator):
 # Clear Curve Radius Operator
 class CURVE_OT_clear_radius(bpy.types.Operator):
     """
-    Operator to reset the radius of selected control points to 1.0.
-    This works on all selected curve objects in Edit Mode.
+    Reset the radius of selected control points to 1.0
     """
     bl_idname = "curve.clear_radius"
     bl_label = "Clear Radius"
