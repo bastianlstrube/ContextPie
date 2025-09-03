@@ -1084,7 +1084,7 @@ class VIEW3D_PIE_MT_context(Menu):
             # NORTH-EAST
             pie.operator("curve.subdivide")
             # SOUTH-WEST
-            deletePie = pie.operator("wm.call_menu_pie", text='Delete/Clear...').name = "SUBPIE_MT_curveDelete"
+            pie.operator("wm.call_menu_pie", text='Delete/Clear...').name = "SUBPIE_MT_curveDelete"
             # SOUTH-EAST
             pie.operator("curve.separate")
 
