@@ -545,19 +545,19 @@ class SUBPIE_MT_shadeObject(Menu):
         # WEST
         pie.operator("object.shade_smooth")
         # EAST
-        pie.operator("object.edit_display_type", text="Solid").display_type = 'SOLID'
+        pie.operator("object.edit_display_type", text="Solid", icon='SHADING_SOLID').display_type = 'SOLID'
         # SOUTH
         pie.operator("object.edit_obj_color", text="Set Object Colour")
         # NORTH
-        pie.operator("object.edit_display_type", text="Bounding Box").display_type = 'BOUNDS'
+        pie.operator("object.edit_display_type", text="Bounding Box", icon='CUBE').display_type = 'BOUNDS'
         # NORTH-WEST
         pie.operator("object.shade_auto_smooth")
         # NORTH-EAST
-        pie.operator("object.edit_display_type", text="Wireframe").display_type = 'WIRE'
+        pie.operator("object.edit_display_type", text="Wireframe", icon='SHADING_WIRE').display_type = 'WIRE'
         # SOUTH-WEST
         pie.operator("object.shade_flat")
         # SOUTH-EAST
-        pie.operator("object.edit_display_type", text="Textured").display_type = 'TEXTURED'
+        pie.operator("object.edit_display_type", text="Textured", icon='SHADING_TEXTURE').display_type = 'TEXTURED'
 
         # OLD NATIVE WAY THAT DOESNT WORK ON MULTIPLE OBJECTS:
         #pie.prop(context.object, "display_type", expand=True)
