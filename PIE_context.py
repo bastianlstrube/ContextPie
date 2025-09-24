@@ -212,13 +212,13 @@ class SUBPIE_MT_edit_mesh_looptools(Menu):
         # WEST
         pie.operator("mesh.looptools_gstretch")
         # EAST
-        pie.operator("mesh.looptools_circle")
+        pie.operator("mesh.looptools_bridge", text="Bridge").loft = False
         # SOUTH
-        pie.operator("mesh.looptools_curve")
+        pie.operator("mesh.looptools_circle")
         # NORTH
         pie.operator("mesh.looptools_flatten")
         # NORTH-WEST
-        pie.operator("mesh.looptools_bridge", text="Bridge").loft = False
+        pie.operator("mesh.looptools_curve")
         # NORTH-EAST
         pie.operator("mesh.looptools_bridge", text="Loft").loft = True
          # SOUTH-WEST
