@@ -449,9 +449,16 @@ class SUBPIE_MT_joinMeshes(Menu):
             # NORTH
             pie.operator("object.join")
             # NORTH-WEST
-            pie.operator("object.join_modifier")
+            sub = pie.operator("object.join_modifier")
+            sub.use_collections = False
+            sub.name_source = 'ACTIVE_OBJECT'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
             # NORTH-EAST
-            pie.separator()
+            sub = pie.operator("object.join_modifier", text="Join Parent Collections")
+            sub.use_collections = True
+            sub.inherit_name = True
+            sub.name_source = 'PARENT_COLLECTION'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
             # SOUTH-WEST
             pie.operator("object.boolean_brush_slice", text="Slice", icon='SELECT_DIFFERENCE')
             # SOUTH-EAST
@@ -466,9 +473,16 @@ class SUBPIE_MT_joinMeshes(Menu):
             # NORTH
             pie.operator("object.join")
             # NORTH-WEST
-            pie.operator("object.join_modifier")
+            sub = pie.operator("object.join_modifier")
+            sub.use_collections = False
+            sub.name_source = 'ACTIVE_OBJECT'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
             # NORTH-EAST
-            pie.separator()
+            sub = pie.operator("object.join_modifier", text="Join Parent Collections")
+            sub.use_collections = True
+            sub.inherit_name = True
+            sub.name_source = 'PARENT_COLLECTION'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
             # SOUTH-WEST
             pie.separator()
             # SOUTH-EAST

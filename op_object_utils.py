@@ -7,7 +7,7 @@ import math
 
 def create_geo_joiner_group():
     """
-    Creates a single, standardized "GeoJoiner" node group with 40 object inputs
+    Creates a standardized "GeoJoiner" node group for joining individual objects.
     """
     node_group = bpy.data.node_groups.new(name="GeoJoiner", type='GeometryNodeTree')
     nodes = node_group.nodes
@@ -15,21 +15,19 @@ def create_geo_joiner_group():
     nodes.clear()
     
     # --- 1. DEFINE THE MODIFIER INTERFACE ---
-    
     node_group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
     
-    total_sockets = 0
-    for i in range(4): # Create 4 panels
+    total_sockets = 40
+    # Create panels and sockets for object inputs
+    for i in range(4):
         panel_name = f"Objects {(i*10)+1:02d}-{(i+1)*10}"
         panel = node_group.interface.new_panel(name=panel_name, default_closed=True)
-        
-        for j in range(10): # Create 10 sockets per panel
-            total_sockets += 1
-            socket_name = f"Object {total_sockets:02d}"
+        for j in range(10):
+            socket_index = (i * 10) + j + 1
+            socket_name = f"Object {socket_index:02d}"
             node_group.interface.new_socket(name=socket_name, in_out="INPUT", socket_type='NodeSocketObject', parent=panel)
 
     # --- 2. CREATE AND ARRANGE THE NODES ---
-
     input_node = nodes.new(type='NodeGroupInput')
     output_node = nodes.new(type='NodeGroupOutput')
     join_node = nodes.new(type='GeometryNodeJoinGeometry')
@@ -39,6 +37,7 @@ def create_geo_joiner_group():
 
     info_node.name = 'Self Object Info'
 
+    # Position nodes for clarity
     input_node.location = (-350, 0)
     join_node.location = (140, 0)
     self_node.location = (140, -276)
@@ -46,20 +45,16 @@ def create_geo_joiner_group():
     trans_node.location = (560, 0)
     output_node.location = (760, 0)
     
-    # Connect Geometries
+    # Connect nodes
     links.new(join_node.outputs['Geometry'], trans_node.inputs['Geometry'])
     links.new(trans_node.outputs['Geometry'], output_node.inputs['Geometry'])
-
-    # Connect Objects transform to a transform node.
     links.new(self_node.outputs['Self Object'], info_node.inputs['Object'])
     links.new(info_node.outputs['Location'], trans_node.inputs['Translation'])
     links.new(info_node.outputs['Rotation'], trans_node.inputs['Rotation'])
     links.new(info_node.outputs['Scale'], trans_node.inputs['Scale'])
 
     # --- 3. CREATE OBJECT INFO NODES AND LINK THEM ---
-    
     node_y_pos_start = (total_sockets - 1) * 40
-
     for i in range(total_sockets):
         socket_name = f"Object {i+1:02d}"
         obj_info_node = nodes.new(type='GeometryNodeObjectInfo')
@@ -69,16 +64,70 @@ def create_geo_joiner_group():
         
     return node_group
 
+def create_collection_joiner_group():
+    """
+    Creates a "CollectionJoiner" node group for instancing up to 8 collections.
+    """
+    node_group = bpy.data.node_groups.new(name="CollectionJoiner", type='GeometryNodeTree')
+    nodes = node_group.nodes
+    links = node_group.links
+    nodes.clear()
 
+    total_sockets = 6
+
+    # --- 1. DEFINE THE MODIFIER INTERFACE ---
+    node_group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    for i in range(total_sockets):
+        socket_name = f"Collection {i+1:02d}"
+        node_group.interface.new_socket(name=socket_name, in_out="INPUT", socket_type='NodeSocketCollection')
+
+    # --- 2. CREATE AND ARRANGE THE NODES ---
+    input_node = nodes.new(type='NodeGroupInput')
+    output_node = nodes.new(type='NodeGroupOutput')
+    join_node = nodes.new(type='GeometryNodeJoinGeometry')
+
+    input_node.location = (-450, 0)
+    join_node.location = (200, 0)
+    output_node.location = (400, 0)
+
+    # --- 3. CREATE INFO NODES AND LINK THEM ---
+    node_y_pos_start = (total_sockets - 1) * 80
+    for i in range(total_sockets):
+        socket_name = f"Collection {i+1:02d}"
+        
+        y_pos = node_y_pos_start - (i * 200)
+        
+        collection_info_node = nodes.new(type='GeometryNodeCollectionInfo')
+        collection_info_node.location = (-200, y_pos)
+        
+        realize_instances_node = nodes.new(type='GeometryNodeRealizeInstances')
+        realize_instances_node.location = (0, y_pos)
+        
+        links.new(input_node.outputs[socket_name], collection_info_node.inputs['Collection'])
+        links.new(collection_info_node.outputs['Instances'], realize_instances_node.inputs['Geometry'])
+        links.new(realize_instances_node.outputs['Geometry'], join_node.inputs['Geometry'])
+
+    links.new(join_node.outputs['Geometry'], output_node.inputs['Geometry'])
+    
+    return node_group
+
+# Adds modifier to join objects or collections into a new object
 class OBJECT_OT_join_modifier(bpy.types.Operator):
     """
     Join selection non-destructively to a new object with a Geo Nodes modifier.
+    Can join individual objects or parent collections.
     """
     bl_idname = "object.join_modifier"
     bl_label = "Join with Modifier"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # Operator properties for the Redo Panel
+    # --- Operator Properties ---
+
+    use_collections: bpy.props.BoolProperty(
+        name="Use Parent Collections",
+        description="Create a modifier for each parent collection instead of each object",
+        default=False
+    )
     inherit_name: bpy.props.BoolProperty(name="Inherit Name", default=False)
     name_source: bpy.props.EnumProperty(
         name="Name Source",
@@ -109,16 +158,7 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
         selected_objects = context.selected_objects[:]
         active_obj = context.active_object
         
-        # --- 1. FIND OR CREATE THE UNIVERSAL NODE GROUP ---
-        node_group_name = "GeoJoiner"
-        node_group = bpy.data.node_groups.get(node_group_name)
-        if not node_group:
-            self.report({'INFO'}, f"Creating new node group: {node_group_name}")
-            node_group = create_geo_joiner_group()
-        else:
-            self.report({'INFO'}, f"Reusing existing node group: {node_group_name}")
-
-        # --- 2. DETERMINE NAME, PARENT, AND LOCATION FOR THE NEW OBJECT ---
+        # --- 1. DETERMINE NAME, PARENT, AND LOCATION FOR THE NEW OBJECT ---
         base_name = "GeoJoiner"
         if self.inherit_name and active_obj:
             if self.name_source == 'ACTIVE_OBJECT':
@@ -136,20 +176,38 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
         else:
             new_obj_location = context.scene.cursor.location.copy()
 
-        # --- 3. CREATE THE JOINER OBJECT ---
+        # --- 2. CREATE THE JOINER OBJECT ---
         mesh = bpy.data.meshes.new(name=f"{final_obj_name}_Mesh")
         joiner_obj = bpy.data.objects.new(final_obj_name, mesh)
         joiner_obj.location = new_obj_location
         target_collection.objects.link(joiner_obj)
 
-        # --- 4. ADD MODIFIERS AND POPULATE THEM ---
+        # --- 3. ADD MODIFIERS (EITHER PER-OBJECT OR PER-COLLECTION) ---
+        if self.use_collections:
+            self.execute_collection_mode(context, joiner_obj, selected_objects)
+        else:
+            self.execute_object_mode(context, joiner_obj, selected_objects)
+        
+        # --- 4. FINALIZE ---
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = joiner_obj
+        joiner_obj.select_set(True)
+        return {'FINISHED'}
+
+    def execute_object_mode(self, context, joiner_obj, selected_objects):
+        # Find or create the node group for joining objects
+        node_group_name = "GeoJoiner"
+        node_group = bpy.data.node_groups.get(node_group_name)
+        if not node_group:
+            self.report({'INFO'}, f"Creating new node group: {node_group_name}")
+            node_group = create_geo_joiner_group()
+        else:
+            self.report({'INFO'}, f"Reusing existing node group: {node_group_name}")
+
         num_selected = len(selected_objects)
         num_modifiers = max(1, math.ceil(num_selected / 40.0))
         
-        all_sockets = []
-        for panel in node_group.interface.items_tree:
-            if panel.item_type == 'PANEL':
-                all_sockets.extend(panel.interface_items)
+        all_sockets = [item for panel in node_group.interface.items_tree if panel.item_type == 'PANEL' for item in panel.interface_items]
 
         for i in range(num_modifiers):
             mod_name = f"GeoJoiner.{i+1:03d}"
@@ -164,7 +222,7 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
                 socket_identifier = all_sockets[j].identifier
                 geo_mod[socket_identifier] = obj
         
-        # --- 5. APPLY FINAL SETTINGS ---
+        # Apply final transform settings to the node group
         for node in node_group.nodes:
             if node.type == 'OBJECT_INFO':
                 if node.name == 'Self Object Info':
@@ -173,12 +231,42 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
                 else:
                     node.transform_space = self.transform_space
 
-        bpy.ops.object.select_all(action='DESELECT')
-        context.view_layer.objects.active = joiner_obj
-        joiner_obj.select_set(True)
+        self.report({'INFO'}, f"Created '{joiner_obj.name}' with {num_modifiers} object modifier(s)")
 
-        self.report({'INFO'}, f"Created '{joiner_obj.name}' with {num_modifiers} modifier(s)")
-        return {'FINISHED'}
+    def execute_collection_mode(self, context, joiner_obj, selected_objects):
+        # Find or create the node group for instancing collections
+        node_group_name = "CollectionJoiner"
+        node_group = bpy.data.node_groups.get(node_group_name)
+        if not node_group:
+            self.report({'INFO'}, f"Creating new node group: {node_group_name}")
+            node_group = create_collection_joiner_group()
+        else:
+            self.report({'INFO'}, f"Reusing existing node group: {node_group_name}")
+            
+        unique_collections = {obj.users_collection[0] for obj in selected_objects if obj.users_collection}
+
+        if not unique_collections:
+            self.report({'WARNING'}, "Selected objects are not in any collections.")
+            # Cleanup the created object if no collections were found
+            bpy.data.meshes.remove(joiner_obj.data)
+            bpy.data.objects.remove(joiner_obj)
+            return
+
+        for coll in unique_collections:
+            mod_name = f"Joiner_{coll.name}"
+            mod = joiner_obj.modifiers.new(name=mod_name, type='NODES')
+            mod.node_group = node_group
+            
+            # The collection input is the second item in the interface
+            socket_identifier = node_group.interface.items_tree[1].identifier
+            mod[socket_identifier] = coll
+        
+        # Set the transform space on the Collection Info node within the group
+        for node in node_group.nodes:
+            if node.type == 'COLLECTION_INFO':
+                node.transform_space = self.transform_space
+
+        self.report({'INFO'}, f"Created '{joiner_obj.name}' with {len(unique_collections)} collection modifier(s)")
 
 # Custom Operator for change display type for multiple selected objects
 class OBJECT_OT_edit_display_type(bpy.types.Operator):
@@ -339,7 +427,6 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
 
 
         return {'FINISHED'}
-
 
 registry = [
     OBJECT_OT_join_modifier,
