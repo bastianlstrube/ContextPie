@@ -121,8 +121,7 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
     bl_label = "Join with Modifier"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # --- Operator Properties ---
-
+    # --- Operator Properties (unchanged) ---
     use_collections: bpy.props.BoolProperty(
         name="Use Parent Collections",
         description="Create a modifier for each parent collection instead of each object",
@@ -158,40 +157,66 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
         selected_objects = context.selected_objects[:]
         active_obj = context.active_object
         
-        # --- 1. DETERMINE NAME, PARENT, AND LOCATION FOR THE NEW OBJECT ---
-        base_name = "GeoJoiner"
-        if self.inherit_name and active_obj:
-            if self.name_source == 'ACTIVE_OBJECT':
-                base_name = f"{active_obj.name}_Joiner"
-            elif active_obj.users_collection:
-                base_name = active_obj.users_collection[0].name
-        final_obj_name = base_name
+        # This list will hold all the new objects we create
+        new_objects = []
 
-        target_collection = context.view_layer.active_layer_collection.collection
-        if self.parent_destination == 'PARENT_COLLECTION' and active_obj and active_obj.users_collection:
-            target_collection = active_obj.users_collection[0]
-
-        if self.initial_location == 'ACTIVE' and active_obj:
-            new_obj_location = active_obj.location.copy()
-        else:
-            new_obj_location = context.scene.cursor.location.copy()
-
-        # --- 2. CREATE THE JOINER OBJECT ---
-        mesh = bpy.data.meshes.new(name=f"{final_obj_name}_Mesh")
-        joiner_obj = bpy.data.objects.new(final_obj_name, mesh)
-        joiner_obj.location = new_obj_location
-        target_collection.objects.link(joiner_obj)
-
-        # --- 3. ADD MODIFIERS (EITHER PER-OBJECT OR PER-COLLECTION) ---
         if self.use_collections:
-            self.execute_collection_mode(context, joiner_obj, selected_objects)
+            # --- 1A. COLLECTION MODE ---
+            # Find unique collections from the selection
+            unique_collections = {obj.users_collection[0] for obj in selected_objects if obj.users_collection}
+
+            if not unique_collections:
+                self.report({'WARNING'}, "Selected objects are not in any collections.")
+                return {'CANCELLED'}
+
+            # The collection mode function will now create the objects and return them
+            new_objects = self.execute_collection_mode(context, unique_collections, active_obj)
+        
         else:
-            self.execute_object_mode(context, joiner_obj, selected_objects)
+            # --- 1B. OBJECT MODE (Original Logic) ---
+            # This logic is fine, as it's intended to create only one object
+            
+            # --- DETERMINE NAME, PARENT, AND LOCATION FOR THE NEW OBJECT ---
+            base_name = "GeoJoiner"
+            if self.inherit_name and active_obj:
+                if self.name_source == 'ACTIVE_OBJECT':
+                    base_name = f"{active_obj.name}_Joiner"
+                elif active_obj.users_collection:
+                    base_name = active_obj.users_collection[0].name
+            final_obj_name = base_name
+
+            target_collection = context.view_layer.active_layer_collection.collection
+            if self.parent_destination == 'PARENT_COLLECTION' and active_obj and active_obj.users_collection:
+                target_collection = active_obj.users_collection[0]
+
+            if self.initial_location == 'ACTIVE' and active_obj:
+                new_obj_location = active_obj.location.copy()
+            else:
+                new_obj_location = context.scene.cursor.location.copy()
+
+            # --- 2. CREATE THE JOINER OBJECT ---
+            mesh = bpy.data.meshes.new(name=f"{final_obj_name}_Mesh")
+            joiner_obj = bpy.data.objects.new(final_obj_name, mesh)
+            joiner_obj.location = new_obj_location
+            target_collection.objects.link(joiner_obj)
+
+            # --- 3. ADD MODIFIERS ---
+            # The object mode function will add modifiers and return the object in a list
+            new_objects = self.execute_object_mode(context, joiner_obj, selected_objects)
         
         # --- 4. FINALIZE ---
+        if not new_objects:
+            # Something went wrong, or no collections were found
+            return {'CANCELLED'}
+            
         bpy.ops.object.select_all(action='DESELECT')
-        context.view_layer.objects.active = joiner_obj
-        joiner_obj.select_set(True)
+        # Select all the new objects we created
+        for obj in new_objects:
+            obj.select_set(True)
+        
+        # Make the last created object the active one
+        context.view_layer.objects.active = new_objects[-1]
+        
         return {'FINISHED'}
 
     def execute_object_mode(self, context, joiner_obj, selected_objects):
@@ -232,8 +257,11 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
                     node.transform_space = self.transform_space
 
         self.report({'INFO'}, f"Created '{joiner_obj.name}' with {num_modifiers} object modifier(s)")
+        
+        # Return the created object in a list to match the new execute logic
+        return [joiner_obj]
 
-    def execute_collection_mode(self, context, joiner_obj, selected_objects):
+    def execute_collection_mode(self, context, unique_collections, active_obj):
         # Find or create the node group for instancing collections
         node_group_name = "CollectionJoiner"
         node_group = bpy.data.node_groups.get(node_group_name)
@@ -243,30 +271,64 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
         else:
             self.report({'INFO'}, f"Reusing existing node group: {node_group_name}")
             
-        unique_collections = {obj.users_collection[0] for obj in selected_objects if obj.users_collection}
+        created_objects = []
+        
+        # Determine the location once; all new objects will share it
+        if self.initial_location == 'ACTIVE' and active_obj:
+            new_obj_location = active_obj.location.copy()
+        else:
+            new_obj_location = context.scene.cursor.location.copy()
 
-        if not unique_collections:
-            self.report({'WARNING'}, "Selected objects are not in any collections.")
-            # Cleanup the created object if no collections were found
-            bpy.data.meshes.remove(joiner_obj.data)
-            bpy.data.objects.remove(joiner_obj)
-            return
-
+        # Loop over each unique collection and create a new object for each
         for coll in unique_collections:
+            
+            # --- 1. DETERMINE NAME & PARENT FOR THIS OBJECT ---
+            base_name = "GeoJoiner"
+            if self.inherit_name:
+                # Naming logic is modified to make sense for multiple collections
+                if self.name_source == 'PARENT_COLLECTION':
+                    base_name = f"{coll.name}_Joiner"
+                elif self.name_source == 'ACTIVE_OBJECT' and active_obj:
+                    base_name = f"{active_obj.name}_{coll.name}_Joiner"
+                else:
+                    # Fallback to collection name
+                    base_name = f"{coll.name}_Joiner"
+            final_obj_name = base_name
+
+            target_collection = context.view_layer.active_layer_collection.collection
+            if self.parent_destination == 'PARENT_COLLECTION':
+                # Parent the new object to the collection it's referencing
+                target_collection = coll
+
+            # --- 2. CREATE THE JOINER OBJECT ---
+            mesh = bpy.data.meshes.new(name=f"{final_obj_name}_Mesh")
+            joiner_obj = bpy.data.objects.new(final_obj_name, mesh)
+            joiner_obj.location = new_obj_location
+            target_collection.objects.link(joiner_obj)
+
+            # --- 3. ADD THE MODIFIER ---
             mod_name = f"Joiner_{coll.name}"
             mod = joiner_obj.modifiers.new(name=mod_name, type='NODES')
             mod.node_group = node_group
             
-            # The collection input is the second item in the interface
+            # The collection input is the second item (index 1) in the interface
+            # (Index 0 is the Geometry output)
             socket_identifier = node_group.interface.items_tree[1].identifier
             mod[socket_identifier] = coll
+            
+            # Add the new object to our list
+            created_objects.append(joiner_obj)
         
         # Set the transform space on the Collection Info node within the group
+        # This only needs to be done once, as it affects the shared node group
         for node in node_group.nodes:
             if node.type == 'COLLECTION_INFO':
                 node.transform_space = self.transform_space
 
-        self.report({'INFO'}, f"Created '{joiner_obj.name}' with {len(unique_collections)} collection modifier(s)")
+        self.report({'INFO'}, f"Created {len(created_objects)} collection joiner object(s)")
+        
+        # Return the list of all objects created
+        return created_objects
 
 # Custom Operator for change display type for multiple selected objects
 class OBJECT_OT_edit_display_type(bpy.types.Operator):
