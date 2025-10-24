@@ -85,10 +85,18 @@ def create_collection_joiner_group():
     input_node = nodes.new(type='NodeGroupInput')
     output_node = nodes.new(type='NodeGroupOutput')
     join_node = nodes.new(type='GeometryNodeJoinGeometry')
+    self_node = nodes.new(type='GeometryNodeSelfObject')
+    info_node = nodes.new(type='GeometryNodeObjectInfo')
+    trans_node = nodes.new(type='GeometryNodeTransform')
+
+    info_node.name = 'Self Object Info'
 
     input_node.location = (-450, 0)
     join_node.location = (200, 0)
-    output_node.location = (400, 0)
+    self_node.location = (140, -276)
+    info_node.location = (340, -140)
+    trans_node.location = (560, 0)
+    output_node.location = (760, 0)
 
     # --- 3. CREATE INFO NODES AND LINK THEM ---
     node_y_pos_start = (total_sockets - 1) * 80
@@ -107,7 +115,12 @@ def create_collection_joiner_group():
         links.new(collection_info_node.outputs['Instances'], realize_instances_node.inputs['Geometry'])
         links.new(realize_instances_node.outputs['Geometry'], join_node.inputs['Geometry'])
 
-    links.new(join_node.outputs['Geometry'], output_node.inputs['Geometry'])
+    links.new(join_node.outputs['Geometry'], trans_node.inputs['Geometry'])
+    links.new(trans_node.outputs['Geometry'], output_node.inputs['Geometry'])
+    links.new(self_node.outputs['Self Object'], info_node.inputs['Object'])
+    links.new(info_node.outputs['Location'], trans_node.inputs['Translation'])
+    links.new(info_node.outputs['Rotation'], trans_node.inputs['Rotation'])
+    links.new(info_node.outputs['Scale'], trans_node.inputs['Scale'])
     
     return node_group
 
