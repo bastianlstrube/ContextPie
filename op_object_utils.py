@@ -124,6 +124,23 @@ def create_collection_joiner_group():
     
     return node_group
 
+# Helper function to get a safe collection to link to ---
+def get_valid_link_collection(context):
+    """
+    Gets the user's active collection, but ensures it's safe to link to.
+    If the Scene Collection is active, this returns context.scene.collection
+    to avoid a linking error.
+    """
+    active_coll = context.view_layer.active_layer_collection.collection
+    
+    # If the active collection is the root, we MUST use context.scene.collection
+    if active_coll == context.scene.collection:
+        return context.scene.collection
+    else:
+        # It's a regular, non-root collection, so it's safe to use.
+        return active_coll
+# ---
+
 # Adds modifier to join objects or collections into a new object
 class OBJECT_OT_join_modifier(bpy.types.Operator):
     """
@@ -198,9 +215,15 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
                     base_name = active_obj.users_collection[0].name
             final_obj_name = base_name
 
-            target_collection = context.view_layer.active_layer_collection.collection
+            # --- FIXED SECTION (Object Mode) ---
             if self.parent_destination == 'PARENT_COLLECTION' and active_obj and active_obj.users_collection:
+                # This is safe, as it's a specific collection
                 target_collection = active_obj.users_collection[0]
+            else: 
+                # This is the 'ACTIVE_COLLECTION' case.
+                # Use the helper to get a safe collection to link to.
+                target_collection = get_valid_link_collection(context)
+            # --- END FIXED SECTION ---
 
             if self.initial_location == 'ACTIVE' and active_obj:
                 new_obj_location = active_obj.location.copy()
@@ -211,6 +234,8 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
             mesh = bpy.data.meshes.new(name=f"{final_obj_name}_Mesh")
             joiner_obj = bpy.data.objects.new(final_obj_name, mesh)
             joiner_obj.location = new_obj_location
+            
+            # This link is now safe
             target_collection.objects.link(joiner_obj)
 
             # --- 3. ADD MODIFIERS ---
@@ -308,15 +333,22 @@ class OBJECT_OT_join_modifier(bpy.types.Operator):
                     base_name = f"{coll.name}_Joiner"
             final_obj_name = base_name
 
-            target_collection = context.view_layer.active_layer_collection.collection
+            # --- FIXED SECTION (Collection Mode) ---
             if self.parent_destination == 'PARENT_COLLECTION':
-                # Parent the new object to the collection it's referencing
+                # Parent the new object to the collection it's referencing (always safe)
                 target_collection = coll
+            else:
+                # This is the 'ACTIVE_COLLECTION' case.
+                # Use the helper to get a safe collection to link to.
+                target_collection = get_valid_link_collection(context)
+            # --- END FIXED SECTION ---
 
             # --- 2. CREATE THE JOINER OBJECT ---
             mesh = bpy.data.meshes.new(name=f"{final_obj_name}_Mesh")
             joiner_obj = bpy.data.objects.new(final_obj_name, mesh)
             joiner_obj.location = new_obj_location
+            
+            # This link is now safe
             target_collection.objects.link(joiner_obj)
 
             # --- 3. ADD THE MODIFIER ---
