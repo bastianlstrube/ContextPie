@@ -1,0 +1,3 @@
+[submodule "blender_studio_utils"]
+	path = blender_studio_utils
+	url = https://projects.blender.org/Mets/blender_studio_utils

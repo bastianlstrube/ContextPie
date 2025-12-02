@@ -17,34 +17,14 @@ import bpy
 from bpy.utils import register_class, unregister_class
 import importlib
 
-def get_addon_prefs(context=None):
-    if not context:
-        context = bpy.context
-
-    addons = context.preferences.addons
-    if __package__.startswith('bl_ext'):
-        # 4.2 and later
-        name = __package__
-    else:
-        # Pre-4.2
-        name = __package__.split(".")[0]
-
-    if name in addons:
-        prefs = addons[name].preferences
-        if prefs == None:
-            # print("This happens when packaging the extension, due to the registration delay.")
-            pass
-        return addons[name].preferences
-
 module_names = (
     "op_object_utils",
     "op_pie_wrappers",
-    "op_restore_deleted_hotkeys",
+    "blender_studio_utils",
     "hotkeys",
     "prefs",
-    "prefs_save_load",
-    "PieAppender", 
-    
+    "PieAppender",
+
     "PIE_context",
     "PIE_mode",
     "PIE_pivots",
@@ -107,12 +87,10 @@ def register():
     bpy.app.timers.register(delayed_register, first_interval=0.5, persistent=True)
 
 def unregister():
-    # We need to save add-on prefs to file before unregistering anything, 
-    # otherwise things can fail in various ways, like hard errors or just
-    # data getting saved as integers instead of bools or enums.
-    from . import prefs
-    addon_prefs = prefs.get_addon_prefs()
+    # save add-on prefs to file before unregistering.
+    from .blender_studio_utils.prefs import get_addon_prefs, update_prefs_on_file
+    addon_prefs = get_addon_prefs()
     if addon_prefs:
-        if addon_prefs.use_auto_save:
-            prefs.update_prefs_on_file()
+        if bpy.context.preferences.use_preferences_save:
+            update_prefs_on_file()
         register_unregister_modules(reversed(modules), False)

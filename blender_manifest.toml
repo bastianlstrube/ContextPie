@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "ContextPie"
-version = "0.9.13"
+version = "0.9.2"
 name = "Context Pie"
 tagline = "Context sensitive pie menu for a simple, fast workflow"
 maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
@@ -18,7 +18,7 @@ website = "https://github.com/bastianlstrube/ContextPie"
 # https://docs.blender.org/manual/en/dev/extensions/tags.html
 tags = ["User Interface", "3D View", "UV"]
 
-blender_version_min = "4.2.0"
+blender_version_min = "5.0.0"
 # Optional: maximum supported Blender version
 # blender_version_max = "5.1.0"
 
@@ -32,7 +32,7 @@ license = [
 longdescription = """
 ## Context sensitive pie menu
 Brings pie menus to poly modeling, curve editing, uv mapping and animation.
-Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus also lets muscle memory navigate the menus much faster than reading through a long list will. 
+Replaces the traditional context sensitive menu with a pie menu, enabling many more functions on the same hotkey. Pie menus also lets muscle memory navigate the menus much faster than reading through a long list will.
 Meant to work in conjunction with Blender's official pie-menu add-on.
 
 ## Shortcuts
@@ -50,7 +50,7 @@ First test version using the extensions website.
 Context menu functions in these contexts:
  * Object Mode
  * Edit Mesh
- * Edit Curve 
+ * Edit Curve
  * UV Editor
  * Pose Mode
  * Edit Armature

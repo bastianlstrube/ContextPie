@@ -6,7 +6,7 @@ import bpy
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty
 import json
-from .hotkeys import register_hotkey
+from .blender_studio_utils.hotkeys import register_hotkey
 
 
 def idname_to_op_class(idname: str):
@@ -19,8 +19,8 @@ def idname_to_op_class(idname: str):
 
 class WM_OT_call_menu_pie_drag_only_cpie(Operator):
     """Summon a pie menu only on mouse drag, otherwise initiate an operator"""
-    # This class is for cases where we want to overwrite a built-in shortcut which triggers on Press, 
-    # with a pie menu that only appears on mouse drag. 
+    # This class is for cases where we want to overwrite a built-in shortcut which triggers on Press,
+    # with a pie menu that only appears on mouse drag.
     # If the user does not mouse drag, invoke the provided fallback operator.
     # In register_drag_hotkey(), the fallback operator is automagically extracted from the keymap,
     # at the moment the hotkey is registered.
@@ -53,11 +53,9 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
             return
 
         fallback_op_kwargs = json.loads(self.fallback_op_kwargs)
-        if type(fallback_op_kwargs) == str:
-            # Not sure why json.loads seems to sometimes return a string, but it does 
-            # when eg. setting Shift+C to drag, and using it when first launching Blender. 
-            # After Reload Scripts, it works fine without this workaround. Weird af.
-            fallback_op_kwargs = json.loads(fallback_op_kwargs)
+
+        # NOTE: logic removed here because the registration of the kwargs is now cleaner,
+        # so we don't end up with double-stringified json.
 
         if op_cls.poll():
             try:
@@ -117,14 +115,21 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
                 else:
                     fallback_operator = kmi.idname
                     if kmi.properties:
-                        fallback_op_kwargs = {k:getattr(kmi.properties, k) if hasattr(kmi.properties, k) else v for k, v in kmi.properties.items()}
+                        fallback_op_kwargs = {}
+                        # It is unsafe to iterate properties items() directly,
+                        # because they might not be serializable, and we only want set properties.
+                        for prop in kmi.properties.rna_type.properties:
+                            if prop.identifier == 'rna_type':
+                                continue
+                            if kmi.properties.is_property_set(prop.identifier):
+                                fallback_op_kwargs[prop.identifier] = getattr(kmi.properties, prop.identifier)
                     break
 
         register_hotkey(
             cls.bl_idname,
             op_kwargs={
-                'name': pie_name, 
-                'fallback_operator': fallback_operator, 
+                'name': pie_name,
+                'fallback_operator': fallback_operator,
                 'fallback_op_kwargs': json.dumps(fallback_op_kwargs),
                 'on_drag': on_drag,
             },
