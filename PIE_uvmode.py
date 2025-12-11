@@ -21,11 +21,11 @@ class SUBPIE_MT_uvSelect(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         pie.separator()
         # EAST
-        pie.operator("uv.select_pinned", text="Pinned") 
+        pie.operator("uv.select_pinned", text="Pinned")
         # SOUTH
         pie.operator("uv.select_overlap", text="Overlap")
         # NORTH
@@ -45,7 +45,7 @@ class SUBPIE_MT_uvSticky(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         o = pie.operator('wm.context_set_string', text="Location", icon="STICKY_UVS_LOC")
         o.data_path = 'tool_settings.uv_sticky_select_mode'
@@ -75,7 +75,7 @@ class SUBPIE_MT_uvTools(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         o = pie.operator('wm.tool_set_by_id', text="Pinch")
         o.name = 'sculpt.uv_sculpt_pinch'
@@ -104,7 +104,7 @@ class IMAGE_PIE_MT_uvMode(Menu):
     bl_label  = "UV Mode Selection"
 
     def draw(self, context):
-        
+
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
@@ -114,8 +114,7 @@ class IMAGE_PIE_MT_uvMode(Menu):
 
         if not context.tool_settings.use_uv_select_sync:
             # WEST
-            o = pie.operator('wm.context_toggle', text="Sync Selection", icon="UV_SYNC_SELECT")
-            o.data_path = 'tool_settings.use_uv_select_sync'
+            pie.prop(context.tool_settings, "use_uv_select_sync", text="Sync Selection", icon="UV_SYNC_SELECT")
             # EAST
             o = pie.operator('wm.context_set_string', text="Vertex", icon="UV_VERTEXSEL")
             o.data_path = 'tool_settings.uv_select_mode'
@@ -130,21 +129,18 @@ class IMAGE_PIE_MT_uvMode(Menu):
             o.value = 'EDGE'
             # NORTH-WEST
             subPie = pie.operator("wm.call_menu_pie", text='Tools...')
-            subPie.name = "SUBPIE_MT_uvTools" 
+            subPie.name = "SUBPIE_MT_uvTools"
             # NORTH-EAST
-            o = pie.operator('wm.context_set_string', text="Islands", icon="UV_ISLANDSEL")
-            o.data_path = 'tool_settings.uv_select_mode'
-            o.value = 'ISLAND'
+            pie.prop(context.tool_settings, "use_uv_select_island", text="Islands", icon="UV_ISLANDSEL")
             # SOUTH-WEST
             subPie = pie.operator("wm.call_menu_pie", text='Sticky...')
-            subPie.name = "SUBPIE_MT_uvSticky"  
+            subPie.name = "SUBPIE_MT_uvSticky"
             # SOUTH-EAST
             subPie = pie.operator("wm.call_menu_pie", text='Select...')
-            subPie.name = "SUBPIE_MT_uvSelect" 
+            subPie.name = "SUBPIE_MT_uvSelect"
         else:
             # WEST
-            o = pie.operator('wm.context_toggle', text="Sync Selection", icon="UV_SYNC_SELECT")
-            o.data_path = 'tool_settings.use_uv_select_sync'
+            pie.prop(context.tool_settings, "use_uv_select_sync", text="Sync Selection", icon="UV_SYNC_SELECT")
             # EAST
             pie.operator('mesh.select_mode', text="Vertex", icon="VERTEXSEL").type = 'VERT'
             # SOUTH
@@ -153,17 +149,15 @@ class IMAGE_PIE_MT_uvMode(Menu):
             pie.operator('mesh.select_mode', text="Edge", icon="EDGESEL").type = 'EDGE'
             # NORTH-WEST
             subPie = pie.operator("wm.call_menu_pie", text='Tools...')
-            subPie.name = "SUBPIE_MT_uvTools" 
+            subPie.name = "SUBPIE_MT_uvTools"
             # NORTH-EAST
-            o = pie.operator('wm.context_set_string', text="Islands", icon="UV_ISLANDSEL")
-            o.data_path = 'tool_settings.uv_select_mode'
-            o.value = 'ISLAND'
+            pie.prop(context.tool_settings, "use_uv_select_island", text="Islands", icon="UV_ISLANDSEL")
             # SOUTH-WEST
             subPie = pie.operator("wm.call_menu_pie", text='Sticky...')
-            subPie.name = "SUBPIE_MT_uvSticky"  
+            subPie.name = "SUBPIE_MT_uvSticky"
             # SOUTH-EAST
             subPie = pie.operator("wm.call_menu_pie", text='Select...')
-            subPie.name = "SUBPIE_MT_uvSelect" 
+            subPie.name = "SUBPIE_MT_uvSelect"
 
         # Static menu
         pie.separator()
@@ -172,11 +166,11 @@ class IMAGE_PIE_MT_uvMode(Menu):
         gap = dropdown.column()
         gap.separator()
         gap.scale_y = 8
-        
+
         dropdown_menu = dropdown.box().column()
         dropdown_menu.scale_y=1
         dropdown_menu.scale_x=1.2
-        
+
         dropdown_menu.menu("IMAGE_MT_uvs", text="UV menu", icon="COLLAPSEMENU")
 
 

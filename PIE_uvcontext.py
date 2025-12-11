@@ -49,7 +49,18 @@ class SUBPIE_MT_uvUnwrap(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
+        # Getting the current UV Editor Space
+        uv_editor_space = None
+        for area in context.screen.areas:
+            if area.type == 'IMAGE_EDITOR':
+                # Get the active space of this area
+                # (The Image Editor and UV Editor share the same space type)
+                space = area.spaces.active
+                if space:
+                    uv_editor_space = space
+                    break # Stop searching once we find one
+
         # WEST
         pie.operator("uv.smart_project")
         # EAST
@@ -71,7 +82,11 @@ class SUBPIE_MT_uvUnwrap(Menu):
         # SOUTH-WEST
         pie.operator("uv.lightmap_pack")
         # SOUTH-EAST
-        pie.operator('wm.context_toggle', text="Live Unwrap").data_path = 'tool_settings.use_live_unwrap'
+        if uv_editor_space:
+            # access .uv_editor to get to the specific Live Unwrap settings
+            pie.prop(uv_editor_space.uv_editor, "use_live_unwrap", text="Live Unwrap")
+        else:
+            pie.separator()
 
 # Reference context menu: IMAGE_MT_uvs_context_menu
 class IMAGE_PIE_MT_uvContext(Menu):
@@ -82,7 +97,7 @@ class IMAGE_PIE_MT_uvContext(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         pie.operator("uv.pin").clear = False
         # EAST
