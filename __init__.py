@@ -2,6 +2,8 @@ import bpy
 from bpy.utils import register_class, unregister_class
 import importlib
 
+_VPM_AGENT_IMMEDIATE_REGISTER_DONE = locals().get("_VPM_AGENT_IMMEDIATE_REGISTER_DONE", False)
+
 bl_info = {
     "name": "ContextPie",
     "version": (0, 9, 21),
@@ -60,12 +62,9 @@ def register_unregister_modules(modules: list, register: bool):
             for c in m.registry:
                 try:
                     register_func(c)
-                except Exception as e:
-                    # Suppress errors if we are just trying to clean up
-                    # and the class isn't there anyway.
-                    if register:
-                        print(f"Warning: Pie Menus failed to {un}register class: {c.__name__}")
-                        print(e)
+                except (AttributeError, RuntimeError, TypeError, ValueError) as e:
+                    print(f"Warning: Pie Menus failed to {un}register class: {c.__name__}")
+                    print(e)
 
         if hasattr(m, 'modules'):
             register_unregister_modules(m.modules, register)
@@ -76,41 +75,29 @@ def register_unregister_modules(modules: list, register: bool):
             m.unregister()
 
 def delayed_register():
-    global _delayed_loaded
-
-    # Safety Check: Is the addon still enabled?
-    if __package__ not in bpy.context.preferences.addons:
-        return
-
-    # Register PieAppender
-    try:
-        register_unregister_modules([pie_appender_module], True)
-        _delayed_loaded = True  # <--- Mark as success
-    except Exception as e:
-        print("ContextPie: Delayed registration failed:", e)
+    register_unregister_modules(modules, True)
 
 
 def register():
-    # Reset flag on register
-    global _delayed_loaded
-    _delayed_loaded = False
-
-    # Register standard modules
-    register_unregister_modules(modules, True)
-
-    bpy.app.timers.register(delayed_register, first_interval=0.5, persistent=True)
+    """
+    We prefer an *immediate* register during startup, because other add-ons may touch
+    keyconfig initialization very early, and Blender's keymap diff application appears
+    sensitive to timing.
+    If immediate registration fails (e.g. missing WM in edge cases), fall back to the
+    legacy timer-based delayed registration.
+    """
+    global _VPM_AGENT_IMMEDIATE_REGISTER_DONE
+    if not _VPM_AGENT_IMMEDIATE_REGISTER_DONE:
+        try:
+            register_unregister_modules(modules, True)
+            _VPM_AGENT_IMMEDIATE_REGISTER_DONE = True
+            return
+        except Exception as e:
+            # Keep behavior unchanged (fallback to timer), but avoid raising during registration.
+            pass
+    # NOTE: persistent=True must be set, otherwise this doesn't work when opening
+    # a .blend file directly from a file browser.
+    bpy.app.timers.register(delayed_register, first_interval=0.0, persistent=True)
 
 def unregister():
-    global _delayed_loaded
-
-    # 1. Kill the timer if it's still pending
-    if bpy.app.timers.is_registered(delayed_register):
-        bpy.app.timers.unregister(delayed_register)
-
-    # 2. Only unregister PieAppender if we actually loaded it
-    if _delayed_loaded:
-        register_unregister_modules([pie_appender_module], False)
-        _delayed_loaded = False
-
-    # 3. Unregister the rest
     register_unregister_modules(reversed(modules), False)

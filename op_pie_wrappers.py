@@ -87,19 +87,30 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
         *,
         keymap_name: str,
         pie_name: str,
-        hotkey_kwargs={'type': "SPACE", 'value': "PRESS"},
+        hotkey_kwargs=None,
         default_fallback_op="",
-        default_fallback_kwargs={},
+        default_fallback_kwargs=None,
         on_drag=False,
     ):
+        if hotkey_kwargs is None:
+            hotkey_kwargs = {'type': "SPACE", 'value': "PRESS"}
         context = bpy.context
         fallback_operator = default_fallback_op
-        fallback_op_kwargs = default_fallback_kwargs
-        user_kc = context.window_manager.keyconfigs.user
-        km = user_kc.keymaps.get(keymap_name)
+        fallback_op_kwargs = default_fallback_kwargs if default_fallback_kwargs is not None else {}
+        # IMPORTANT:
+        # Do NOT derive fallback operator/kwargs from the USER keyconfig.
+        # Other add-ons (eg. Pie Menu Editor) can legitimately alter user keymaps,
+        # and baking that dynamic state into our add-on KeyMapItem properties can
+        # make Blender fail to match/restore user overrides across restarts.
+        #
+        # Instead, derive fallback from the DEFAULT (active preset) keyconfig,
+        # which is stable and represents expected built-in behavior.
+        default_kc = context.window_manager.keyconfigs.default
+        km = default_kc.keymaps.get(keymap_name)
         if km:
             for kmi in km.keymap_items:
-                for i, condition in enumerate([
+                for condition in [
+                    kmi.idname != 'wm.call_menu_pie_drag_only_cpie',
                     kmi.type == hotkey_kwargs.get('type', ""),
                     kmi.value == hotkey_kwargs.get('value', "PRESS"),
                     kmi.ctrl == hotkey_kwargs.get('ctrl', False),
@@ -109,20 +120,13 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
                     kmi.any == hotkey_kwargs.get('any', False),
                     kmi.key_modifier == hotkey_kwargs.get('key_modifier', 'NONE'),
                     kmi.active
-                ]):
+                ]:
                     if not condition:
                         break
                 else:
                     fallback_operator = kmi.idname
                     if kmi.properties:
-                        fallback_op_kwargs = {}
-                        # It is unsafe to iterate properties items() directly,
-                        # because they might not be serializable, and we only want set properties.
-                        for prop in kmi.properties.rna_type.properties:
-                            if prop.identifier == 'rna_type':
-                                continue
-                            if kmi.properties.is_property_set(prop.identifier):
-                                fallback_op_kwargs[prop.identifier] = getattr(kmi.properties, prop.identifier)
+                        fallback_op_kwargs = {k:getattr(kmi.properties, k) if hasattr(kmi.properties, k) else v for k, v in kmi.properties.items()}
                     break
 
         register_hotkey(
@@ -130,7 +134,8 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
             op_kwargs={
                 'name': pie_name,
                 'fallback_operator': fallback_operator,
-                'fallback_op_kwargs': json.dumps(fallback_op_kwargs),
+                # Deterministic JSON (sort_keys=True) helps keep KMI identity stable across sessions.
+                'fallback_op_kwargs': json.dumps(fallback_op_kwargs, sort_keys=True),
                 'on_drag': on_drag,
             },
             hotkey_kwargs=hotkey_kwargs,
