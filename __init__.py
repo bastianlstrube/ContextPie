@@ -4,7 +4,7 @@ import importlib
 
 bl_info = {
     "name": "ContextPie",
-    "version": (0, 9, 13),
+    "version": (0, 9, 21),
     "blender": (5, 0, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
