@@ -4,9 +4,9 @@
 
 import bpy
 
-class WM_OT_toggle_keymap_item_on_drag(bpy.types.Operator):
+class WM_OT_toggle_keymap_item_on_drag_cpie(bpy.types.Operator):
     "When Drag is enabled, this pie menu will only appear when the mouse is dragged while the assigned key combo is held down"
-    bl_idname = "wm.toggle_keymap_item_property"
+    bl_idname = "wm.toggle_keymap_item_property_cpie"
     bl_label = "Toggle On Drag"
     bl_options = {'REGISTER', 'INTERNAL'}
 
@@ -47,7 +47,4 @@ class WM_OT_toggle_keymap_item_on_drag(bpy.types.Operator):
 
         return {'FINISHED'}
 
-if "bl_ext.blender_org.viewport_pie_menus" not in bpy.context.preferences.addons:
-    registry = [WM_OT_toggle_keymap_item_on_drag,]
-else:
-    registry = []
+registry = [WM_OT_toggle_keymap_item_on_drag_cpie]

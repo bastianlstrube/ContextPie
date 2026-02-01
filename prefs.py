@@ -66,14 +66,15 @@ def button_draw_func(layout, km: KeyMap, kmi: KeyMapItem, compact=False):
     if kmi.idname != 'wm.call_menu_pie_drag_only_cpie':
         return
     if not kmi.properties:
-        sub.label(text="Missing properties. This should never happen!")
+        split.label(text="Missing properties. This should never happen!")
         return
+
     text = "" if compact else "Drag"
 
     sub = split.row(align=True)
     sub.enabled = kmi.active
     op = sub.operator(
-        'wm.toggle_keymap_item_property',
+        'wm.toggle_keymap_item_property_cpie',
         text=text,
         icon='MOUSE_MOVE',
         depress=kmi.properties.on_drag,
