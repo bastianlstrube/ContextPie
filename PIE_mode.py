@@ -25,7 +25,7 @@ class SUBPIE_MT_objectSelect(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         pie.operator_enum("object.select_grouped", "type")
         '''
         # WEST
@@ -45,7 +45,7 @@ class SUBPIE_MT_objectSelect(Menu):
         # NORTH-EAST
         pie.operator("mesh.select_mirror", text='Mirror')
         # SOUTH-WEST
-        pie.operator("mesh.loop_to_region", text='Inside')        
+        pie.operator("mesh.loop_to_region", text='Inside')
         # SOUTH-EAST
         pie.operator("mesh.select_linked", text='Linked')
         '''
@@ -56,7 +56,7 @@ class SUBPIE_MT_meshSelect(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         pie.operator("mesh.region_to_loop", text='Boundary')
         # EAST
@@ -70,7 +70,7 @@ class SUBPIE_MT_meshSelect(Menu):
         # NORTH-EAST
         pie.operator("mesh.select_mirror", text='Mirror')
         # SOUTH-WEST
-        pie.operator("mesh.loop_to_region", text='Inside')        
+        pie.operator("mesh.loop_to_region", text='Inside')
         # SOUTH-EAST
         pie.operator("mesh.select_linked", text='Linked')
 
@@ -80,7 +80,7 @@ class SUBPIE_MT_curveSelect(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         pie.operator("curve.select_previous", text='Previous')
         # EAST
@@ -94,7 +94,7 @@ class SUBPIE_MT_curveSelect(Menu):
         # NORTH-EAST
         pie.operator("curve.select_random", text='Random')
         # SOUTH-WEST
-        pie.operator("curve.select_similar", text='Similar Radius').type = 'RADIUS'      
+        pie.operator("curve.select_similar", text='Similar Radius').type = 'RADIUS'
         # SOUTH-EAST
         pie.operator("curve.select_linked", text='Linked')
 
@@ -105,7 +105,7 @@ class SUBPIE_MT_separate(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         pie.operator("mesh.split")
         # EAST
@@ -114,9 +114,9 @@ class SUBPIE_MT_separate(Menu):
         pie.operator("mesh.rip_move")
         # NORTH
         pie.separator()
-        
+
         # NORTH-WEST
-        pie.operator("mesh.edge_split", text='Split By Edge').type = 'EDGE'      
+        pie.operator("mesh.edge_split", text='Split By Edge').type = 'EDGE'
         # NORTH-EAST
         pie.operator("mesh.separate", text='By Material').type = 'MATERIAL'
         # SOUTH-WEST
@@ -131,7 +131,7 @@ class SUBPIE_MT_curveTypeHandles(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        
+
         # WEST
         pie.operator("curve.handle_type_set", text='Automatic Handles').type = 'AUTOMATIC'
         # EAST
@@ -289,7 +289,7 @@ class VIEW3D_PIE_MT_mode(Menu):
         # EAST
         pie.separator()
         pie.menu("VIEW3D_MT_edit_armature_names")
-        pie.separator() 
+        pie.separator()
 
     ## GREASE PENCIL MODES
     def draw_edit_gpencil_mode(self, pie, context):
@@ -369,7 +369,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             if hasattr(brush, "blend"):
                 box.prop(brush, "blend", text="")
 
-        ups = context.tool_settings.unified_paint_settings
+        ups = UnifiedPaintPanel.paint_settings(context).unified_paint_settings
         size_prop = "size"
         size_owner = ups if ups.use_unified_size else brush
         if size_owner.use_locked_size == 'SCENE':
@@ -410,13 +410,13 @@ addon_keymaps = []
 def register():
 
     categories = [
-        "Object Mode", 
-        "Mesh", 
-        "Curve", 
+        "Object Mode",
+        "Mesh",
+        "Curve",
         "Grease Pencil Edit Mode",
         "Grease Pencil Sculpt Mode",
         "Grease Pencil Paint Mode",
-        "Sculpt", 
+        "Sculpt",
         "Pose",
         "Lattice",
         "Armature",

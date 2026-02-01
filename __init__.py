@@ -23,8 +23,8 @@ module_names = (
     "op_object_utils",
     "op_pie_wrappers",
     "blender_studio_utils",
-    "hotkeys",
     "prefs",
+    "PieAppender",
 
     "PIE_context",
     "PIE_mode",

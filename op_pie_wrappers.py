@@ -3,10 +3,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import bpy
+import os
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty
 import json
 from .blender_studio_utils.hotkeys import register_hotkey
+
+
 
 
 def idname_to_op_class(idname: str):
@@ -29,12 +32,19 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
     bl_label = "Pie Menu on Drag"
     bl_options = {'REGISTER', 'INTERNAL'}
 
+    def update_kmi(self, context):
+        if not hasattr(context, 'keymapitem'):
+            return
+        kmi = context.keymapitem # Set via UILayout.context_pointer_set().
+        kmi.type = kmi.type
+
     name: StringProperty(options={'SKIP_SAVE'})
     on_drag: BoolProperty(
         name="On Drag",
-        default=False,
+        default=True,
         description="Only show this pie menu on mouse drag, otherwise execute a default operator",
         options={'SKIP_SAVE'},
+        update=update_kmi,
     )
     fallback_operator: StringProperty(options={'SKIP_SAVE'})
     fallback_op_kwargs: StringProperty(default="{}", options={'SKIP_SAVE'})
@@ -53,13 +63,22 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
             return
 
         fallback_op_kwargs = json.loads(self.fallback_op_kwargs)
-
-        # NOTE: logic removed here because the registration of the kwargs is now cleaner,
-        # so we don't end up with double-stringified json.
+        if type(fallback_op_kwargs) == str:
+            # Not sure why json.loads seems to sometimes return a string, but it does
+            # when eg. setting Shift+C to drag, and using it when first launching Blender.
+            # After Reload Scripts, it works fine without this workaround. Weird af.
+            fallback_op_kwargs = json.loads(fallback_op_kwargs)
 
         if op_cls.poll():
             try:
-                return op_cls('INVOKE_DEFAULT', **fallback_op_kwargs)
+                # 1. Execute the original operator and capture the result
+                result = op_cls('INVOKE_DEFAULT', **fallback_op_kwargs)
+
+                # 2. [Added] Check if it's a Save operation and report the message manually
+                if 'FINISHED' in result and self.fallback_operator == 'wm.save_mainfile':
+                    # Get current filename, or default to untitled
+                    filename = os.path.basename(bpy.data.filepath) if bpy.data.filepath else "untitled.blend"
+                    self.report({'INFO'}, f'Saved "{filename}"')
             except TypeError:
                 # This can apparently happen sometimes, see issue #86.
                 print(f"Pie Menu Fallback Operator failed: {self.fallback_operator}, {self.fallback_op_kwargs}")
@@ -90,13 +109,14 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
         hotkey_kwargs=None,
         default_fallback_op="",
         default_fallback_kwargs=None,
-        on_drag=False,
+        on_drag=True,
     ):
         if hotkey_kwargs is None:
             hotkey_kwargs = {'type': "SPACE", 'value': "PRESS"}
         context = bpy.context
         fallback_operator = default_fallback_op
         fallback_op_kwargs = default_fallback_kwargs if default_fallback_kwargs is not None else {}
+
         # IMPORTANT:
         # Do NOT derive fallback operator/kwargs from the USER keyconfig.
         # Other add-ons (eg. Pie Menu Editor) can legitimately alter user keymaps,
@@ -142,6 +162,11 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
             keymap_name=keymap_name,
         )
 
-registry = [
-    WM_OT_call_menu_pie_drag_only_cpie,
-]
+def register():
+    bpy.utils.register_class(WM_OT_call_menu_pie_drag_only_cpie)
+
+def unregister():
+    # HACK: As a workaround to https://projects.blender.org/blender/blender/issues/150229, we do not unregister
+    # this operator when the add-on is uninstalled, which is pretty bad.
+    # bpy.utils.unregister_class(WM_OT_call_menu_pie_drag_only)
+    pass
