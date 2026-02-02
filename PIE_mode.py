@@ -412,4 +412,5 @@ def register():
             pie_name=VIEW3D_PIE_MT_mode.bl_idname,
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
             keymap_name=cat,
+            on_drag=True,
         )

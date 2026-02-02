@@ -135,4 +135,5 @@ def register():
         pie_name=IMAGE_PIE_MT_uvMode.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
         keymap_name="UV Editor",
+        on_drag=True,
     )

@@ -1053,11 +1053,13 @@ def register():
         pie_name=VIEW3D_PIE_MT_context.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
         keymap_name="3D View",
+        on_drag=False,
     )
     WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
         pie_name=VIEW3D_PIE_MT_context.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
         keymap_name="Sculpt",
+        on_drag=False,
     )
 
 

@@ -109,7 +109,7 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
         hotkey_kwargs=None,
         default_fallback_op="",
         default_fallback_kwargs=None,
-        on_drag=True,
+        on_drag=False,
     ):
         if hotkey_kwargs is None:
             hotkey_kwargs = {'type': "SPACE", 'value': "PRESS"}
