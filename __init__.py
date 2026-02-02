@@ -38,6 +38,7 @@ module_names = (
     "SUBPIE_snap_menu",
     "SUBPIE_MeshAlign",
     "SUBPIE_set_origin",
+    "SUBPIE_copy",
 )
 
 modules = [

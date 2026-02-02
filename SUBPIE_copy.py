@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+# Modified for ContextPie addon - operators renamed with cpie. prefix
+
 import bpy
 from mathutils import Matrix
 from bpy.types import (
@@ -42,6 +44,7 @@ def build_op(idname, label, description, fpoll, fexec, finvoke):
         bl_idname = idname
         bl_label = label
         bl_description = description
+        bl_options = {'REGISTER', 'UNDO'}
         execute = fexec
         poll = fpoll
         invoke = finvoke
@@ -278,9 +281,9 @@ class CopyCustomProperties(CopySelection):
                 if is_selected:
                     copy_custom_property(active, item, keys[index])
 
-class CopySelectedBoneCustomProperties(CopyCustomProperties, Operator):
+class CPIE_OT_pose_copy_selected_custom_props(CopyCustomProperties, Operator):
     """Copy Chosen custom properties from active to selected"""
-    bl_idname = "pose.copy_selected_custom_props"
+    bl_idname = "cpie.pose_copy_selected_custom_props"
     bl_label = "Copy Selected Custom Properties"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -295,9 +298,9 @@ class CopySelectedBoneCustomProperties(CopyCustomProperties, Operator):
         return {'FINISHED'}
 
 
-class CopySelectedPoseConstraints(Operator):
+class CPIE_OT_pose_copy_selected_constraints(Operator):
     """Copy Chosen constraints from active to selected"""
-    bl_idname = "pose.copy_selected_constraints"
+    bl_idname = "cpie.pose_copy_selected_constraints"
     bl_label = "Copy Selected Constraints"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -327,20 +330,60 @@ class CopySelectedPoseConstraints(Operator):
 
 
 pose_ops = []  # list of pose mode copy operators
-genops(pose_copies, pose_ops, "pose.copy_", pose_poll_func, pLoopExec)
+genops(pose_copies, pose_ops, "cpie.pose_copy_", pose_poll_func, pLoopExec)
 
 
-class VIEW3D_MT_posecopypopup(Menu):
-    bl_label = "Copy Attributes"
+class SUBPIE_MT_pose_copy_other(Menu):
+    bl_label = "Copy Pose Other"
 
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
-        for op in pose_copies:
-            layout.operator("pose.copy_" + op[0])
-        layout.operator("pose.copy_selected_constraints")
-        layout.operator("pose.copy_selected_custom_props")
-        layout.operator("pose.copy", text="copy pose")
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("cpie.pose_copy_pose_drw", text="Bone Shape")
+        # EAST
+        pie.operator("cpie.pose_copy_pose_lok", text="Protected Transform")
+        # SOUTH
+        pie.operator("cpie.pose_copy_pose_iks", text="IK Limits")
+        # NORTH
+        pie.operator("cpie.pose_copy_bbone_settings", text="BBone Settings")
+        # NORTH-WEST
+        pie.operator("cpie.pose_copy_selected_constraints", text="Selected Constraints...")
+        # NORTH-EAST
+        pie.operator("cpie.pose_copy_selected_custom_props", text="Custom Properties...")
+        # SOUTH-WEST
+        pie.operator("cpie.pose_copy_pose_con", text="All Constraints")
+        # SOUTH-EAST
+        pie.separator()
+
+
+class SUBPIE_MT_pose_copy(Menu):
+    bl_label = "Copy Pose Attributes"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("cpie.pose_copy_pose_loc_loc", text="Local Location")
+        # EAST
+        pie.operator("cpie.pose_copy_pose_loc_rot", text="Local Rotation")
+        # SOUTH
+        pie.operator("cpie.pose_copy_pose_loc_sca", text="Local Scale")
+        # NORTH
+        pie.operator("pose.copy", text="Copy Pose")
+        # NORTH-WEST
+        pie.operator("cpie.pose_copy_pose_vis_loc", text="Visual Location")
+        # NORTH-EAST
+        pie.operator("cpie.pose_copy_pose_vis_rot", text="Visual Rotation")
+        # SOUTH-WEST
+        pie.operator("cpie.pose_copy_pose_vis_sca", text="Visual Scale")
+        # SOUTH-EAST
+        pie.operator("wm.call_menu_pie", text="Other...").name = "SUBPIE_MT_pose_copy_other"
+        pie.separator()
 
 
 def obLoopExec(self, context, funk):
@@ -589,9 +632,9 @@ def object_invoke_func(self, context, event):
     return {'RUNNING_MODAL'}
 
 
-class CopySelectedObjectConstraints(Operator):
+class CPIE_OT_object_copy_selected_constraints(Operator):
     """Copy Chosen constraints from active to selected"""
-    bl_idname = "object.copy_selected_constraints"
+    bl_idname = "cpie.object_copy_selected_constraints"
     bl_label = "Copy Selected Constraints"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -620,9 +663,9 @@ class CopySelectedObjectConstraints(Operator):
         return{'FINISHED'}
 
 
-class CopySelectedObjectModifiers(Operator):
+class CPIE_OT_object_copy_selected_modifiers(Operator):
     """Copy Chosen modifiers from active to selected"""
-    bl_idname = "object.copy_selected_modifiers"
+    bl_idname = "cpie.object_copy_selected_modifiers"
     bl_label = "Copy Selected Modifiers"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -656,9 +699,9 @@ class CopySelectedObjectModifiers(Operator):
         return{'FINISHED'}
 
 
-class CopySelectedObjectCustomProperties(CopyCustomProperties, Operator):
+class CPIE_OT_object_copy_selected_custom_props(CopyCustomProperties, Operator):
     """Copy Chosen custom properties from active to selected objects"""
-    bl_idname = "object.copy_selected_custom_props"
+    bl_idname = "cpie.object_copy_selected_custom_props"
     bl_label = "Copy Selected Custom Properties"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -673,39 +716,90 @@ class CopySelectedObjectCustomProperties(CopyCustomProperties, Operator):
         return {'FINISHED'}
 
 object_ops = []
-genops(object_copies, object_ops, "object.copy_", object_poll_func, obLoopExec)
+genops(object_copies, object_ops, "cpie.object_copy_", object_poll_func, obLoopExec)
 
 
-class VIEW3D_MT_copypopup(Menu):
-    bl_label = "Copy Attributes"
+class SUBPIE_MT_object_copy_data(Menu):
+    bl_label = "Copy Object Data"
 
     def draw(self, context):
         layout = self.layout
-
         layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator("view3d.copybuffer", icon="COPY_ID")
+        pie = layout.menu_pie()
 
-        if (len(context.selected_objects) <= 1):
-            layout.separator()
-            layout.label(text="Please select at least two objects", icon="INFO")
-            layout.separator()
+        # WEST
+        pie.operator("cpie.object_copy_obj_mod", text="All Modifiers")
+        # EAST
+        pie.operator("cpie.object_copy_obj_con", text="All Constraints")
+        # SOUTH
+        pie.operator("cpie.object_copy_obj_wei", text="Vertex Weights")
+        # NORTH
+        pie.operator("cpie.object_copy_obj_grp", text="Collection Links")
+        # NORTH-WEST
+        pie.operator("cpie.object_copy_selected_modifiers", text="Selected Modifiers...")
+        # NORTH-EAST
+        pie.operator("cpie.object_copy_selected_constraints", text="Selected Constraints...")
+        # SOUTH-WEST
+        pie.operator("cpie.object_copy_selected_custom_props", text="Custom Properties...")
+        # SOUTH-EAST
+        pie.separator()
 
-        for entry, op in enumerate(object_copies):
-            if entry and entry % 4 == 0:
-                layout.separator()
-            layout.operator("object.copy_" + op[0])
-        layout.operator("object.copy_selected_constraints")
-        layout.operator("object.copy_selected_modifiers")
-        layout.operator("object.copy_selected_custom_props")
 
-        layout.separator()
-        layout.operator("object.copy_light_linking")
-        layout.operator("object.copy_shadow_linking")
+class SUBPIE_MT_object_copy_display(Menu):
+    bl_label = "Copy Object Display"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("cpie.object_copy_obj_drw", text="Draw Options")
+        # EAST
+        pie.operator("cpie.object_copy_obj_col", text="Object Color")
+        # SOUTH
+        pie.operator("cpie.object_copy_obj_idx", text="Pass Index")
+        # NORTH
+        pie.operator("cpie.object_copy_obj_dup", text="Instancing")
+        # NORTH-WEST
+        pie.operator("cpie.object_copy_light_linking", text="Light Linking")
+        # NORTH-EAST
+        pie.operator("cpie.object_copy_shadow_linking", text="Shadow Linking")
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
+
+
+class SUBPIE_MT_object_copy(Menu):
+    bl_label = "Copy Object Attributes"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("cpie.object_copy_obj_vis_loc", text="Location")
+        # EAST
+        pie.operator("cpie.object_copy_obj_vis_rot", text="Rotation")
+        # SOUTH
+        pie.operator("cpie.object_copy_obj_vis_sca", text="Scale")
+        # NORTH
+        pie.operator("view3d.copybuffer", text="Copy to Buffer", icon="COPYDOWN")
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.operator("wm.call_menu_pie", text="Display...").name = "SUBPIE_MT_object_copy_display"
+        # SOUTH-WEST
+        pie.operator("cpie.object_copy_obj_lok", text="Protected Transform")
+        # SOUTH-EAST
+        pie.operator("wm.call_menu_pie", text="Data...").name = "SUBPIE_MT_object_copy_data"
 
 
 # Begin Mesh copy settings:
 
-class MESH_MT_CopyFaceSettings(Menu):
+class CPIE_MT_CopyFaceSettings(Menu):
     bl_label = "Copy Face Settings"
 
     @classmethod
@@ -719,26 +813,26 @@ class MESH_MT_CopyFaceSettings(Menu):
 
         layout = self.layout
 
-        op = layout.operator("mesh.copy_face_settings", text="Copy Material")
+        op = layout.operator("cpie.mesh_copy_face_settings", text="Copy Material")
         op['layer'] = ''
         op['mode'] = 'MAT'
 
         if mesh.uv_layers.active:
-            op = layout.operator("mesh.copy_face_settings", text="Copy Active UV Coords")
+            op = layout.operator("cpie.mesh_copy_face_settings", text="Copy Active UV Coords")
             op['layer'] = ''
             op['mode'] = 'UV'
 
         if mesh.vertex_colors.active:
-            op = layout.operator("mesh.copy_face_settings", text="Copy Active Vertex Colors")
+            op = layout.operator("cpie.mesh_copy_face_settings", text="Copy Active Vertex Colors")
             op['layer'] = ''
             op['mode'] = 'VCOL'
 
         if uv or vc:
             layout.separator()
             if uv:
-                layout.menu("MESH_MT_CopyUVCoordsFromLayer")
+                layout.menu("CPIE_MT_CopyUVCoordsFromLayer")
             if vc:
-                layout.menu("MESH_MT_CopyVertexColorsFromLayer")
+                layout.menu("CPIE_MT_CopyVertexColorsFromLayer")
 
 
 # Data (UV map, Image and Vertex color) menus calling MESH_OT_CopyFaceSettings
@@ -746,7 +840,7 @@ class MESH_MT_CopyFaceSettings(Menu):
 # causing issues with access and registration
 
 
-class MESH_MT_CopyUVCoordsFromLayer(Menu):
+class CPIE_MT_CopyUVCoordsFromLayer(Menu):
     bl_label = "Copy UV Coordinates from Layer"
 
     @classmethod
@@ -760,7 +854,7 @@ class MESH_MT_CopyUVCoordsFromLayer(Menu):
         _buildmenu(self, mesh, 'UV', "GROUP_UVS")
 
 
-class MESH_MT_CopyVertexColorsFromLayer(Menu):
+class CPIE_MT_CopyVertexColorsFromLayer(Menu):
     bl_label = "Copy Vertex Colors from Layer"
 
     @classmethod
@@ -782,15 +876,15 @@ def _buildmenu(self, mesh, mode, icon):
         layers = mesh.uv_layers
     for layer in layers:
         if not layer.active:
-            op = layout.operator("mesh.copy_face_settings",
+            op = layout.operator("cpie.mesh_copy_face_settings",
                                  text=layer.name, icon=icon)
             op['layer'] = layer.name
             op['mode'] = mode
 
 
-class MESH_OT_CopyFaceSettings(Operator):
+class CPIE_OT_mesh_copy_face_settings(Operator):
     """Copy settings from active face to all selected faces"""
-    bl_idname = 'mesh.copy_face_settings'
+    bl_idname = 'cpie.mesh_copy_face_settings'
     bl_label = "Copy Face Settings"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -867,8 +961,8 @@ class MESH_OT_CopyFaceSettings(Operator):
         return(retval)
 
 
-class OBJECT_OT_copy_light_linking(Operator):
-    bl_idname = 'object.copy_light_linking'
+class CPIE_OT_object_copy_light_linking(Operator):
+    bl_idname = 'cpie.object_copy_light_linking'
     bl_label = "Copy Light Linking Collection"
     bl_description = "Copy light linking collection from active object to all selected objects"
     bl_options = {'REGISTER', 'UNDO'}
@@ -908,8 +1002,8 @@ class OBJECT_OT_copy_light_linking(Operator):
 
 
 
-class OBJECT_OT_copy_shadow_linking(Operator):
-    bl_idname = 'object.copy_shadow_linking'
+class CPIE_OT_object_copy_shadow_linking(Operator):
+    bl_idname = 'cpie.object_copy_shadow_linking'
     bl_label = "Copy Shadow Linking Collection"
     bl_description = "Copy shadow linking collection from active object to all selected objects"
     bl_options = {'REGISTER', 'UNDO'}
@@ -950,21 +1044,23 @@ class OBJECT_OT_copy_shadow_linking(Operator):
 
 
 
-
 registry = (
-    CopySelectedPoseConstraints,
-    CopySelectedBoneCustomProperties,
-    VIEW3D_MT_posecopypopup,
-    CopySelectedObjectConstraints,
-    CopySelectedObjectModifiers,
-    CopySelectedObjectCustomProperties,
-    VIEW3D_MT_copypopup,
-    MESH_MT_CopyFaceSettings,
-    MESH_MT_CopyUVCoordsFromLayer,
-    MESH_MT_CopyVertexColorsFromLayer,
-    MESH_OT_CopyFaceSettings,
-    OBJECT_OT_copy_light_linking,
-    OBJECT_OT_copy_shadow_linking,
+    CPIE_OT_pose_copy_selected_constraints,
+    CPIE_OT_pose_copy_selected_custom_props,
+    SUBPIE_MT_pose_copy_other,
+    SUBPIE_MT_pose_copy,
+    CPIE_OT_object_copy_selected_constraints,
+    CPIE_OT_object_copy_selected_modifiers,
+    CPIE_OT_object_copy_selected_custom_props,
+    SUBPIE_MT_object_copy_data,
+    SUBPIE_MT_object_copy_display,
+    SUBPIE_MT_object_copy,
+    CPIE_MT_CopyFaceSettings,
+    CPIE_MT_CopyUVCoordsFromLayer,
+    CPIE_MT_CopyVertexColorsFromLayer,
+    CPIE_OT_mesh_copy_face_settings,
+    CPIE_OT_object_copy_light_linking,
+    CPIE_OT_object_copy_shadow_linking,
     *pose_ops,
     *object_ops,
 )

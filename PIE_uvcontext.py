@@ -2,16 +2,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-bl_info = {
-    "name": "Context Pie: 'Shift + Right Mouse'",
-    "blender": (4, 2, 0),
-    "category": "Interface",
-    "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube",
-    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
-}
-
-
 import bpy
 from bpy.types import Menu
 

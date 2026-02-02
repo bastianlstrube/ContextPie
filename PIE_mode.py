@@ -2,15 +2,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-bl_info = {
-    "name": "Context Pie: Mode Selection 'Right Mouse'",
-    "blender": (4, 2, 0),
-    "category": "Interface",
-    "description": "Context sensitive pie menu for a simple, fast workflow",
-    "author": "Bastian L Strube",
-    "location": "View3D (Object, Mesh, Curve, Lattice), UV Editor",
-}
-
 from bpy.types import Menu
 from bl_ui.properties_paint_common import (
     UnifiedPaintPanel,
@@ -291,18 +282,9 @@ class VIEW3D_PIE_MT_mode(Menu):
         pie.menu("VIEW3D_MT_edit_armature_names")
         pie.separator()
 
-    ## GREASE PENCIL MODES
     def draw_edit_gpencil_mode(self, pie, context):
-        # WEST
-        pie.operator_enum("OBJECT_OT_mode_set", "mode")
-    '''
-    def draw_paint_gpencil_mode(self, pie, context):
         pie.operator_enum("OBJECT_OT_mode_set", "mode")
 
-    def draw_sculpt_gpencil_mode(self, pie, context):
-        pie.operator_enum("OBJECT_OT_mode_set", "mode")
-    '''
-    ## BRUSH MODE SECTION
     def draw_paint_vertex_mode(self, pie, context):
         # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
