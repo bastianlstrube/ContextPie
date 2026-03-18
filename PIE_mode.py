@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import bpy
 from bpy.types import Menu
 from bl_ui.properties_paint_common import (
     UnifiedPaintPanel,
@@ -407,7 +408,10 @@ def register():
         "Image Paint",
     ]
 
+    default_keymaps = bpy.context.window_manager.keyconfigs.default.keymaps
     for cat in categories:
+        if cat not in default_keymaps:
+            continue
         WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
             pie_name=VIEW3D_PIE_MT_mode.bl_idname,
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
