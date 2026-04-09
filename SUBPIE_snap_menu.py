@@ -14,7 +14,9 @@ bl_info = {
 from bpy.types import (
     Menu,
     Operator,
+
 )
+from bpy.app import version
 
 """
 # Proportional Edit Object
@@ -73,6 +75,10 @@ class SUBPIE_OT_SwapSnapElementsBase(Operator):
         return {'FINISHED'}
 """
 #    elementsbase = ({'INCREMENT'}, {'VERTEX'}, {'EDGE'}, {'FACE'}, {'VOLUME'}, {'EDGE_MIDPOINT'}, {'EDGE_PERPENDICULAR'})
+
+
+
+# --- SNAP TARGET OPERATORS ---
 
 class SUBPIE_OT_SnapIncrement(Operator):
     bl_idname = "pie_snap.increment"
@@ -194,7 +200,93 @@ class SUBPIE_OT_SnapEdgePerpendicular(Operator):
             ts.snap_elements_base = {'EDGE_PERPENDICULAR'}
         return {'FINISHED'}
 
-# Sub Pie SnapEditObj
+class SUBPIE_OT_SnapFaceCenter(Operator):
+    bl_idname = "pie_snap.face_center"
+    bl_label = "Snap Face Center"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ts = context.tool_settings
+        if ts.use_snap is False:
+            ts.use_snap = True
+        
+        # 'FACE_NEAREST' or 'FACE_CENTER' depending on API
+        ts.snap_elements_base = {'FACE_MIDPOINT'}
+        return {'FINISHED'}
+
+
+# --- BASE TARGET OPERATORS ---
+
+class SUBPIE_OT_SnapTargetClosest(Operator):
+    bl_idname = "pie_snap.target_closest"
+    bl_label = "Target: Closest"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        context.tool_settings.snap_target = 'CLOSEST'
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapTargetCenter(Operator):
+    bl_idname = "pie_snap.target_center"
+    bl_label = "Target: Center"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        context.tool_settings.snap_target = 'CENTER'
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapTargetMedian(Operator):
+    bl_idname = "pie_snap.target_median"
+    bl_label = "Target: Median"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        context.tool_settings.snap_target = 'MEDIAN'
+        return {'FINISHED'}
+
+class SUBPIE_OT_SnapTargetActive(Operator):
+    bl_idname = "pie_snap.target_active"
+    bl_label = "Target: Active"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        context.tool_settings.snap_target = 'ACTIVE'
+        return {'FINISHED'}
+
+
+# --- MENUS ---
+
+class SUBPIE_MT_SnapMore(Menu):
+    bl_idname = "SUBPIE_MT_snap_more"
+    bl_label = "Snap More"
+
+    def draw(self, context):
+        layout = self.layout
+        pie = layout.menu_pie()
+        box = pie.split().column()
+        
+        box.operator("pie_snap.increment", text="Increment", icon='SNAP_INCREMENT')
+        box.operator("pie_snap.edgemidpoint", text="Edge Midpoint", icon='SNAP_MIDPOINT')
+        box.operator("pie_snap.edgeperpendicular", text="Edge Perpendicular", icon='SNAP_PERPENDICULAR')
+        # Version check for Face Center (Blender 5.1+)
+        if version >= (5, 1, 0):
+            box.operator("pie_snap.face_center", text="Face Center", icon='SNAP_FACE_CENTER') 
+
+
+class SUBPIE_MT_SnapBase(Menu):
+    bl_idname = "SUBPIE_MT_snap_base"
+    bl_label = "Snap Base"
+
+    def draw(self, context):
+        layout = self.layout
+        pie = layout.menu_pie()
+        box = pie.split().column()
+
+        box.operator("pie_snap.target_closest", text="Closest", icon='MESH_CIRCLE')
+        box.operator("pie_snap.target_median", text="Median", icon='PIVOT_MEDIAN')
+        box.operator("pie_snap.target_active", text="Active", icon='PIVOT_ACTIVE')
+        box.operator("pie_snap.target_center", text="Center", icon='PIVOT_BOUNDBOX')
+
 class SUBPIE_MT_Snap(Menu):
     bl_idname = "SUBPIE_MT_snap"
     bl_label = "Snap"
@@ -203,6 +295,7 @@ class SUBPIE_MT_Snap(Menu):
         layout = self.layout
         pie = layout.menu_pie()
         ts = context.tool_settings
+        
         # 4 - LEFT
         pie.operator("pie_snap.volume", text="Volume", icon='SNAP_VOLUME')
         # 6 - RIGHT
@@ -212,11 +305,11 @@ class SUBPIE_MT_Snap(Menu):
         # 8 - TOP
         pie.operator("pie_snap.edge", text="Edge", icon='SNAP_EDGE')
         # 7 - TOP - LEFT
-        pie.operator("pie_snap.edgemidpoint", text="Edge Midpoint", icon='SNAP_MIDPOINT')
+        pie.menu("SUBPIE_MT_snap_base", text="Snap Base...", icon='PLUS')
         # 9 - TOP - RIGHT
-        pie.operator("pie_snap.grid", text="Grid", icon='SNAP_GRID')
+        pie.menu("SUBPIE_MT_snap_more", text="More...", icon='PLUS')
         # 1 - BOTTOM - LEFT
-        pie.operator("pie_snap.increment", text="Increment", icon='SNAP_INCREMENT')
+        pie.operator("pie_snap.grid", text="Grid", icon='SNAP_GRID')
         # 3 - BOTTOM - RIGHT
         pie.operator("pie_snap.face", text="Face", icon='SNAP_FACE')
 
@@ -230,5 +323,12 @@ registry = (
     SUBPIE_OT_SnapVolume,
     SUBPIE_OT_SnapEdgeMidpoint,
     SUBPIE_OT_SnapEdgePerpendicular,
+    SUBPIE_OT_SnapFaceCenter,
+    SUBPIE_OT_SnapTargetClosest,
+    SUBPIE_OT_SnapTargetCenter,
+    SUBPIE_OT_SnapTargetMedian,
+    SUBPIE_OT_SnapTargetActive,
     SUBPIE_MT_Snap,
+    SUBPIE_MT_SnapMore,
+    SUBPIE_MT_SnapBase,
 )
