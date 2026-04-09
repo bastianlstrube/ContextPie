@@ -52,9 +52,9 @@ class SUBPIE_MT_meshSelect(Menu):
         # WEST
         pie.operator("mesh.region_to_loop", text='Boundary')
         # EAST
-        pie.operator("mesh.loop_multi_select", text='Ring').ring = True
+        pie.operator("mesh.select_edge_ring_multi", text='Ring')
         # SOUTH
-        pie.operator("mesh.loop_multi_select", text='Loop').ring = False
+        pie.operator("mesh.select_edge_loop_multi", text='Loop')
         # NORTH
         pie.operator("mesh.select_nth", text='Checker Deselect')
         # NORTH-WEST
