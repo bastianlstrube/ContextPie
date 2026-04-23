@@ -38,6 +38,7 @@ class SUBPIE_MT_gn_curve(Menu):
         pie.operator("node.add_node", text="Trim Curve", icon='CURVE_DATA').type = 'GeometryNodeTrimCurve'
         pie.operator("node.add_node", text="Fill Curve", icon='MESH_DATA').type = 'GeometryNodeFillCurve'
         pie.operator("node.add_node", text="Curve to Mesh", icon='MESH_DATA').type = 'GeometryNodeCurveToMesh'
+        pie.operator("node.add_node", text="Curve to Points", icon='PARTICLE_DATA').type = 'GeometryNodeCurveToPoints'
 
 class SUBPIE_MT_gn_utilities(Menu):
     bl_label = "Utilities & Math"
@@ -51,6 +52,7 @@ class SUBPIE_MT_gn_utilities(Menu):
         pie.operator("node.add_node", text="Color Ramp", icon='COLOR').type = 'ShaderNodeValToRGB'
         pie.operator("node.add_node", text="Float Curve", icon='CURVE_DATA').type = 'ShaderNodeFloatCurve'
         pie.operator("node.add_node", text="Switch", icon='ARROW_LEFTRIGHT').type = 'GeometryNodeSwitch'
+        pie.operator("node.add_node", text="Map Range", icon='ARROW_LEFTRIGHT').type = 'ShaderNodeMapRange'
 
 class SUBPIE_MT_gn_io(Menu):
     bl_label = "Input & Output"
@@ -64,6 +66,7 @@ class SUBPIE_MT_gn_io(Menu):
         pie.operator("node.add_node", text="Boolean", icon='CHECKBOX_HLT').type = 'FunctionNodeInputBool'
         pie.operator("node.add_node", text="Object Info", icon='OBJECT_DATA').type = 'GeometryNodeObjectInfo'
         pie.operator("node.add_node", text="Collection Info", icon='OUTLINER_COLLECTION').type = 'GeometryNodeCollectionInfo'
+        pie.operator("node.add_node", text="Scene Time", icon='TIME').type = 'GeometryNodeInputSceneTime'
 
 class SUBPIE_MT_gn_geometry_instances(Menu):
     bl_label = "Geometry & Instances"
@@ -77,6 +80,7 @@ class SUBPIE_MT_gn_geometry_instances(Menu):
         pie.operator("node.add_node", text="Realize Instances", icon='OUTLINER_OB_GROUP_INSTANCE').type = 'GeometryNodeRealizeInstances'
         pie.operator("node.add_node", text="Separate Geometry", icon='MESH_DATA').type = 'GeometryNodeSeparateGeometry'
         pie.operator("node.add_node", text="Delete Geometry", icon='CANCEL').type = 'GeometryNodeDeleteGeometry'
+        pie.operator("node.add_node", text="Geometry to Instance", icon='OUTLINER_OB_GROUP_INSTANCE').type = 'GeometryNodeGeometryToInstance'
 
 class SUBPIE_MT_gn_attributes(Menu):
     bl_label = "Attributes & Textures"
@@ -89,6 +93,8 @@ class SUBPIE_MT_gn_attributes(Menu):
         pie.operator("node.add_node", text="Noise Texture", icon='TEXTURE').type = 'ShaderNodeTexNoise'
         pie.operator("node.add_node", text="Voronoi Texture", icon='TEXTURE').type = 'ShaderNodeTexVoronoi'
         pie.operator("node.add_node", text="Gradient Texture", icon='TEXTURE').type = 'ShaderNodeTexGradient'
+        pie.operator("node.add_node", text="Blur Attribute", icon='MOD_SMOOTH').type = 'GeometryNodeBlurAttribute'
+        pie.operator("node.add_node", text="Sample Index", icon='SPREADSHEET').type = 'GeometryNodeSampleIndex'
 
 class SUBPIE_MT_gn_points_volumes(Menu):
     bl_label = "Points & Volumes"
@@ -100,6 +106,9 @@ class SUBPIE_MT_gn_points_volumes(Menu):
         pie.operator("node.add_node", text="Points to Volume", icon='VOLUME_DATA').type = 'GeometryNodePointsToVolume'
         pie.operator("node.add_node", text="Volume to Mesh", icon='MESH_DATA').type = 'GeometryNodeVolumeToMesh'
         pie.operator("node.add_node", text="Points to Vertices", icon='VERTEXSEL').type = 'GeometryNodePointsToVertices'
+        pie.operator("node.add_node", text="Distribute Points in Volume", icon='PARTICLE_DATA').type = 'GeometryNodeDistributePointsInVolume'
+        pie.operator("node.add_node", text="Volume Cube", icon='VOLUME_DATA').type = 'GeometryNodeVolumeCube'
+        pie.operator("node.add_node", text="Set Point Radius", icon='PARTICLE_DATA').type = 'GeometryNodeSetPointRadius'
 
 class SUBPIE_MT_gn_materials(Menu):
     bl_label = "Materials"
@@ -110,6 +119,10 @@ class SUBPIE_MT_gn_materials(Menu):
         pie.operator("node.add_node", text="Replace Material", icon='MATERIAL').type = 'GeometryNodeReplaceMaterial'
         pie.operator("node.add_node", text="Material Selection", icon='MATERIAL').type = 'GeometryNodeMaterialSelection'
         pie.operator("node.add_node", text="Set Material Index", icon='MATERIAL').type = 'GeometryNodeSetMaterialIndex'
+        pie.operator("node.add_node", text="Input Material", icon='MATERIAL').type = 'GeometryNodeInputMaterial'
+        pie.operator("node.add_node", text="Set Shade Smooth", icon='SHADING_RENDERED').type = 'GeometryNodeSetShadeSmooth'
+        pie.operator("node.add_node", text="UV Unwrap", icon='UV').type = 'GeometryNodeUVUnwrap'
+        pie.operator("node.add_node", text="UV Pack Islands", icon='UV').type = 'GeometryNodeUVPackIslands'
 
 
 # ==============================================================================
@@ -126,6 +139,8 @@ class SUBPIE_MT_sh_input(Menu):
         pie.operator("node.add_node", text="Value", icon='VALUE_PROP').type = 'ShaderNodeValue'
         pie.operator("node.add_node", text="RGB", icon='COLOR').type = 'ShaderNodeRGB'
         pie.operator("node.add_node", text="Attribute", icon='SPREADSHEET').type = 'ShaderNodeAttribute'
+        pie.operator("node.add_node", text="Fresnel", icon='NORMALS_FACE').type = 'ShaderNodeFresnel'
+        pie.operator("node.add_node", text="UV Map", icon='UV').type = 'ShaderNodeUVMap'
 
 class SUBPIE_MT_sh_output(Menu):
     bl_label = "Output"
@@ -135,6 +150,10 @@ class SUBPIE_MT_sh_output(Menu):
         pie.operator("node.add_node", text="Light Output", icon='LIGHT').type = 'ShaderNodeOutputLight'
         pie.operator("node.add_node", text="World Output", icon='WORLD').type = 'ShaderNodeOutputWorld'
         pie.operator("node.add_node", text="AOV Output", icon='RENDER_RESULT').type = 'ShaderNodeOutputAOV'
+        pie.operator("node.add_node", text="Line Style Output", icon='STROKE').type = 'ShaderNodeOutputLineStyle'
+        pie.operator("node.add_node", text="Background", icon='WORLD').type = 'ShaderNodeBackground'
+        pie.operator("node.add_node", text="Holdout", icon='SHADING_WIRE').type = 'ShaderNodeHoldout'
+        pie.operator("node.add_node", text="Emission", icon='LIGHT').type = 'ShaderNodeEmission'
 
 class SUBPIE_MT_sh_shader(Menu):
     bl_label = "Shader"
@@ -146,6 +165,8 @@ class SUBPIE_MT_sh_shader(Menu):
         pie.operator("node.add_node", text="Transparent BSDF", icon='SHADING_WIRE').type = 'ShaderNodeBsdfTransparent'
         pie.operator("node.add_node", text="Glass BSDF", icon='SHADING_RENDERED').type = 'ShaderNodeBsdfGlass'
         pie.operator("node.add_node", text="Volume Scatter", icon='VOLUME_DATA').type = 'ShaderNodeVolumeScatter'
+        pie.operator("node.add_node", text="Glossy BSDF", icon='SHADING_RENDERED').type = 'ShaderNodeBsdfGlossy'
+        pie.operator("node.add_node", text="Principled Volume", icon='VOLUME_DATA').type = 'ShaderNodeVolumePrincipled'
 
 class SUBPIE_MT_sh_texture(Menu):
     bl_label = "Texture"
@@ -156,6 +177,9 @@ class SUBPIE_MT_sh_texture(Menu):
         pie.operator("node.add_node", text="Voronoi Texture", icon='TEXTURE').type = 'ShaderNodeTexVoronoi'
         pie.operator("node.add_node", text="Gradient Texture", icon='TEXTURE').type = 'ShaderNodeTexGradient'
         pie.operator("node.add_node", text="Wave Texture", icon='TEXTURE').type = 'ShaderNodeTexWave'
+        pie.operator("node.add_node", text="Sky Texture", icon='LIGHT_SUN').type = 'ShaderNodeTexSky'
+        pie.operator("node.add_node", text="Checker Texture", icon='TEXTURE').type = 'ShaderNodeTexChecker'
+        pie.operator("node.add_node", text="Magic Texture", icon='TEXTURE').type = 'ShaderNodeTexMagic'
 
 class SUBPIE_MT_sh_color(Menu):
     bl_label = "Color"
@@ -166,6 +190,9 @@ class SUBPIE_MT_sh_color(Menu):
         pie.operator("node.add_node", text="RGB Curves", icon='CURVE_DATA').type = 'ShaderNodeRGBCurve'
         pie.operator("node.add_node", text="Hue/Saturation", icon='COLOR').type = 'ShaderNodeHueSaturation'
         pie.operator("node.add_node", text="Invert Color", icon='COLOR').type = 'ShaderNodeInvert'
+        pie.operator("node.add_node", text="Bright/Contrast", icon='COLORSET_10_VEC').type = 'ShaderNodeBrightContrast'
+        pie.operator("node.add_node", text="Gamma", icon='COLOR').type = 'ShaderNodeGamma'
+        pie.operator("node.add_node", text="Light Falloff", icon='LIGHT').type = 'ShaderNodeLightFalloff'
 
 class SUBPIE_MT_sh_vector(Menu):
     bl_label = "Vector"
@@ -176,6 +203,9 @@ class SUBPIE_MT_sh_vector(Menu):
         pie.operator("node.add_node", text="Displacement", icon='FORCE_TEXTURE').type = 'ShaderNodeDisplacement'
         pie.operator("node.add_node", text="Normal Map", icon='NORMALS_FACE').type = 'ShaderNodeNormalMap'
         pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath'
+        pie.operator("node.add_node", text="Vector Displacement", icon='FORCE_TEXTURE').type = 'ShaderNodeVectorDisplacement'
+        pie.operator("node.add_node", text="Vector Curves", icon='CURVE_DATA').type = 'ShaderNodeVectorCurve'
+        pie.operator("node.add_node", text="Vector Transform", icon='ORIENTATION_GLOBAL').type = 'ShaderNodeVectorTransform'
 
 class SUBPIE_MT_sh_converter(Menu):
     bl_label = "Converter"
@@ -187,6 +217,8 @@ class SUBPIE_MT_sh_converter(Menu):
         pie.operator("node.add_node", text="Combine Color", icon='COLOR').type = 'ShaderNodeCombineColor'
         pie.operator("node.add_node", text="Separate XYZ", icon='AXIS_SIDE').type = 'ShaderNodeSeparateXYZ'
         pie.operator("node.add_node", text="Combine XYZ", icon='AXIS_SIDE').type = 'ShaderNodeCombineXYZ'
+        pie.operator("node.add_node", text="Clamp", icon='ARROW_LEFTRIGHT').type = 'ShaderNodeClamp'
+        pie.operator("node.add_node", text="Blackbody", icon='LIGHT').type = 'ShaderNodeBlackbody'
 
 
 # ==============================================================================
@@ -202,6 +234,9 @@ class SUBPIE_MT_co_input(Menu):
         pie.operator("node.add_node", text="Movie Clip", icon='TRACKER').type = 'CompositorNodeMovieClip'
         pie.operator("node.add_node", text="Value", icon='VALUE_PROP').type = 'CompositorNodeValue'
         pie.operator("node.add_node", text="RGB", icon='COLOR').type = 'CompositorNodeRGB'
+        pie.operator("node.add_node", text="Mask", icon='MOD_MASK').type = 'CompositorNodeMask'
+        pie.operator("node.add_node", text="Bokeh Image", icon='IMAGE_DATA').type = 'CompositorNodeBokehImage'
+        pie.operator("node.add_node", text="Track Position", icon='TRACKER').type = 'CompositorNodeTrackPos'
 
 class SUBPIE_MT_co_output(Menu):
     bl_label = "Output"
@@ -210,6 +245,11 @@ class SUBPIE_MT_co_output(Menu):
         pie.operator("node.add_node", text="Composite", icon='RENDER_RESULT').type = 'CompositorNodeComposite'
         pie.operator("node.add_node", text="Viewer", icon='HIDE_ON').type = 'CompositorNodeViewer'
         pie.operator("node.add_node", text="File Output", icon='FILE_IMAGE').type = 'CompositorNodeOutputFile'
+        pie.operator("node.add_node", text="Split Viewer", icon='HIDE_ON').type = 'CompositorNodeSplitViewer'
+        pie.separator()
+        pie.separator()
+        pie.separator()
+        pie.separator()
 
 class SUBPIE_MT_co_color(Menu):
     bl_label = "Color"
@@ -220,6 +260,9 @@ class SUBPIE_MT_co_color(Menu):
         pie.operator("node.add_node", text="Color Balance", icon='COLOR').type = 'CompositorNodeColorBalance'
         pie.operator("node.add_node", text="Color Ramp", icon='COLOR').type = 'CompositorNodeValToRGB'
         pie.operator("node.add_node", text="Hue Saturation Value", icon='COLOR').type = 'CompositorNodeHueSat'
+        pie.operator("node.add_node", text="RGB Curves", icon='CURVE_DATA').type = 'CompositorNodeCurveRGB'
+        pie.operator("node.add_node", text="Bright/Contrast", icon='COLORSET_10_VEC').type = 'CompositorNodeBrightContrast'
+        pie.operator("node.add_node", text="Gamma", icon='COLOR').type = 'CompositorNodeGamma'
 
 class SUBPIE_MT_co_filter(Menu):
     bl_label = "Filter"
@@ -230,6 +273,9 @@ class SUBPIE_MT_co_filter(Menu):
         pie.operator("node.add_node", text="Directional Blur", icon='MOD_SMOOTH').type = 'CompositorNodeDBlur'
         pie.operator("node.add_node", text="Sun Beams", icon='LIGHT_SUN').type = 'CompositorNodeSunBeams'
         pie.operator("node.add_node", text="Pixelate", icon='TEXTURE').type = 'CompositorNodePixelate'
+        pie.operator("node.add_node", text="Despeckle", icon='MOD_SMOOTH').type = 'CompositorNodeDespeckle'
+        pie.operator("node.add_node", text="Filter", icon='FILTER').type = 'CompositorNodeFilter'
+        pie.operator("node.add_node", text="Bokeh Blur", icon='IMAGE_DATA').type = 'CompositorNodeBokehBlur'
 
 class SUBPIE_MT_co_transform(Menu):
     bl_label = "Transform"
@@ -240,6 +286,9 @@ class SUBPIE_MT_co_transform(Menu):
         pie.operator("node.add_node", text="Scale", icon='NODE').type = 'CompositorNodeScale'
         pie.operator("node.add_node", text="Rotate", icon='NODE').type = 'CompositorNodeRotate'
         pie.operator("node.add_node", text="Flip", icon='NODE').type = 'CompositorNodeFlip'
+        pie.operator("node.add_node", text="Crop", icon='FULLSCREEN_EXIT').type = 'CompositorNodeCrop'
+        pie.operator("node.add_node", text="Movie Distortion", icon='TRACKER').type = 'CompositorNodeMovieDistortion'
+        pie.operator("node.add_node", text="Corner Pin", icon='NODE').type = 'CompositorNodeCornerPin'
 
 class SUBPIE_MT_co_matte(Menu):
     bl_label = "Matte & Mask"
@@ -250,6 +299,9 @@ class SUBPIE_MT_co_matte(Menu):
         pie.operator("node.add_node", text="Color Key", icon='IMAGE_ALPHA').type = 'CompositorNodeColorMatte'
         pie.operator("node.add_node", text="Box Mask", icon='MOD_MASK').type = 'CompositorNodeBoxMask'
         pie.operator("node.add_node", text="Ellipse Mask", icon='MOD_MASK').type = 'CompositorNodeEllipseMask'
+        pie.operator("node.add_node", text="Luminance Key", icon='IMAGE_ALPHA').type = 'CompositorNodeLumaMatte'
+        pie.operator("node.add_node", text="Chroma Key", icon='IMAGE_ALPHA').type = 'CompositorNodeChromaMatte'
+        pie.operator("node.add_node", text="Difference Key", icon='IMAGE_ALPHA').type = 'CompositorNodeDiffMatte'
 
 class SUBPIE_MT_co_converter(Menu):
     bl_label = "Converter"
@@ -259,6 +311,10 @@ class SUBPIE_MT_co_converter(Menu):
         pie.operator("node.add_node", text="Set Alpha", icon='IMAGE_ALPHA').type = 'CompositorNodeSetAlpha'
         pie.operator("node.add_node", text="ID Mask", icon='MOD_MASK').type = 'CompositorNodeIDMask'
         pie.operator("node.add_node", text="RGB to BW", icon='COLOR').type = 'CompositorNodeRGBToBW'
+        pie.operator("node.add_node", text="Separate Color", icon='COLOR').type = 'CompositorNodeSeparateColor'
+        pie.operator("node.add_node", text="Combine Color", icon='COLOR').type = 'CompositorNodeCombineColor'
+        pie.operator("node.add_node", text="Alpha Convert", icon='IMAGE_ALPHA').type = 'CompositorNodePremulKey'
+        pie.operator("node.add_node", text="Normalize", icon='NORMALIZE_FCURVES').type = 'CompositorNodeNormalize'
 
 
 # ==============================================================================

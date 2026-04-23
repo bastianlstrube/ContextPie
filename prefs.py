@@ -39,6 +39,14 @@ def draw_prefs(layout, context, compact=False):
     layout.use_property_split = True
     layout.use_property_decorate = False
 
+    if "node_wrangler" not in context.preferences.addons:
+        box = layout.box()
+        box.alert = True
+        col = box.column(align=True)
+        col.label(text="Node Wrangler is not enabled.", icon='ERROR')
+        col.label(text="Many node pie menu options require it.", icon='BLANK1')
+        col.operator("preferences.addon_enable", text="Enable Node Wrangler", icon='CHECKMARK').module = "node_wrangler"
+
     if not compact:
         col = layout.column()
         row = col.row()
