@@ -30,6 +30,7 @@ module_names = (
     "PIE_context",
     "PIE_mode",
     "PIE_pivots",
+    # "PIE_context_node", Work in progress and not that good yet.... try claude instead
     "PIE_uvcontext",
     "PIE_uvmode",
     "PIE_uvpivots",

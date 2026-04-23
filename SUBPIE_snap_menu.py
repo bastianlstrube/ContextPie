@@ -87,10 +87,6 @@ class SUBPIE_OT_SnapIncrement(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'INCREMENT'}
-
         if not ts.snap_elements_base == {'INCREMENT'}:
             ts.snap_elements_base = {'INCREMENT'}
         return {'FINISHED'}
@@ -102,10 +98,6 @@ class SUBPIE_OT_SnapGrid(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'GRID'}
-
         if not ts.snap_elements_base == {'GRID'}:
             ts.snap_elements_base = {'GRID'}
         return {'FINISHED'}
@@ -117,10 +109,6 @@ class SUBPIE_OT_SnapVertex(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'VERTEX'}
-
         if not ts.snap_elements_base == {'VERTEX'}:
             ts.snap_elements_base = {'VERTEX'}
         return {'FINISHED'}
@@ -132,10 +120,6 @@ class SUBPIE_OT_SnapEdge(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'EDGE'}
-
         if not ts.snap_elements_base == {'EDGE'}:
             ts.snap_elements_base = {'EDGE'}
         return {'FINISHED'}
@@ -147,10 +131,6 @@ class SUBPIE_OT_SnapFace(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'FACE'}
-
         if not ts.snap_elements_base == {'FACE'}:
             ts.snap_elements_base = {'FACE'}
         return {'FINISHED'}
@@ -162,10 +142,6 @@ class SUBPIE_OT_SnapVolume(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'VOLUME'}
-
         if not ts.snap_elements_base == {'VOLUME'}:
             ts.snap_elements_base = {'VOLUME'}
         return {'FINISHED'}
@@ -177,10 +153,6 @@ class SUBPIE_OT_SnapEdgeMidpoint(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'EDGE_MIDPOINT'}
-
         if not ts.snap_elements_base == {'EDGE_MIDPOINT'}:
             ts.snap_elements_base = {'EDGE_MIDPOINT'}
         return {'FINISHED'}
@@ -192,10 +164,6 @@ class SUBPIE_OT_SnapEdgePerpendicular(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-            ts.snap_elements_base = {'EDGE_PERPENDICULAR'}
-
         if not ts.snap_elements_base == {'EDGE_PERPENDICULAR'}:
             ts.snap_elements_base = {'EDGE_PERPENDICULAR'}
         return {'FINISHED'}
@@ -207,11 +175,8 @@ class SUBPIE_OT_SnapFaceCenter(Operator):
 
     def execute(self, context):
         ts = context.tool_settings
-        if ts.use_snap is False:
-            ts.use_snap = True
-        
-        # 'FACE_NEAREST' or 'FACE_CENTER' depending on API
-        ts.snap_elements_base = {'FACE_MIDPOINT'}
+        if not ts.snap_elements_base == {'FACE_MIDPOINT'}:
+            ts.snap_elements_base = {'FACE_MIDPOINT'}
         return {'FINISHED'}
 
 
