@@ -58,10 +58,6 @@ class NODE_PIE_MT_pivots(Menu):
             gap.scale_y = 8
             dropdown_menu = dropdown.box().column()
             dropdown_menu.scale_y = 1
-            op = dropdown_menu.operator("node.nw_link_active_to_selected", text="Link Active to Selected")
-            op.replace = False
-            op.use_node_name = False
-            op.use_outputs_names = False
             dropdown_menu.operator("node.nw_detach_outputs", text="Detach Outputs (Keep Inputs)")
 
 

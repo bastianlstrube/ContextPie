@@ -541,8 +541,11 @@ class NODE_PIE_MT_context(Menu):
             pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED')
         # SOUTH
         pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
-        # NORTH - link active node to tree output (NW) or standard viewer toggle
-        if nw_loaded:
+        # NORTH - viewer/output link, tree-type aware
+        tree_type = context.space_data.tree_type if context.space_data.node_tree else None
+        if tree_type in ('GeometryNodeTree', 'CompositorNodeTree'):
+            pie.operator("node.link_viewer", text="Link to Viewer", icon='HIDE_OFF')
+        elif nw_loaded:
             pie.operator("node.nw_link_out", text="Link to Output", icon='DRIVER')
         else:
             pie.operator("node.view_toggle", text="Toggle Viewer", icon='HIDE_ON')
@@ -593,9 +596,12 @@ class NODE_PIE_MT_context(Menu):
         pie.operator("wm.call_menu_pie", text='Join / Merge...', icon='TRIA_UP').name = "SUBPIE_MT_node_join"
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
-        # NORTH-EAST - swap links between two selected nodes (NW)
+        # NORTH-EAST - link active node to all other selected (NW)
         if nw_loaded:
-            pie.operator("node.nw_swap_links", text="Swap Links", icon='FILE_REFRESH')
+            op = pie.operator("node.nw_link_active_to_selected", text="Link Active to Selected", icon='LINKED')
+            op.replace = False
+            op.use_node_name = False
+            op.use_outputs_names = False
         else:
             pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED')
         # SOUTH-WEST

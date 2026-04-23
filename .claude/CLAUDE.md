@@ -28,11 +28,15 @@ All hotkeys go through `WM_OT_call_menu_pie_drag_only_cpie` in `op_pie_wrappers.
 ### Pie menu files
 | File | Keymap | Trigger |
 |---|---|---|
-| `PIE_context.py` | 3D View + Sculpt | Shift+RMB |
-| `PIE_context_node.py` | Node Editor | Shift+RMB |
-| `PIE_mode.py` | 3D View | RMB |
-| `PIE_pivots.py` | 3D View | Ctrl+RMB |
-| `PIE_uvcontext.py` / `PIE_uvmode.py` / `PIE_uvpivots.py` | UV Editor | same pattern |
+| `PIE_3d_context.py` | 3D View + Sculpt | Shift+RMB |
+| `PIE_3d_mode.py` | 3D View | RMB |
+| `PIE_3d_pivots.py` | 3D View | Ctrl+RMB |
+| `PIE_node_context.py` | Node Editor | Shift+RMB |
+| `PIE_node_mode.py` | Node Editor | RMB |
+| `PIE_node_pivots.py` | Node Editor | Ctrl+RMB |
+| `PIE_uv_context.py` | UV Editor | Shift+RMB |
+| `PIE_uv_mode.py` | UV Editor | RMB |
+| `PIE_uv_pivots.py` | UV Editor | Ctrl+RMB |
 
 `SUBPIE_MT_*` classes are sub-pie menus called via `wm.call_menu_pie` with `.name = "SUBPIE_MT_..."`. They live either in the same file as their parent or in dedicated `SUBPIE_*.py` files.
 
