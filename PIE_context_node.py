@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2016-2024 Bastian L. Strube
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 import bpy
 from bpy.types import Menu
 
@@ -107,8 +111,9 @@ class SUBPIE_MT_gn_materials(Menu):
         pie.operator("node.add_node", text="Material Selection", icon='MATERIAL').type = 'GeometryNodeMaterialSelection'
         pie.operator("node.add_node", text="Set Material Index", icon='MATERIAL').type = 'GeometryNodeSetMaterialIndex'
 
+
 # ==============================================================================
-# 1. SHADER NODES SUB-MENUS
+# 2. SHADER NODES SUB-MENUS
 # ==============================================================================
 
 class SUBPIE_MT_sh_input(Menu):
@@ -183,8 +188,9 @@ class SUBPIE_MT_sh_converter(Menu):
         pie.operator("node.add_node", text="Separate XYZ", icon='AXIS_SIDE').type = 'ShaderNodeSeparateXYZ'
         pie.operator("node.add_node", text="Combine XYZ", icon='AXIS_SIDE').type = 'ShaderNodeCombineXYZ'
 
+
 # ==============================================================================
-# 2. COMPOSITOR NODES SUB-MENUS
+# 3. COMPOSITOR NODES SUB-MENUS
 # ==============================================================================
 
 class SUBPIE_MT_co_input(Menu):
@@ -254,8 +260,185 @@ class SUBPIE_MT_co_converter(Menu):
         pie.operator("node.add_node", text="ID Mask", icon='MOD_MASK').type = 'CompositorNodeIDMask'
         pie.operator("node.add_node", text="RGB to BW", icon='COLOR').type = 'CompositorNodeRGBToBW'
 
+
 # ==============================================================================
-# 3. MAIN CONTEXT MENU
+# 4. MULTI-SELECTION SUB-MENUS
+# ==============================================================================
+
+class SUBPIE_MT_node_join(Menu):
+    bl_label = "Join / Merge"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        nw_loaded = "node_wrangler" in context.preferences.addons
+        tree_type = context.space_data.tree_type
+
+        # Opened from NORTH: clump primary geo ops at N/NW/NE/W, math at E/S.
+
+        if tree_type == 'GeometryNodeTree':
+            if nw_loaded:
+                # WEST - last boolean, still in upper cluster
+                op = pie.operator("node.nw_merge_nodes", text="Intersect", icon='SELECT_INTERSECT')
+                op.mode = 'INTERSECT'
+                op.merge_type = 'GEOMETRY'
+                # EAST - math begins here, moving away from north
+                op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
+                op.mode = 'ADD'
+                op.merge_type = 'MATH'
+                # SOUTH - math, furthest from north
+                op = pie.operator("node.nw_merge_nodes", text="Math Multiply")
+                op.mode = 'MULTIPLY'
+                op.merge_type = 'MATH'
+                # NORTH - primary: Join Geometry
+                op = pie.operator("node.nw_merge_nodes", text="Join Geometry", icon='MESH_DATA')
+                op.mode = 'JOIN'
+                op.merge_type = 'GEOMETRY'
+                # NORTH-WEST - boolean cluster
+                op = pie.operator("node.nw_merge_nodes", text="Difference", icon='SELECT_SUBTRACT')
+                op.mode = 'DIFFERENCE'
+                op.merge_type = 'GEOMETRY'
+                # NORTH-EAST - boolean cluster
+                op = pie.operator("node.nw_merge_nodes", text="Union", icon='SELECT_EXTEND')
+                op.mode = 'UNION'
+                op.merge_type = 'GEOMETRY'
+                # SOUTH-WEST
+                pie.separator()
+                # SOUTH-EAST
+                pie.separator()
+            else:
+                # WEST
+                pie.operator("node.add_node", text="Intersect", icon='SELECT_INTERSECT').type = 'GeometryNodeMeshBoolean'
+                # EAST
+                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath'
+                # SOUTH
+                pie.separator()
+                # NORTH
+                pie.operator("node.add_node", text="Join Geometry", icon='MESH_DATA').type = 'GeometryNodeJoinGeometry'
+                # NORTH-WEST
+                pie.operator("node.add_node", text="Mesh Boolean", icon='MOD_BOOLEAN').type = 'GeometryNodeMeshBoolean'
+                # NORTH-EAST
+                pie.operator("node.add_node", text="Switch", icon='ARROW_LEFTRIGHT').type = 'GeometryNodeSwitch'
+                # SOUTH-WEST
+                pie.separator()
+                # SOUTH-EAST
+                pie.separator()
+
+        elif tree_type == 'ShaderNodeTree':
+            if nw_loaded:
+                # WEST - shader cluster (opened from north, shaders near top)
+                op = pie.operator("node.nw_merge_nodes", text="Mix Shader", icon='SHADING_RENDERED')
+                op.mode = 'MIX'
+                op.merge_type = 'SHADER'
+                # EAST - math, moving south
+                op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
+                op.mode = 'ADD'
+                op.merge_type = 'MATH'
+                # SOUTH - math, furthest
+                op = pie.operator("node.nw_merge_nodes", text="Math Subtract")
+                op.mode = 'SUBTRACT'
+                op.merge_type = 'MATH'
+                # NORTH - primary
+                op = pie.operator("node.nw_merge_nodes", text="Add Shader", icon='ADD')
+                op.mode = 'ADD'
+                op.merge_type = 'SHADER'
+                # NORTH-WEST - color cluster
+                op = pie.operator("node.nw_merge_nodes", text="Color Mix", icon='COLOR')
+                op.mode = 'MIX'
+                op.merge_type = 'MIX'
+                # NORTH-EAST - color cluster
+                op = pie.operator("node.nw_merge_nodes", text="Color Multiply")
+                op.mode = 'MULTIPLY'
+                op.merge_type = 'MIX'
+                # SOUTH-WEST
+                pie.separator()
+                # SOUTH-EAST
+                pie.separator()
+            else:
+                pie.operator("node.add_node", text="Mix Shader", icon='SHADING_RENDERED').type = 'ShaderNodeMixShader'
+                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath'
+                pie.separator()
+                pie.operator("node.add_node", text="Add Shader", icon='ADD').type = 'ShaderNodeAddShader'
+                pie.separator()
+                pie.separator()
+                pie.separator()
+                pie.separator()
+
+        elif tree_type == 'CompositorNodeTree':
+            if nw_loaded:
+                # WEST
+                op = pie.operator("node.nw_merge_nodes", text="Color Mix", icon='COLOR')
+                op.mode = 'MIX'
+                op.merge_type = 'MIX'
+                # EAST - math, moving south
+                op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
+                op.mode = 'ADD'
+                op.merge_type = 'MATH'
+                # SOUTH - furthest
+                op = pie.operator("node.nw_merge_nodes", text="Depth Combine", icon='MOD_ARRAY')
+                op.mode = 'MIX'
+                op.merge_type = 'DEPTH_COMBINE'
+                # NORTH - primary
+                op = pie.operator("node.nw_merge_nodes", text="Alpha Over", icon='IMAGE_ALPHA')
+                op.mode = 'MIX'
+                op.merge_type = 'ALPHAOVER'
+                # NORTH-WEST
+                op = pie.operator("node.nw_merge_nodes", text="Color Add")
+                op.mode = 'ADD'
+                op.merge_type = 'MIX'
+                # NORTH-EAST
+                op = pie.operator("node.nw_merge_nodes", text="Math Multiply")
+                op.mode = 'MULTIPLY'
+                op.merge_type = 'MATH'
+                # SOUTH-WEST
+                pie.separator()
+                # SOUTH-EAST
+                pie.separator()
+            else:
+                pie.operator("node.add_node", text="Alpha Over", icon='IMAGE_ALPHA').type = 'CompositorNodeAlphaOver'
+                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'CompositorNodeMath'
+                pie.separator()
+                pie.operator("node.add_node", text="Mix", icon='COLOR').type = 'CompositorNodeMixRGB'
+                pie.separator()
+                pie.separator()
+                pie.separator()
+                pie.separator()
+        else:
+            pie.label(text="No merge options for this tree")
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.separator()
+            pie.separator()
+
+
+class SUBPIE_MT_node_duplicate(Menu):
+    bl_label = "Duplicate"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        # Opened from NW: clump options at NW/W/N/NE, separators at S/SW/SE/E.
+        # WEST - adjacent to NW
+        pie.operator("node.duplicate_move_keep_inputs", text="Keep Inputs", icon='DUPLICATE')
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.separator()
+        # NORTH - adjacent to NW
+        pie.operator("node.clipboard_paste", text="Paste", icon='PASTEDOWN')
+        # NORTH-WEST - primary, closest to origin
+        pie.operator("node.duplicate_move", text="Duplicate", icon='DUPLICATE')
+        # NORTH-EAST
+        pie.operator("node.clipboard_copy", text="Copy", icon='COPYDOWN')
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
+
+
+# ==============================================================================
+# 5. MAIN CONTEXT MENU
 # ==============================================================================
 
 class NODE_PIE_MT_context(Menu):
@@ -288,17 +471,24 @@ class NODE_PIE_MT_context(Menu):
         else:
             self.draw_multi_nodes(pie, context)
 
-    # --- ADD NODE PIES (Dynamic based on workspace) ---
-    
+    # --- ADD NODE PIES (no selection) ---
+
     def draw_no_nodes_geo(self, pie, context):
-        # Insert your 8 SUBPIE_MT_gn_... menus here from the previous step
+        # WEST
         pie.operator("wm.call_menu_pie", text="Mesh Nodes...", icon='MESH_DATA').name = "SUBPIE_MT_gn_mesh"
+        # EAST
         pie.operator("wm.call_menu_pie", text="Curve Nodes...", icon='CURVE_DATA').name = "SUBPIE_MT_gn_curve"
+        # SOUTH
         pie.operator("wm.call_menu_pie", text="Utilities & Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_gn_utilities"
+        # NORTH
         pie.operator("wm.call_menu_pie", text="Input & Output...", icon='NODETREE').name = "SUBPIE_MT_gn_io"
+        # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Geometry & Instances...", icon='GROUP_VERTEX').name = "SUBPIE_MT_gn_geometry_instances"
+        # NORTH-EAST
         pie.operator("wm.call_menu_pie", text="Attributes & Textures...", icon='SPREADSHEET').name = "SUBPIE_MT_gn_attributes"
+        # SOUTH-WEST
         pie.operator("wm.call_menu_pie", text="Points & Volumes...", icon='PARTICLE_DATA').name = "SUBPIE_MT_gn_points_volumes"
+        # SOUTH-EAST
         pie.operator("wm.call_menu_pie", text="Materials...", icon='MATERIAL').name = "SUBPIE_MT_gn_materials"
 
     def draw_no_nodes_shader(self, pie, context):
@@ -337,26 +527,41 @@ class NODE_PIE_MT_context(Menu):
         # SOUTH-EAST
         pie.operator("node.add_node", text="Group Input", icon='NODETREE').type = 'NodeGroupInput'
 
-    # --- SELECTION PIES (Universal across all editors) ---
+    # --- SELECTION PIES ---
 
     def draw_single_node(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X') # WEST
-        pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED') # EAST
-        pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF') # SOUTH
-        if nw_loaded: # NORTH
-            pie.operator("node.nw_preview_node", text="Preview Node", icon='HIDE_ON')
+        # WEST - cut node out of chain, reconnect around it
+        pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X')
+        # EAST - detach only outputs, keep inputs (NW) or detach all links
+        if nw_loaded:
+            pie.operator("node.nw_detach_outputs", text="Detach Outputs", icon='UNLINKED')
+        else:
+            pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED')
+        # SOUTH
+        pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
+        # NORTH - link active node to tree output (NW) or standard viewer toggle
+        if nw_loaded:
+            pie.operator("node.nw_link_out", text="Link to Output", icon='DRIVER')
         else:
             pie.operator("node.view_toggle", text="Toggle Viewer", icon='HIDE_ON')
-        pie.operator("node.duplicate_move", text="Duplicate", icon='DUPLICATE') # NORTH-WEST
-        pie.operator("node.duplicate_move_keep_inputs", text="Duplicate (Keep Inputs)", icon='DUPLICATE') # NORTH-EAST
-        pie.operator("node.delete", text="Delete", icon='TRASH') # SOUTH-WEST
-        if nw_loaded: # SOUTH-EAST
-            pie.operator("node.nw_add_reroutes", text="Add Reroutes", icon='NODE')
+        # NORTH-WEST
+        pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
+        # NORTH-EAST - add reroute nodes to all outputs (NW) or copy
+        if nw_loaded:
+            pie.operator("node.nw_add_reroutes", text="Add Reroutes", icon='NODE').option = 'ALL'
         else:
             pie.operator("node.clipboard_copy", text="Copy Node", icon='COPYDOWN')
+        # SOUTH-WEST
+        pie.operator("node.delete", text="Delete", icon='TRASH')
+        # SOUTH-EAST - reset node to defaults (NW) or hide toggle
+        if nw_loaded:
+            pie.operator("node.nw_reset_nodes", text="Reset Node", icon='FILE_REFRESH')
+        else:
+            pie.operator("node.hide_toggle", text="Toggle Hidden", icon='HIDE_OFF')
 
+        # Extras dropdown
         pie.separator()
         pie.separator()
         dropdown = pie.column()
@@ -365,34 +570,40 @@ class NODE_PIE_MT_context(Menu):
         gap.scale_y = 8
         dropdown_menu = dropdown.box().column()
         dropdown_menu.scale_y = 1
-        dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings") if nw_loaded else None
+        if nw_loaded:
+            dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
+            dropdown_menu.operator("node.nw_copy_label", text="Copy Label from Active").option = 'FROM_ACTIVE'
+            dropdown_menu.operator("node.nw_clear_label", text="Clear Label").option = True
         dropdown_menu.operator("node.hide_toggle", text="Toggle Hidden")
         dropdown_menu.operator("node.options_toggle", text="Toggle Options")
 
     def draw_multi_nodes(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X') # WEST
-        if nw_loaded: # EAST
+        # WEST
+        pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X')
+        # EAST - align selected nodes (NW) or attach
+        if nw_loaded:
             pie.operator("node.nw_align_nodes", text="Align Nodes", icon='ALIGN_JUSTIFY')
         else:
             pie.operator("node.translate_attach", text="Attach Nodes", icon='LINKED')
-        pie.operator("node.join", text="Frame Selected") # SOUTH
-        
-        # NORTH (Dynamic merge based on tree/selection via Node Wrangler)
+        # SOUTH - wrap in frame node
+        pie.operator("node.join", text="Frame Selected", icon='STICKY_UVS_LOC')
+        # NORTH - merge / join (see SUBPIE_MT_node_join)
+        pie.operator("wm.call_menu_pie", text='Join / Merge...', icon='TRIA_UP').name = "SUBPIE_MT_node_join"
+        # NORTH-WEST
+        pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
+        # NORTH-EAST - swap links between two selected nodes (NW)
         if nw_loaded:
-            pie.operator("node.nw_merge_nodes", text="Merge / Join Nodes", icon='TRACKING_FORWARDS')
-        else:
-            pie.operator("node.add_node", text="Add Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath' 
-            
-        pie.operator("node.duplicate_move", text="Duplicate", icon='DUPLICATE') # NORTH-WEST
-        if nw_loaded: # NORTH-EAST
             pie.operator("node.nw_swap_links", text="Swap Links", icon='FILE_REFRESH')
         else:
             pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED')
-        pie.operator("node.delete", text="Delete", icon='TRASH') # SOUTH-WEST
-        pie.operator("node.mute_toggle", text="Mute / Unmute Selected", icon='HIDE_OFF') # SOUTH-EAST
+        # SOUTH-WEST
+        pie.operator("node.delete", text="Delete", icon='TRASH')
+        # SOUTH-EAST
+        pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
 
+        # Extras dropdown
         pie.separator()
         pie.separator()
         dropdown = pie.column()
@@ -402,35 +613,51 @@ class NODE_PIE_MT_context(Menu):
         dropdown_menu = dropdown.box().column()
         dropdown_menu.scale_y = 1
         if nw_loaded:
-            dropdown_menu.operator("node.nw_frame_selected", text="NW Frame Selected")
-            dropdown_menu.operator("node.nw_clear_viewer", text="Clear Viewers")
-            dropdown_menu.operator("node.nw_bg_sync", text="Sync Background")
+            dropdown_menu.operator("node.nw_link_active_to_selected", text="Link Active to Selected")
+            dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
+            dropdown_menu.operator("node.nw_del_unused", text="Delete Unused Nodes")
+            dropdown_menu.operator("node.nw_center_nodes", text="Center Nodes")
+            dropdown_menu.operator("node.nw_reload_images", text="Reload Images")
+            dropdown_menu.operator("node.nw_bg_reset", text="Reset Backdrop")
 
 
 # ==============================================================================
-# 4. REGISTRATION
+# 6. REGISTRATION
 # ==============================================================================
 
-# Ensure the Geometry nodes sub-menus from the previous response are appended to this list!
 registry = [
-SUBPIE_MT_gn_mesh,
-    SUBPIE_MT_gn_curve, SUBPIE_MT_gn_utilities, SUBPIE_MT_gn_io, SUBPIE_MT_gn_geometry_instances, 
-    SUBPIE_MT_gn_attributes, SUBPIE_MT_gn_points_volumes, SUBPIE_MT_gn_materials,
-    SUBPIE_MT_sh_input, SUBPIE_MT_sh_output, SUBPIE_MT_sh_shader, SUBPIE_MT_sh_texture,
-    SUBPIE_MT_sh_color, SUBPIE_MT_sh_vector, SUBPIE_MT_sh_converter,
-    SUBPIE_MT_co_input, SUBPIE_MT_co_output, SUBPIE_MT_co_color, SUBPIE_MT_co_filter,
-    SUBPIE_MT_co_transform, SUBPIE_MT_co_matte, SUBPIE_MT_co_converter,
+    SUBPIE_MT_gn_mesh,
+    SUBPIE_MT_gn_curve,
+    SUBPIE_MT_gn_utilities,
+    SUBPIE_MT_gn_io,
+    SUBPIE_MT_gn_geometry_instances,
+    SUBPIE_MT_gn_attributes,
+    SUBPIE_MT_gn_points_volumes,
+    SUBPIE_MT_gn_materials,
+    SUBPIE_MT_sh_input,
+    SUBPIE_MT_sh_output,
+    SUBPIE_MT_sh_shader,
+    SUBPIE_MT_sh_texture,
+    SUBPIE_MT_sh_color,
+    SUBPIE_MT_sh_vector,
+    SUBPIE_MT_sh_converter,
+    SUBPIE_MT_co_input,
+    SUBPIE_MT_co_output,
+    SUBPIE_MT_co_color,
+    SUBPIE_MT_co_filter,
+    SUBPIE_MT_co_transform,
+    SUBPIE_MT_co_matte,
+    SUBPIE_MT_co_converter,
+    SUBPIE_MT_node_join,
+    SUBPIE_MT_node_duplicate,
     NODE_PIE_MT_context,
 ]
 
 def register():
-    # Loop over your classes here using bpy.utils.register_class(cls)
-    # Then map the hotkey:
-    
     WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
         pie_name=NODE_PIE_MT_context.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},
-        keymap_name="Node Editor", 
+        keymap_name="Node Editor",
         on_drag=False,
     )
 
