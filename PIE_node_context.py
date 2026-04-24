@@ -111,7 +111,7 @@ class SUBPIE_MT_gn_points_volumes(Menu):
         pie.operator("node.add_node", text="Set Point Radius", icon='PARTICLE_DATA').type = 'GeometryNodeSetPointRadius'
 
 class SUBPIE_MT_gn_materials(Menu):
-    bl_label = "Materials"
+    bl_label = "Materials & UV"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
@@ -318,7 +318,63 @@ class SUBPIE_MT_co_converter(Menu):
 
 
 # ==============================================================================
-# 4. MULTI-SELECTION SUB-MENUS
+# 4. SHARED UTILITY SUB-MENUS
+# ==============================================================================
+
+class SUBPIE_MT_node_group(Menu):
+    bl_label = "Group"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        # Opened from SE: cluster at SE/E, separators elsewhere.
+        # WEST
+        pie.separator()
+        # EAST - adjacent to SE
+        pie.operator("node.add_node", text="Group Input", icon='FORWARD').type = 'NodeGroupInput'
+        # SOUTH
+        pie.separator()
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST - primary
+        pie.operator("node.add_node", text="Group Output", icon='BACK').type = 'NodeGroupOutput'
+
+
+class SUBPIE_MT_node_delete(Menu):
+    bl_label = "Delete"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        nw_loaded = "node_wrangler" in context.preferences.addons
+        # Opened from SW: cluster at SW/S/W, separators elsewhere.
+        # WEST - adjacent to SW
+        if nw_loaded:
+            pie.operator("node.nw_del_unused", text="Delete Unused", icon='TRASH')
+        else:
+            pie.separator()
+        # EAST
+        pie.separator()
+        # SOUTH - adjacent to SW
+        pie.operator("node.delete", text="Delete", icon='TRASH')
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST - primary
+        pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X')
+        # SOUTH-EAST
+        pie.separator()
+
+
+# ==============================================================================
+# 5. MULTI-SELECTION SUB-MENUS
 # ==============================================================================
 
 class SUBPIE_MT_node_join(Menu):
@@ -373,7 +429,7 @@ class SUBPIE_MT_node_join(Menu):
                 # NORTH-WEST
                 pie.operator("node.add_node", text="Mesh Boolean", icon='MOD_BOOLEAN').type = 'GeometryNodeMeshBoolean'
                 # NORTH-EAST
-                pie.operator("node.add_node", text="Switch", icon='ARROW_LEFTRIGHT').type = 'GeometryNodeSwitch'
+                pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath'
                 # SOUTH-WEST
                 pie.separator()
                 # SOUTH-EAST
@@ -494,7 +550,7 @@ class SUBPIE_MT_node_duplicate(Menu):
 
 
 # ==============================================================================
-# 5. MAIN CONTEXT MENU
+# 6. MAIN CONTEXT MENU
 # ==============================================================================
 
 class NODE_PIE_MT_context(Menu):
@@ -545,7 +601,7 @@ class NODE_PIE_MT_context(Menu):
         # SOUTH-WEST
         pie.operator("wm.call_menu_pie", text="Points & Volumes...", icon='PARTICLE_DATA').name = "SUBPIE_MT_gn_points_volumes"
         # SOUTH-EAST
-        pie.operator("wm.call_menu_pie", text="Materials...", icon='MATERIAL').name = "SUBPIE_MT_gn_materials"
+        pie.operator("wm.call_menu_pie", text="Materials & UV...", icon='MATERIAL').name = "SUBPIE_MT_gn_materials"
 
     def draw_no_nodes_shader(self, pie, context):
         # WEST
@@ -563,7 +619,7 @@ class NODE_PIE_MT_context(Menu):
         # SOUTH-WEST
         pie.operator("wm.call_menu_pie", text="Vector...", icon='ORIENTATION_GLOBAL').name = "SUBPIE_MT_sh_vector"
         # SOUTH-EAST
-        pie.operator("node.add_node", text="Group Input", icon='NODETREE').type = 'NodeGroupInput'
+        pie.operator("wm.call_menu_pie", text="Group...", icon='NODETREE').name = "SUBPIE_MT_node_group"
 
     def draw_no_nodes_comp(self, pie, context):
         # WEST
@@ -581,20 +637,20 @@ class NODE_PIE_MT_context(Menu):
         # SOUTH-WEST
         pie.operator("wm.call_menu_pie", text="Matte & Mask...", icon='IMAGE_ALPHA').name = "SUBPIE_MT_co_matte"
         # SOUTH-EAST
-        pie.operator("node.add_node", text="Group Input", icon='NODETREE').type = 'NodeGroupInput'
+        pie.operator("wm.call_menu_pie", text="Group...", icon='NODETREE').name = "SUBPIE_MT_node_group"
 
     # --- SELECTION PIES ---
 
     def draw_single_node(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        # WEST - cut node out of chain, reconnect around it
-        pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X')
-        # EAST - detach only outputs, keep inputs (NW) or detach all links
+        # WEST - sever all links on this node
+        pie.operator("node.links_detach", text="Detach All Links", icon='UNLINKED')
+        # EAST - detach only outputs, keep inputs (NW) or copy node
         if nw_loaded:
             pie.operator("node.nw_detach_outputs", text="Detach Outputs", icon='UNLINKED')
         else:
-            pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED')
+            pie.operator("node.clipboard_copy", text="Copy Node", icon='COPYDOWN')
         # SOUTH
         pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
         # NORTH - viewer/output link, tree-type aware
@@ -607,13 +663,13 @@ class NODE_PIE_MT_context(Menu):
             pie.operator("node.view_toggle", text="Toggle Viewer", icon='HIDE_ON')
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
-        # NORTH-EAST - add reroute nodes to all outputs (NW) or copy
+        # NORTH-EAST - add reroute nodes to all outputs (NW)
         if nw_loaded:
             pie.operator("node.nw_add_reroutes", text="Add Reroutes", icon='NODE').option = 'ALL'
         else:
-            pie.operator("node.clipboard_copy", text="Copy Node", icon='COPYDOWN')
-        # SOUTH-WEST
-        pie.operator("node.delete", text="Delete", icon='TRASH')
+            pie.separator()
+        # SOUTH-WEST - delete submenu
+        pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
         # SOUTH-EAST - reset node to defaults (NW) or hide toggle
         if nw_loaded:
             pie.operator("node.nw_reset_nodes", text="Reset Node", icon='FILE_REFRESH')
@@ -639,31 +695,31 @@ class NODE_PIE_MT_context(Menu):
     def draw_multi_nodes(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        # WEST
-        pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X')
+        # WEST - sever all links on selected nodes
+        pie.operator("node.links_detach", text="Detach All Links", icon='UNLINKED')
         # EAST - align selected nodes (NW) or attach
         if nw_loaded:
             pie.operator("node.nw_align_nodes", text="Align Nodes", icon='ALIGN_JUSTIFY')
         else:
             pie.operator("node.translate_attach", text="Attach Nodes", icon='LINKED')
-        # SOUTH - wrap in frame node
-        pie.operator("node.join", text="Frame Selected", icon='STICKY_UVS_LOC')
+        # SOUTH - mute/unmute, consistent with single-node
+        pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
         # NORTH - merge / join (see SUBPIE_MT_node_join)
         pie.operator("wm.call_menu_pie", text='Join / Merge...', icon='TRIA_UP').name = "SUBPIE_MT_node_join"
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
-        # NORTH-EAST - link active node to all other selected (NW)
+        # NORTH-EAST - link active node to all other selected (NW) or attach
         if nw_loaded:
             op = pie.operator("node.nw_link_active_to_selected", text="Link Active to Selected", icon='LINKED')
             op.replace = False
             op.use_node_name = False
             op.use_outputs_names = False
         else:
-            pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED')
-        # SOUTH-WEST
-        pie.operator("node.delete", text="Delete", icon='TRASH')
-        # SOUTH-EAST
-        pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
+            pie.operator("node.translate_attach", text="Attach Nodes", icon='LINKED')
+        # SOUTH-WEST - delete submenu
+        pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
+        # SOUTH-EAST - wrap in frame node
+        pie.operator("node.join", text="Frame Selected", icon='STICKY_UVS_LOC')
 
         # Extras dropdown
         pie.separator()
@@ -677,14 +733,13 @@ class NODE_PIE_MT_context(Menu):
         if nw_loaded:
             dropdown_menu.operator("node.nw_link_active_to_selected", text="Link Active to Selected")
             dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
-            dropdown_menu.operator("node.nw_del_unused", text="Delete Unused Nodes")
             dropdown_menu.operator("node.nw_center_nodes", text="Center Nodes")
             dropdown_menu.operator("node.nw_reload_images", text="Reload Images")
             dropdown_menu.operator("node.nw_bg_reset", text="Reset Backdrop")
 
 
 # ==============================================================================
-# 6. REGISTRATION
+# 7. REGISTRATION
 # ==============================================================================
 
 registry = [
@@ -710,6 +765,8 @@ registry = [
     SUBPIE_MT_co_transform,
     SUBPIE_MT_co_matte,
     SUBPIE_MT_co_converter,
+    SUBPIE_MT_node_group,
+    SUBPIE_MT_node_delete,
     SUBPIE_MT_node_join,
     SUBPIE_MT_node_duplicate,
     NODE_PIE_MT_context,
