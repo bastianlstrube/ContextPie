@@ -35,18 +35,29 @@ def _find_mode_property(node):
     return None
 
 
+def _reference_node(context):
+    """Active node if it is selected, otherwise the first selected node."""
+    active = context.active_node
+    selected = context.selected_nodes
+    if active and active in selected:
+        return active
+    return selected[0] if selected else active
+
+
 def _mode_items(self, context):
-    """Dynamic enum items read from the active node's primary enum property."""
+    """Dynamic enum items read from the reference node's primary enum property."""
     items = [('NONE', "No Mode Found", "")]
-    if context and context.active_node:
-        prop_name = _find_mode_property(context.active_node)
-        if prop_name:
-            rna_prop = context.active_node.bl_rna.properties.get(prop_name)
-            if rna_prop:
-                items = [
-                    (item.identifier, item.name, item.description, item.icon, i)
-                    for i, item in enumerate(rna_prop.enum_items_static)
-                ]
+    if context:
+        node = _reference_node(context)
+        if node:
+            prop_name = _find_mode_property(node)
+            if prop_name:
+                rna_prop = node.bl_rna.properties.get(prop_name)
+                if rna_prop:
+                    items = [
+                        (item.identifier, item.name, item.description, item.icon, i)
+                        for i, item in enumerate(rna_prop.enum_items_static)
+                    ]
     # Store on the function to prevent Python GC'ing the list before Blender reads it.
     _mode_items._cache = items
     return items
@@ -97,13 +108,13 @@ class NODE_OT_cpie_cycle_mode(Operator):
     def poll(cls, context):
         return (context.space_data.type == 'NODE_EDITOR'
                 and context.space_data.node_tree is not None
-                and context.active_node is not None)
+                and bool(context.selected_nodes))
 
     def invoke(self, context, event):
-        active = context.active_node
-        prop_name = _find_mode_property(active)
+        active = _reference_node(context)
+        prop_name = _find_mode_property(active) if active else None
         if not prop_name:
-            self.report({'WARNING'}, "No mode property found on active node")
+            self.report({'WARNING'}, "No mode property found on selected nodes")
             return {'CANCELLED'}
 
         self._prop_name = prop_name
