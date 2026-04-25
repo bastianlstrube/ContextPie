@@ -703,6 +703,7 @@ class NODE_PIE_MT_context(Menu):
         gap.scale_y = 8
         dropdown_menu = dropdown.box().column()
         dropdown_menu.scale_y = 1
+        dropdown_menu.operator("node.cpie_cycle_mode", text="Cycle Mode", icon='FILE_REFRESH')
         if nw_loaded:
             dropdown_menu.operator("node.nw_reset_nodes", text="Reset Node")
             dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
@@ -733,12 +734,12 @@ class NODE_PIE_MT_context(Menu):
         pie.operator("wm.call_menu_pie", text='Join / Merge...', icon='TRIA_UP').name = "SUBPIE_MT_node_join"
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
-        # NORTH-EAST - dynamic mode picker, based on active node's enum property
-        pie.operator("wm.call_menu_pie", text="Change Mode...", icon='DRIVER_TRANSFORM').name = "SUBPIE_MT_node_dynamic_mode"
+        # NORTH-EAST
+        pie.separator()
         # SOUTH-WEST - delete submenu
         pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
-        # SOUTH-EAST - scroll/arrow-key cycle through mode options
-        pie.operator("node.cpie_cycle_mode", text="Cycle Mode", icon='FILE_REFRESH')
+        # SOUTH-EAST - dynamic mode/operation picker for this node type
+        pie.operator("wm.call_menu_pie", text="Change Mode...", icon='DRIVER_TRANSFORM').name = "SUBPIE_MT_node_dynamic_mode"
 
         # Extras dropdown
         pie.separator()
@@ -749,6 +750,7 @@ class NODE_PIE_MT_context(Menu):
         gap.scale_y = 8
         dropdown_menu = dropdown.box().column()
         dropdown_menu.scale_y = 1
+        dropdown_menu.operator("node.cpie_cycle_mode", text="Cycle Mode", icon='FILE_REFRESH')
         if nw_loaded:
             dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
             dropdown_menu.operator("node.nw_center_nodes", text="Center Nodes")
