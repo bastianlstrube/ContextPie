@@ -691,11 +691,8 @@ class NODE_PIE_MT_context(Menu):
             pie.separator()
         # SOUTH-WEST - delete submenu
         pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
-        # SOUTH-EAST - reset node to defaults (NW) or hide toggle
-        if nw_loaded:
-            pie.operator("node.nw_reset_nodes", text="Reset Node", icon='FILE_REFRESH')
-        else:
-            pie.operator("node.hide_toggle", text="Toggle Hidden", icon='HIDE_OFF')
+        # SOUTH-EAST - dynamic mode/operation picker for this node type
+        pie.operator("wm.call_menu_pie", text="Change Mode...", icon='DRIVER_TRANSFORM').name = "SUBPIE_MT_node_dynamic_mode"
 
         # Extras dropdown
         pie.separator()
@@ -707,6 +704,7 @@ class NODE_PIE_MT_context(Menu):
         dropdown_menu = dropdown.box().column()
         dropdown_menu.scale_y = 1
         if nw_loaded:
+            dropdown_menu.operator("node.nw_reset_nodes", text="Reset Node")
             dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
             dropdown_menu.operator("node.nw_copy_label", text="Copy Label from Active").option = 'FROM_ACTIVE'
             dropdown_menu.operator("node.nw_clear_label", text="Clear Label").option = True
@@ -735,18 +733,12 @@ class NODE_PIE_MT_context(Menu):
         pie.operator("wm.call_menu_pie", text='Join / Merge...', icon='TRIA_UP').name = "SUBPIE_MT_node_join"
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
-        # NORTH-EAST - batch change blend type on selected Mix/Color nodes
-        if nw_loaded:
-            pie.operator("wm.call_menu_pie", text="Batch Blend...", icon='COLOR').name = "SUBPIE_MT_nw_batch_blend"
-        else:
-            pie.separator()
+        # NORTH-EAST - dynamic mode picker, based on active node's enum property
+        pie.operator("wm.call_menu_pie", text="Change Mode...", icon='DRIVER_TRANSFORM').name = "SUBPIE_MT_node_dynamic_mode"
         # SOUTH-WEST - delete submenu
         pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
-        # SOUTH-EAST - batch change math operation on selected Math nodes
-        if nw_loaded:
-            pie.operator("wm.call_menu_pie", text="Batch Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_nw_batch_math"
-        else:
-            pie.separator()
+        # SOUTH-EAST - scroll/arrow-key cycle through mode options
+        pie.operator("node.cpie_cycle_mode", text="Cycle Mode", icon='FILE_REFRESH')
 
         # Extras dropdown
         pie.separator()
