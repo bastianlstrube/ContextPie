@@ -318,7 +318,27 @@ class SUBPIE_MT_co_converter(Menu):
 
 
 # ==============================================================================
-# 4. SHARED UTILITY SUB-MENUS
+# 4. BATCH CHANGE SUB-MENUS (Node Wrangler)
+# ==============================================================================
+
+class SUBPIE_MT_nw_batch_blend(Menu):
+    bl_label = "Batch: Blend Type"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.nw_batch_change", "blend_type")
+
+
+class SUBPIE_MT_nw_batch_math(Menu):
+    bl_label = "Batch: Math Operation"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.nw_batch_change", "operation")
+
+
+# ==============================================================================
+# 5. SHARED UTILITY SUB-MENUS
 # ==============================================================================
 
 class SUBPIE_MT_node_group(Menu):
@@ -374,7 +394,7 @@ class SUBPIE_MT_node_delete(Menu):
 
 
 # ==============================================================================
-# 5. MULTI-SELECTION SUB-MENUS
+# 6. MULTI-SELECTION SUB-MENUS
 # ==============================================================================
 
 class SUBPIE_MT_node_join(Menu):
@@ -550,7 +570,7 @@ class SUBPIE_MT_node_duplicate(Menu):
 
 
 # ==============================================================================
-# 6. MAIN CONTEXT MENU
+# 7. MAIN CONTEXT MENU
 # ==============================================================================
 
 class NODE_PIE_MT_context(Menu):
@@ -644,23 +664,24 @@ class NODE_PIE_MT_context(Menu):
     def draw_single_node(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        # WEST - sever all links on this node
-        pie.operator("node.links_detach", text="Detach All Links", icon='UNLINKED')
-        # EAST - detach only outputs, keep inputs (NW) or copy node
+        # WEST - detach only outputs, keep inputs (NW)
         if nw_loaded:
             pie.operator("node.nw_detach_outputs", text="Detach Outputs", icon='UNLINKED')
         else:
-            pie.operator("node.clipboard_copy", text="Copy Node", icon='COPYDOWN')
+            pie.separator()
+        # EAST - link to output (NW)
+        if nw_loaded:
+            pie.operator("node.nw_link_out", text="Link to Output", icon='DRIVER')
+        else:
+            pie.separator()
         # SOUTH
         pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
-        # NORTH - viewer/output link, tree-type aware
+        # NORTH - link to viewer (geo/comp only)
         tree_type = context.space_data.tree_type if context.space_data.node_tree else None
         if tree_type in ('GeometryNodeTree', 'CompositorNodeTree'):
             pie.operator("node.link_viewer", text="Link to Viewer", icon='HIDE_OFF')
-        elif nw_loaded:
-            pie.operator("node.nw_link_out", text="Link to Output", icon='DRIVER')
         else:
-            pie.operator("node.view_toggle", text="Toggle Viewer", icon='HIDE_ON')
+            pie.separator()
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
         # NORTH-EAST - add reroute nodes to all outputs (NW)
@@ -695,11 +716,17 @@ class NODE_PIE_MT_context(Menu):
     def draw_multi_nodes(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        # WEST - sever all links on selected nodes
-        pie.operator("node.links_detach", text="Detach All Links", icon='UNLINKED')
-        # EAST - align selected nodes (NW) or attach
+        # WEST - detach only outputs, keep inputs (NW)
         if nw_loaded:
-            pie.operator("node.nw_align_nodes", text="Align Nodes", icon='ALIGN_JUSTIFY')
+            pie.operator("node.nw_detach_outputs", text="Detach Outputs", icon='UNLINKED')
+        else:
+            pie.separator()
+        # EAST - link active node to all other selected (NW) or attach
+        if nw_loaded:
+            op = pie.operator("node.nw_link_active_to_selected", text="Link Active to Selected", icon='LINKED')
+            op.replace = False
+            op.use_node_name = False
+            op.use_outputs_names = False
         else:
             pie.operator("node.translate_attach", text="Attach Nodes", icon='LINKED')
         # SOUTH - mute/unmute, consistent with single-node
@@ -708,18 +735,18 @@ class NODE_PIE_MT_context(Menu):
         pie.operator("wm.call_menu_pie", text='Join / Merge...', icon='TRIA_UP').name = "SUBPIE_MT_node_join"
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
-        # NORTH-EAST - link active node to all other selected (NW) or attach
+        # NORTH-EAST - batch change blend type on selected Mix/Color nodes
         if nw_loaded:
-            op = pie.operator("node.nw_link_active_to_selected", text="Link Active to Selected", icon='LINKED')
-            op.replace = False
-            op.use_node_name = False
-            op.use_outputs_names = False
+            pie.operator("wm.call_menu_pie", text="Batch Blend...", icon='COLOR').name = "SUBPIE_MT_nw_batch_blend"
         else:
-            pie.operator("node.translate_attach", text="Attach Nodes", icon='LINKED')
+            pie.separator()
         # SOUTH-WEST - delete submenu
         pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
-        # SOUTH-EAST - wrap in frame node
-        pie.operator("node.join", text="Frame Selected", icon='STICKY_UVS_LOC')
+        # SOUTH-EAST - batch change math operation on selected Math nodes
+        if nw_loaded:
+            pie.operator("wm.call_menu_pie", text="Batch Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_nw_batch_math"
+        else:
+            pie.separator()
 
         # Extras dropdown
         pie.separator()
@@ -731,7 +758,6 @@ class NODE_PIE_MT_context(Menu):
         dropdown_menu = dropdown.box().column()
         dropdown_menu.scale_y = 1
         if nw_loaded:
-            dropdown_menu.operator("node.nw_link_active_to_selected", text="Link Active to Selected")
             dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
             dropdown_menu.operator("node.nw_center_nodes", text="Center Nodes")
             dropdown_menu.operator("node.nw_reload_images", text="Reload Images")
@@ -739,7 +765,7 @@ class NODE_PIE_MT_context(Menu):
 
 
 # ==============================================================================
-# 7. REGISTRATION
+# 8. REGISTRATION
 # ==============================================================================
 
 registry = [
@@ -765,6 +791,8 @@ registry = [
     SUBPIE_MT_co_transform,
     SUBPIE_MT_co_matte,
     SUBPIE_MT_co_converter,
+    SUBPIE_MT_nw_batch_blend,
+    SUBPIE_MT_nw_batch_math,
     SUBPIE_MT_node_group,
     SUBPIE_MT_node_delete,
     SUBPIE_MT_node_join,

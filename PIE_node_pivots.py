@@ -10,7 +10,7 @@ from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
 class NODE_PIE_MT_pivots(Menu):
     bl_idname = "NODE_PIE_MT_pivots_pie"
-    bl_label = "Node Connections"
+    bl_label = "Node Links"
 
     def draw(self, context):
         layout = self.layout
@@ -27,7 +27,7 @@ class NODE_PIE_MT_pivots(Menu):
         # EAST - drag across links to mute/unmute them
         pie.operator("node.links_mute", text="Mute Links", icon='HIDE_OFF')
         # SOUTH - sever all connections on selected nodes
-        pie.operator("node.links_detach", text="Detach Links", icon='UNLINKED')
+        pie.operator("node.links_detach", text="Detach All Links", icon='UNLINKED')
         # NORTH - auto-connect selected nodes by matching socket types
         pie.operator("node.link_make", text="Make Links", icon='LINKED')
         # NORTH-WEST - like Make Links but overwrites existing connections
@@ -47,18 +47,6 @@ class NODE_PIE_MT_pivots(Menu):
             pie.operator("node.nw_lazy_mix", text="Lazy Mix", icon='NODE')
         else:
             pie.separator()
-
-        # Extras dropdown
-        if nw_loaded:
-            pie.separator()
-            pie.separator()
-            dropdown = pie.column()
-            gap = dropdown.column()
-            gap.separator()
-            gap.scale_y = 8
-            dropdown_menu = dropdown.box().column()
-            dropdown_menu.scale_y = 1
-            dropdown_menu.operator("node.nw_detach_outputs", text="Detach Outputs (Keep Inputs)")
 
 
 # ==============================================================================

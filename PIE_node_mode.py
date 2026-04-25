@@ -76,17 +76,30 @@ class NODE_PIE_MT_mode(Menu):
         pie.operator("node.group_edit", text="Enter Group", icon='NODETREE').exit = False
         # NORTH-WEST - move selection inside an existing group
         pie.operator("node.group_insert", text="Insert into Group", icon='NODETREE')
-        # NORTH-EAST - link active node to viewer/output
+        # NORTH-EAST - align selected nodes
         if nw_loaded:
-            pie.operator("node.nw_link_out", text="Link to Output", icon='DRIVER')
-        elif is_geo:
-            pie.operator("node.link_viewer", text="Link to Viewer", icon='HIDE_OFF')
+            pie.operator("node.nw_align_nodes", text="Align Nodes", icon='ALIGN_JUSTIFY')
         else:
-            pie.operator("node.find_node", text="Find Node...", icon='VIEWZOOM')
-        # SOUTH-WEST - remove node(s) from their frame
-        pie.operator("node.detach", text="Remove from Frame", icon='GROUP_VERTEX')
+            pie.separator()
+        # SOUTH-WEST - wrap selected nodes in a frame
+        pie.operator("node.join", text="Frame Selected", icon='STICKY_UVS_LOC')
         # SOUTH-EAST - select submenu (consistent with all other mode pies)
         pie.operator("wm.call_menu_pie", text="Select...", icon='RESTRICT_SELECT_OFF').name = "SUBPIE_MT_nodeSelect"
+
+        # Extras dropdown
+        pie.separator()
+        pie.separator()
+        dropdown = pie.column()
+        gap = dropdown.column()
+        gap.separator()
+        gap.scale_y = 8
+        dropdown_menu = dropdown.box().column()
+        dropdown_menu.scale_y = 1
+        dropdown_menu.operator("node.detach", text="Remove from Frame", icon='GROUP_VERTEX')
+        if nw_loaded:
+            dropdown_menu.operator("node.nw_link_out", text="Link to Output", icon='DRIVER')
+        elif is_geo:
+            dropdown_menu.operator("node.link_viewer", text="Link to Viewer", icon='HIDE_OFF')
 
 
 # ==============================================================================
