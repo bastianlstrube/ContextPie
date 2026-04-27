@@ -15,4 +15,5 @@ Made following an ancient Mayan pie recipe and works well with the industry comp
 
 Install from [extensions.blender.org](https://extensions.blender.org/add-ons/contextpie/) or directly from Blender in Preferences > Extensions and search for 'Context Pie'.
 
-For testing/Early Access: Hit the green Code button above > Download ZIP and install that zip directly from blender by going to Preferences > Add-ons > Top Right Downarrow Menu > Install from Disk...
+#### For Testing: 
+Hit the green Code button above > Download ZIP and install that zip directly from blender by going to Preferences > Add-ons > Top Right Downarrow Menu > Install from Disk...
