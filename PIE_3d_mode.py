@@ -90,6 +90,24 @@ class SUBPIE_MT_curveSelect(Menu):
         # SOUTH-EAST
         pie.operator("curve.select_linked", text='Linked')
 
+class SUBPIE_MT_armatureSelect(Menu):
+    bl_label = "Select"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator_enum("armature.select_similar", "type")
+
+class SUBPIE_MT_poseSelect(Menu):
+    bl_label = "Select"
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator_enum("pose.select_grouped", "type")
+
 # Sub Pie for mesh face split/separate operators
 class SUBPIE_MT_separate(Menu):
     bl_label = "Split/Separate"
@@ -206,6 +224,7 @@ class VIEW3D_PIE_MT_mode(Menu):
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             # SOUTH EAST
             pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
+
         elif obj and sel and obj.type == 'EMPTY':
             # WEST EAST SOUTH NORTH
             pie.separator()
@@ -255,13 +274,58 @@ class VIEW3D_PIE_MT_mode(Menu):
         # SOUTH EAST
         pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_curveSelect"
 
+    def draw_edit_armature_mode(self, pie, context):
+        # WEST
+        pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
+        # EAST
+        pie.separator()
+        # SOUTH
+        op = pie.operator("armature.select_hierarchy", icon="OUTLINER_OB_ARMATURE", text='Select Child')
+        op.direction = 'CHILD'
+        op.extend = False
+        # NORTH
+        op = pie.operator("armature.select_hierarchy", icon="USER", text='Select Parent')
+        op.direction = 'PARENT'
+        op.extend = False
+        # NW
+        op = pie.operator("armature.select_hierarchy", text='Add Select Parents')
+        op.direction = 'PARENT'
+        op.extend = True
+        # NE
+        op = pie.operator("armature.select_hierarchy", text='Add Select Children')
+        op.direction = 'CHILD'
+        op.extend = True
+        # SW
+        pie.menu("VIEW3D_MT_edit_armature_names")
+        # SE
+        pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_armatureSelect"
+
     def draw_pose_mode(self, pie, context):
         # WEST
         pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
         # EAST
         pie.separator()
+        # SOUTH
+        op = pie.operator("pose.select_hierarchy", icon="OUTLINER_OB_ARMATURE", text='Select Child')
+        op.direction = 'CHILD'
+        op.extend = False
+        # NORTH
+        op = pie.operator("pose.select_hierarchy", icon="USER", text='Select Parent')
+        op.direction = 'PARENT'
+        op.extend = False
+        # NW
+        op = pie.operator("pose.select_hierarchy", text='Add Select Parents')
+        op.direction = 'PARENT'
+        op.extend = True
+        # NE
+        op = pie.operator("pose.select_hierarchy", text='Add Select Children')
+        op.direction = 'CHILD'
+        op.extend = True
+        # SW
         pie.menu("VIEW3D_MT_pose_context_menu", text="Pose Context Menu", icon="COLLAPSEMENU")
-        pie.separator()
+        # SE
+        pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_poseSelect"
+
 
     def draw_edit_lattice_mode(self, pie, context):
         # WEST
@@ -274,14 +338,6 @@ class VIEW3D_PIE_MT_mode(Menu):
         pie.separator()
         # SOUTH WEST
         pie.menu("VIEW3D_MT_edit_lattice_context_menu")
-
-    def draw_edit_armature_mode(self, pie, context):
-        # WEST
-        pie.operator("object.mode_set", icon="OBJECT_DATAMODE")
-        # EAST
-        pie.separator()
-        pie.menu("VIEW3D_MT_edit_armature_names")
-        pie.separator()
 
     def draw_edit_gpencil_mode(self, pie, context):
         pie.operator_enum("OBJECT_OT_mode_set", "mode")
@@ -383,6 +439,8 @@ registry = [
     SUBPIE_MT_objectSelect,
     SUBPIE_MT_meshSelect,
     SUBPIE_MT_curveSelect,
+    SUBPIE_MT_armatureSelect,
+    SUBPIE_MT_poseSelect,
     SUBPIE_MT_separate,
     SUBPIE_MT_curveTypeHandles,
     VIEW3D_PIE_MT_mode,
