@@ -266,9 +266,9 @@ class VIEW3D_PIE_MT_mode(Menu):
         # NORTH
         pie.operator("curve.cyclic_toggle")
         # NORTH WEST
-        pie.separator()
+        pie.operator("wm.tool_set_by_id", text="Pen Tool", icon='CURVE_BEZCURVE').name = "builtin.pen"
         # NORTH EAST
-        pie.separator()
+        pie.operator("wm.tool_set_by_id", text="Curve Draw Tool", icon='GREASEPENCIL').name = "builtin.draw"
         # SOUTH WEST
         pie.menu("VIEW3D_MT_edit_curve_context_menu", text="Context Menu", icon="COLLAPSEMENU")
         # SOUTH EAST
