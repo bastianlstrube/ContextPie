@@ -140,14 +140,13 @@ class SUBPIE_MT_gn_materials(Menu):
 
 class SUBPIE_MT_sh_input(Menu):
     bl_label = "Input"
-
     def draw(self, context):
         pie = self.layout.menu_pie()
         
         # 1. WEST
         pie.operator("node.add_node", text="Color", icon='COLOR').type = 'ShaderNodeRGB'
         # 2. EAST
-        pie.operator("node.add_node", text="Value", icon='VALUE_PROP').type = 'ShaderNodeValue'
+        pie.operator("node.add_node", text="Value", icon='PROPERTIES').type = 'ShaderNodeValue'
         # 3. SOUTH
         pie.operator("node.add_node", text="Attribute", icon='SPREADSHEET').type = 'ShaderNodeAttribute'
         # 4. NORTH
