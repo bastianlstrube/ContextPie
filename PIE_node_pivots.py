@@ -39,7 +39,7 @@ class NODE_PIE_MT_pivots(Menu):
             pie.separator()
         # SOUTH-WEST - drag from node to node to connect interactively (NW)
         if nw_loaded:
-            pie.operator("node.nw_lazy_connect", text="Lazy Connect", icon='DRIVER').with_menu = False
+            pie.operator("node.nw_lazy_connect", text="Lazy Connect", icon='DRIVER').with_menu = True
         else:
             pie.separator()
         # SOUTH-EAST - drag from node to node to insert a mix node (NW)

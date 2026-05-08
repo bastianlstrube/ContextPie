@@ -59,14 +59,23 @@ class SUBPIE_MT_gn_io(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Group Input", icon='FORWARD').type = 'NodeGroupInput'
-        pie.operator("node.add_node", text="Group Output", icon='BACK').type = 'NodeGroupOutput'
-        pie.operator("node.add_node", text="Value", icon='VALUE_PROP').type = 'ShaderNodeValue'
-        pie.operator("node.add_node", text="Integer", icon='LINENUMBERS_ON').type = 'FunctionNodeInputInt'
-        pie.operator("node.add_node", text="Boolean", icon='CHECKBOX_HLT').type = 'FunctionNodeInputBool'
+        
+        # 1. WEST - Object Data
         pie.operator("node.add_node", text="Object Info", icon='OBJECT_DATA').type = 'GeometryNodeObjectInfo'
-        pie.operator("node.add_node", text="Collection Info", icon='OUTLINER_COLLECTION').type = 'GeometryNodeCollectionInfo'
+        # 2. EAST - Scene Data
         pie.operator("node.add_node", text="Scene Time", icon='TIME').type = 'GeometryNodeInputSceneTime'
+        # 3. SOUTH - Basic Constant
+        pie.operator("node.add_node", text="Value", icon='PROPERTIES').type = 'ShaderNodeValue'
+        # 4. NORTH - Material Constant
+        pie.operator("node.add_node", text="Material", icon='MATERIAL').type = 'GeometryNodeInputMaterial'
+        # 5. NORTH-WEST - Collection Constant
+        pie.operator("node.add_node", text="Collection Info", icon='OUTLINER_COLLECTION').type = 'GeometryNodeCollectionInfo'
+        # 6. NORTH-EAST - Self Reference
+        pie.operator("node.add_node", text="Self Object", icon='NODE_SEL').type = 'GeometryNodeSelfObject'        
+        # 7. SOUTH-WEST - Integer Constant
+        pie.operator("node.add_node", text="Integer", icon='LINENUMBERS_ON').type = 'FunctionNodeInputInt'
+        # 8. SOUTH-EAST - Boolean Constant
+        pie.operator("node.add_node", text="Boolean", icon='CHECKBOX_HLT').type = 'FunctionNodeInputBool'
 
 class SUBPIE_MT_gn_geometry_instances(Menu):
     bl_label = "Geometry & Instances"
@@ -131,16 +140,26 @@ class SUBPIE_MT_gn_materials(Menu):
 
 class SUBPIE_MT_sh_input(Menu):
     bl_label = "Input"
+
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Texture Coordinate", icon='TEXTURE').type = 'ShaderNodeTexCoord'
-        pie.operator("node.add_node", text="Geometry", icon='MESH_DATA').type = 'ShaderNodeNewGeometry'
-        pie.operator("node.add_node", text="Object Info", icon='OBJECT_DATA').type = 'ShaderNodeObjectInfo'
+        
+        # 1. WEST
+        pie.operator("node.add_node", text="Color", icon='COLOR').type = 'ShaderNodeRGB'
+        # 2. EAST
         pie.operator("node.add_node", text="Value", icon='VALUE_PROP').type = 'ShaderNodeValue'
-        pie.operator("node.add_node", text="RGB", icon='COLOR').type = 'ShaderNodeRGB'
+        # 3. SOUTH
         pie.operator("node.add_node", text="Attribute", icon='SPREADSHEET').type = 'ShaderNodeAttribute'
-        pie.operator("node.add_node", text="Fresnel", icon='NORMALS_FACE').type = 'ShaderNodeFresnel'
+        # 4. NORTH
+        pie.operator("node.add_node", text="Object Info", icon='OBJECT_DATA').type = 'ShaderNodeObjectInfo'
+        # 5. NORTH-WEST
+        pie.operator("node.add_node", text="Geometry", icon='MESH_DATA').type = 'ShaderNodeNewGeometry'
+        # 6. NORTH-EAST
         pie.operator("node.add_node", text="UV Map", icon='UV').type = 'ShaderNodeUVMap'
+        # 7. SOUTH-WEST
+        pie.operator("node.add_node", text="Camera Data", icon='CAMERA_DATA').type = 'ShaderNodeCameraData'
+        # 8. SOUTH-EAST
+        pie.operator("node.add_node", text="Ambient Occlusion", icon='NODE_SEL').type = 'ShaderNodeAmbientOcclusion'
 
 class SUBPIE_MT_sh_output(Menu):
     bl_label = "Output"
@@ -229,13 +248,22 @@ class SUBPIE_MT_co_input(Menu):
     bl_label = "Input"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Render Layers", icon='RENDERLAYERS').type = 'CompositorNodeRLayers'
+        
+        # WEST
         pie.operator("node.add_node", text="Image", icon='IMAGE_DATA').type = 'CompositorNodeImage'
+        # EAST
+        pie.operator("node.add_node", text="Render Layers", icon='RENDERLAYERS').type = 'CompositorNodeRLayers'
+        # SOUTH
+        pie.operator("node.add_node", text="Value", icon='PROPERTIES').type = 'CompositorNodeValue'
+        # NORTH
+        pie.operator("node.add_node", text="Time", icon='TIME').type = 'CompositorNodeTime'
+        # NORTH-WEST
         pie.operator("node.add_node", text="Movie Clip", icon='TRACKER').type = 'CompositorNodeMovieClip'
-        pie.operator("node.add_node", text="Value", icon='VALUE_PROP').type = 'CompositorNodeValue'
+        # NORTH-EAST
         pie.operator("node.add_node", text="RGB", icon='COLOR').type = 'CompositorNodeRGB'
+        # SOUTH-WEST
         pie.operator("node.add_node", text="Mask", icon='MOD_MASK').type = 'CompositorNodeMask'
-        pie.operator("node.add_node", text="Bokeh Image", icon='IMAGE_DATA').type = 'CompositorNodeBokehImage'
+        # SOUTH-EAST
         pie.operator("node.add_node", text="Track Position", icon='TRACKER').type = 'CompositorNodeTrackPos'
 
 class SUBPIE_MT_co_output(Menu):
