@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "ContextPie"
-version = "0.9.40"
+version = "0.9.42"
 name = "Context Pie"
 tagline = "Context sensitive pie menu for a simple, fast workflow"
 maintainer = "Bastian L Strube <mail@bastianlstrube.dk>"
@@ -18,7 +18,7 @@ website = "https://github.com/bastianlstrube/ContextPie"
 # https://docs.blender.org/manual/en/dev/extensions/tags.html
 tags = ["User Interface", "3D View", "UV"]
 
-blender_version_min = "5.0.0"
+blender_version_min = "5.1.0"
 # Optional: maximum supported Blender version
 # blender_version_max = "5.1.0"
 

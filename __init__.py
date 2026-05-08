@@ -6,7 +6,7 @@ _VPM_AGENT_IMMEDIATE_REGISTER_DONE = locals().get("_VPM_AGENT_IMMEDIATE_REGISTER
 
 bl_info = {
     "name": "ContextPie",
-    "version": (0, 9, 40),
+    "version": (0, 9, 42),
     "blender": (5, 0, 0),
     "category": "Interface",
     "description": "Context sensitive pie menu for a simple, fast workflow",
