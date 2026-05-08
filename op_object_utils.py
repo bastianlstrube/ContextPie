@@ -535,9 +535,58 @@ class OBJECT_OT_add_pie_boolean(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class OBJECT_OT_create_curve_pen(bpy.types.Operator):
+    """Create an empty curve and activate the Pen Tool"""
+    bl_idname = "curve.create_curve_pen"
+    bl_label = "Create Curve with Pen Tool"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # Create curve data and object
+        curve_data = bpy.data.curves.new(name="Curve", type='CURVE')
+        curve_data.dimensions = '3D'
+        obj = bpy.data.objects.new("CurvePenObject", curve_data)
+        
+        # Link and make active
+        context.collection.objects.link(obj)
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
+        
+        # Enter Edit Mode and set the tool
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.wm.tool_set_by_id(name="builtin.pen")
+        
+        return {'FINISHED'}
+
+class OBJECT_OT_create_curve_draw(bpy.types.Operator):
+    """Create an empty curve and activate the Pen Tool"""
+    bl_idname = "curve.create_curve_draw"
+    bl_label = "Create Curve with Draw Tool"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # Create curve data and object
+        curve_data = bpy.data.curves.new(name="Curve", type='CURVE')
+        curve_data.dimensions = '3D'
+        obj = bpy.data.objects.new("CurvePenObject", curve_data)
+        
+        # Link and make active
+        context.collection.objects.link(obj)
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
+        
+        # Enter Edit Mode and set the tool
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.wm.tool_set_by_id(name="builtin.draw")
+        
+        return {'FINISHED'}
+
+
 registry = [
     OBJECT_OT_join_modifier,
     OBJECT_OT_edit_display_type,
     OBJECT_OT_edit_obj_color,
     OBJECT_OT_add_pie_boolean,
+    OBJECT_OT_create_curve_pen,
+    OBJECT_OT_create_curve_draw,
 ]

@@ -202,6 +202,15 @@ class SUBPIE_MT_PieDelete(Menu):
         layout = self.layout
         pie = layout.menu_pie()
 
+        # WEST
+        # EAST
+        # SOUTH
+        # NORTH
+        # NORTH-WEST
+        # NORTH-EAST
+        # SOUTH-WEST
+        # SOUTH-EAST
+
         box = pie.split().column()
         box.operator("mesh.dissolve_limited", text="Limited Dissolve", icon='STICKY_UVS_LOC')
         box.operator("mesh.delete_edgeloop", text="Delete Edge Loops", icon='NONE')
@@ -593,6 +602,8 @@ class SUBPIE_MT_add_curves_text(Menu):
         pie.operator("curve.primitive_nurbs_curve_add", text="NURBS Curve", icon='CURVE_NCURVE')
         pie.operator("curve.primitive_nurbs_path_add", text="NURBS Path", icon='CURVE_PATH')
         pie.operator("object.text_add", text="Text", icon='FONT_DATA')
+        pie.operator("curve.create_curve_pen", text="Curve Pen", icon='CURVE_BEZCURVE')
+        pie.operator("curve.create_curve_draw", text="Curve Draw", icon='GREASEPENCIL')
 
 class SUBPIE_MT_add_empties(Menu):
     bl_label = "Empties"
