@@ -30,7 +30,7 @@ class WM_OT_call_menu_pie_drag_only_cpie(Operator):
 
     bl_idname = "wm.call_menu_pie_drag_only_cpie"
     bl_label = "Pie Menu on Drag"
-    bl_options = {'REGISTER', 'INTERNAL'}
+    bl_options = {'INTERNAL'}
 
     def update_kmi(self, context):
         if not hasattr(context, 'keymapitem'):
