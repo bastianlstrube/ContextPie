@@ -195,7 +195,82 @@ class SUBPIE_MT_extrudeFaces(Menu):
         pie.operator("wm.tool_set_by_id", text="Extrude To Cursor Tool").name = "builtin.extrude_to_cursor"
         pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude")
 
-class SUBPIE_MT_PieDelete(Menu):
+###-----------------------------------------------------------------------------###
+###                         DELETE SUB PIE MENUS                                ###
+###-----------------------------------------------------------------------------###
+
+class SUBPIE_MT_delete_vertex(Menu):
+    bl_label = "Delete Vertices"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("mesh.dissolve_verts", text="Dissolve Split Faces", icon='MOD_BEVEL').use_face_split = True
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.operator("mesh.dissolve_verts", text="Dissolve Vertices", icon='SNAP_VERTEX').use_face_split = False
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("mesh.delete", text="Delete Vertices", icon='VERTEXSEL').type = 'VERT'
+
+
+class SUBPIE_MT_delete_edge(Menu):
+    bl_label = "Delete Edges"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("mesh.dissolve_edges", text="Dissolve Edges", icon='SNAP_EDGE').use_verts = True
+        # EAST
+        pie.operator("mesh.dissolve_limited", text="Limited Dissolve", icon='STICKY_UVS_LOC')
+        # SOUTH
+        pie.operator("mesh.delete_edgeloop", text="Delete Edge Loops", icon='NONE')
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.operator("mesh.dissolve_edges", text="Dissolve Keep Vert", icon='MOD_CAST').use_verts = False
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
+
+class SUBPIE_MT_delete_face(Menu):
+    bl_label = "Delete Faces"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("mesh.dissolve_faces", text="Dissolve Faces", icon='SNAP_FACE')
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.operator("mesh.delete", text="Only Edge & Faces", icon='NONE').type = 'EDGE_FACE'
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.operator("mesh.delete", text="Only Faces", icon='UV_FACESEL').type = 'ONLY_FACE'
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        pie.operator("mesh.delete", text="Delete Faces", icon='FACESEL').type = 'FACE'
+
+# OLD AND UNUSED
+class SUBPIE_MT_delete_mesh(Menu):
     bl_label = "Pie Delete"
 
     def draw(self, context):
@@ -227,6 +302,10 @@ class SUBPIE_MT_PieDelete(Menu):
         pie.operator("mesh.delete", text="Delete Faces", icon='FACESEL').type = 'FACE'
         pie.operator("mesh.dissolve_verts", text="Dissolve Vertices", icon='SNAP_VERTEX')
         pie.operator("mesh.dissolve_faces", text="Dissolve Faces", icon='SNAP_FACE')
+
+###-----------------------------------------------------------------------------###
+###                          CURVE SUB PIE MENUS                                ###
+###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_smoothCurve(Menu):
     bl_label = "Smooth"
@@ -694,7 +773,7 @@ class VIEW3D_PIE_MT_context(Menu):
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
         # SOUTH-WEST
-        pie.operator("wm.call_menu_pie", text='Delete...', icon="TRIA_DOWN").name = "SUBPIE_MT_PieDelete"
+        pie.operator("wm.call_menu_pie", text="Vertices...", icon='TRASH').name = "SUBPIE_MT_delete_vertex"
         # SOUTH-EAST
         pie.operator("transform.vert_slide", text="Slide Vertex")
 
@@ -724,7 +803,7 @@ class VIEW3D_PIE_MT_context(Menu):
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
         # SOUTH-WEST
-        pie.operator("wm.call_menu_pie", text='Delete...', icon="TRIA_LEFT").name = "SUBPIE_MT_PieDelete"
+        pie.operator("wm.call_menu_pie", text="Edges...", icon='TRASH').name = "SUBPIE_MT_delete_edge"
         # SOUTH-EAST
         pie.operator("transform.edge_slide", text="Slide Edge")
 
@@ -764,7 +843,7 @@ class VIEW3D_PIE_MT_context(Menu):
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
         # SOUTH-WEST
-        pie.operator("wm.call_menu_pie", text='Delete...', icon="TRIA_LEFT").name = "SUBPIE_MT_PieDelete"
+        pie.operator("wm.call_menu_pie", text="Faces...", icon='TRASH').name = "SUBPIE_MT_delete_face"
         # SOUTH-EAST
         pie.operator("transform.shrink_fatten")
 
@@ -1039,7 +1118,10 @@ registry = [
     SUBPIE_MT_constraints,
     SUBPIE_MT_ik,
     SUBPIE_MT_motionpaths,
-    SUBPIE_MT_PieDelete,
+    #SUBPIE_MT_delete_mesh,
+    SUBPIE_MT_delete_edge,
+    SUBPIE_MT_delete_face,
+    SUBPIE_MT_delete_vertex,
     SUBPIE_MT_sculpt_brush_select_contrast,
     SUBPIE_MT_sculpt_brush_select_transform,
     SUBPIE_MT_sculpt_brush_select_volume,
