@@ -354,15 +354,25 @@ class VIEW3D_PIE_MT_mode(Menu):
         self.draw_brush_properties(box, context, brush, capabilities)
 
     def draw_paint_texture_mode(self, pie, context):
+        paint_path = 'tool_settings.image_paint'
+        brush_path = f'{paint_path}.brush'
+        ups_path = f'{paint_path}.unified_paint_settings'
         # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
         # EAST
         pie.separator()
-        box = pie.box()
-        brush = context.tool_settings.image_paint.brush
-        capabilities = brush.image_paint_capabilities
-
-        self.draw_brush_properties(box, context, brush, capabilities)
+        # SOUTH — drag to set brush size (LMB confirm, RMB cancel)
+        op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
+        op.data_path_primary = f'{brush_path}.size'
+        op.data_path_secondary = f'{ups_path}.size'
+        op.use_secondary = f'{ups_path}.use_unified_size'
+        op.image_id = brush_path
+        # NORTH — drag to set brush strength
+        op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
+        op.data_path_primary = f'{brush_path}.strength'
+        op.data_path_secondary = f'{ups_path}.strength'
+        op.use_secondary = f'{ups_path}.use_unified_strength'
+        op.image_id = brush_path
 
     def draw_paint_weight_mode(self, pie, context):
         # WEST
@@ -376,15 +386,33 @@ class VIEW3D_PIE_MT_mode(Menu):
         self.draw_brush_properties(box, context, brush, capabilities)
 
     def draw_sculpt_mode(self, pie, context):
+        paint_path = 'tool_settings.sculpt'
+        brush_path = f'{paint_path}.brush'
+        ups_path = f'{paint_path}.unified_paint_settings'
+        # Sculpt brushes can be locked to view (pixels = .size) or scene (world = .unprojected_size).
+        # Brush.use_locked_size is 'VIEW' | 'SCENE'; ups.use_locked_size mirrors it for unified.
+        brush = context.tool_settings.sculpt.brush
+        ups = context.tool_settings.sculpt.unified_paint_settings
+        size_attr = 'unprojected_size' if (ups.use_unified_size and ups.use_locked_size == 'SCENE') \
+                    or (not ups.use_unified_size and brush and brush.use_locked_size == 'SCENE') \
+                    else 'size'
+
         # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
         # EAST
         pie.operator("sculpt.dynamic_topology_toggle", text="Dyntopo Toggle")
-        box = pie.box()
-        brush = context.tool_settings.sculpt.brush
-        capabilities = brush.sculpt_capabilities
-
-        self.draw_brush_properties(box, context, brush, capabilities)
+        # SOUTH — drag to set brush size (LMB confirm, RMB cancel)
+        op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
+        op.data_path_primary = f'{brush_path}.{size_attr}'
+        op.data_path_secondary = f'{ups_path}.{size_attr}'
+        op.use_secondary = f'{ups_path}.use_unified_size'
+        op.image_id = brush_path
+        # NORTH — drag to set brush strength
+        op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
+        op.data_path_primary = f'{brush_path}.strength'
+        op.data_path_secondary = f'{ups_path}.strength'
+        op.use_secondary = f'{ups_path}.use_unified_strength'
+        op.image_id = brush_path
 
     def draw_brush_properties(self, box, context, brush, capabilities):
 
