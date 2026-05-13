@@ -24,8 +24,8 @@ class NODE_PIE_MT_pivots(Menu):
 
         # WEST - drag across links to cut them
         pie.operator("node.links_cut", text="Cut Links", icon='SCULPTMODE_HLT')
-        # EAST - drag across links to mute/unmute them
-        pie.operator("node.links_mute", text="Mute Links", icon='HIDE_OFF')
+        # EAST - drag across links to add a reroute
+        pie.operator("node.add_reroute", text="Add Reroute", icon='NODE')
         # SOUTH - sever all connections on selected nodes
         pie.operator("node.links_detach", text="Detach All Links", icon='UNLINKED')
         # NORTH - auto-connect selected nodes by matching socket types

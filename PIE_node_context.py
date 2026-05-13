@@ -8,6 +8,95 @@ from bpy.types import Menu
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
 
+
+class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
+    """Combine the first outputs of selected nodes into a Combine XYZ or Combine Color node"""
+    bl_idname = "node.cpie_combine_selected"
+    bl_label = "Combine Selected Nodes"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    combine_type: bpy.props.EnumProperty(
+        items=[
+            ('XYZ', "Combine XYZ", "Combine into XYZ"),
+            ('COLOR', "Combine Color", "Combine into Color"),
+        ],
+        default='XYZ'
+    )
+
+    @classmethod
+    def poll(cls, context):
+        space = context.space_data
+        return space.type == 'NODE_EDITOR' and space.node_tree is not None and len(context.selected_nodes) > 0
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        nodes = tree.nodes
+        links = tree.links
+        selected_nodes = context.selected_nodes
+
+        # Sort nodes visually from top to bottom
+        selected_nodes.sort(key=lambda n: n.location.y, reverse=True)
+        tree_type = tree.bl_idname
+
+        # Determine Target Node Type based on the editor context
+        if self.combine_type == 'XYZ':
+            # Both GN and Shader share the Shader Vector nodes
+            if tree_type in ('GeometryNodeTree', 'ShaderNodeTree'):
+                target_type = 'ShaderNodeCombineXYZ'
+            else:
+                self.report({'WARNING'}, "Combine XYZ not supported in this tree type.")
+                return {'CANCELLED'}
+        else: # COLOR
+            if tree_type == 'ShaderNodeTree':
+                target_type = 'ShaderNodeCombineColor'
+            elif tree_type == 'GeometryNodeTree':
+                target_type = 'FunctionNodeCombineColor' # GN uses Function for colors
+            elif tree_type == 'CompositorNodeTree':
+                target_type = 'CompositorNodeCombineColor'
+            else:
+                self.report({'WARNING'}, "Combine Color not supported in this tree type.")
+                return {'CANCELLED'}
+
+        # Spawn the node
+        new_node = nodes.new(type=target_type)
+
+        # Position it to the right of the selected block
+        avg_x = sum(n.location.x for n in selected_nodes) / len(selected_nodes)
+        avg_y = sum(n.location.y for n in selected_nodes) / len(selected_nodes)
+        max_width = max(n.width for n in selected_nodes)
+        new_node.location = (avg_x + max_width + 40, avg_y)
+
+        # Gather output sockets based on connection priority
+        unlinked_sockets = []
+        linked_sockets = []
+
+        for node in selected_nodes:
+            for out in node.outputs:
+                # Look for valid, visible sockets
+                if not out.hide and out.enabled:
+                    # Separate them into priority lists
+                    if len(out.links) == 0:
+                        unlinked_sockets.append(out)
+                    else:
+                        linked_sockets.append(out)
+
+        # Combine the lists: Unlinked sockets first, followed by linked ones
+        prioritized_sockets = unlinked_sockets + linked_sockets
+
+        # Link up to the first 3 sockets available in our prioritized list
+        for target_idx, out_socket in enumerate(prioritized_sockets):
+            if target_idx >= 3:
+                break
+            links.new(out_socket, new_node.inputs[target_idx])
+
+        # Deselect old nodes, make the new node active
+        for n in selected_nodes:
+            n.select = False
+        new_node.select = True
+        tree.nodes.active = new_node
+
+        return {'FINISHED'}
+
 # ==============================================================================
 # 1. GEOMETRY NODES SUB-MENUS
 # ==============================================================================
@@ -432,144 +521,112 @@ class SUBPIE_MT_node_join(Menu):
         nw_loaded = "node_wrangler" in context.preferences.addons
         tree_type = context.space_data.tree_type
 
-        # Opened from NORTH: clump primary geo ops at N/NW/NE/W, math at E/S.
+        # Note: Pie menus MUST contain exactly 8 items to prevent layout warnings.
 
         if tree_type == 'GeometryNodeTree':
             if nw_loaded:
-                # WEST - last boolean, still in upper cluster
+                # 1. WEST
                 op = pie.operator("node.nw_merge_nodes", text="Intersect", icon='SELECT_INTERSECT')
-                op.mode = 'INTERSECT'
-                op.merge_type = 'GEOMETRY'
-                # EAST - math begins here, moving away from north
+                op.mode = 'INTERSECT'; op.merge_type = 'GEOMETRY'
+                # 2. EAST
                 op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
-                op.mode = 'ADD'
-                op.merge_type = 'MATH'
-                # SOUTH - math, furthest from north
+                op.mode = 'ADD'; op.merge_type = 'MATH'
+                # 3. SOUTH
                 op = pie.operator("node.nw_merge_nodes", text="Math Multiply")
-                op.mode = 'MULTIPLY'
-                op.merge_type = 'MATH'
-                # NORTH - primary: Join Geometry
+                op.mode = 'MULTIPLY'; op.merge_type = 'MATH'
+                # 4. NORTH
                 op = pie.operator("node.nw_merge_nodes", text="Join Geometry", icon='MESH_DATA')
-                op.mode = 'JOIN'
-                op.merge_type = 'GEOMETRY'
-                # NORTH-WEST - boolean cluster
+                op.mode = 'JOIN'; op.merge_type = 'GEOMETRY'
+                # 5. NORTH-WEST
                 op = pie.operator("node.nw_merge_nodes", text="Difference", icon='SELECT_SUBTRACT')
-                op.mode = 'DIFFERENCE'
-                op.merge_type = 'GEOMETRY'
-                # NORTH-EAST - boolean cluster
+                op.mode = 'DIFFERENCE'; op.merge_type = 'GEOMETRY'
+                # 6. NORTH-EAST
                 op = pie.operator("node.nw_merge_nodes", text="Union", icon='SELECT_EXTEND')
-                op.mode = 'UNION'
-                op.merge_type = 'GEOMETRY'
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
+                op.mode = 'UNION'; op.merge_type = 'GEOMETRY'
+                # 7. SOUTH-WEST - CUSTOM AUTO-COMBINE
+                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ'
+                # 8. SOUTH-EAST - CUSTOM AUTO-COMBINE
+                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR'
             else:
-                # WEST
-                pie.operator("node.add_node", text="Intersect", icon='SELECT_INTERSECT').type = 'GeometryNodeMeshBoolean'
-                # EAST
-                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath'
-                # SOUTH
-                pie.separator()
-                # NORTH
-                pie.operator("node.add_node", text="Join Geometry", icon='MESH_DATA').type = 'GeometryNodeJoinGeometry'
-                # NORTH-WEST
-                pie.operator("node.add_node", text="Mesh Boolean", icon='MOD_BOOLEAN').type = 'GeometryNodeMeshBoolean'
-                # NORTH-EAST
-                pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath'
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
+                pie.operator("node.add_node", text="Intersect", icon='SELECT_INTERSECT').type = 'GeometryNodeMeshBoolean' # 1
+                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath' # 2
+                pie.separator() # 3
+                pie.operator("node.add_node", text="Join Geometry", icon='MESH_DATA').type = 'GeometryNodeJoinGeometry' # 4
+                pie.operator("node.add_node", text="Mesh Boolean", icon='MOD_BOOLEAN').type = 'GeometryNodeMeshBoolean' # 5
+                pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath' # 6
+                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ' # 7
+                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR' # 8
 
         elif tree_type == 'ShaderNodeTree':
             if nw_loaded:
-                # WEST - shader cluster (opened from north, shaders near top)
+                # 1. WEST
                 op = pie.operator("node.nw_merge_nodes", text="Mix Shader", icon='SHADING_RENDERED')
-                op.mode = 'MIX'
-                op.merge_type = 'SHADER'
-                # EAST - math, moving south
+                op.mode = 'MIX'; op.merge_type = 'SHADER'
+                # 2. EAST
                 op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
-                op.mode = 'ADD'
-                op.merge_type = 'MATH'
-                # SOUTH - math, furthest
+                op.mode = 'ADD'; op.merge_type = 'MATH'
+                # 3. SOUTH
                 op = pie.operator("node.nw_merge_nodes", text="Math Subtract")
-                op.mode = 'SUBTRACT'
-                op.merge_type = 'MATH'
-                # NORTH - primary
+                op.mode = 'SUBTRACT'; op.merge_type = 'MATH'
+                # 4. NORTH
                 op = pie.operator("node.nw_merge_nodes", text="Add Shader", icon='ADD')
-                op.mode = 'ADD'
-                op.merge_type = 'SHADER'
-                # NORTH-WEST - color cluster
+                op.mode = 'ADD'; op.merge_type = 'SHADER'
+                # 5. NORTH-WEST
                 op = pie.operator("node.nw_merge_nodes", text="Color Mix", icon='COLOR')
-                op.mode = 'MIX'
-                op.merge_type = 'MIX'
-                # NORTH-EAST - color cluster
+                op.mode = 'MIX'; op.merge_type = 'MIX'
+                # 6. NORTH-EAST
                 op = pie.operator("node.nw_merge_nodes", text="Color Multiply")
-                op.mode = 'MULTIPLY'
-                op.merge_type = 'MIX'
-                # SOUTH-WEST
-                pie.separator()
-                # SOUTH-EAST
-                pie.separator()
+                op.mode = 'MULTIPLY'; op.merge_type = 'MIX'
+                # 7. SOUTH-WEST - CUSTOM AUTO-COMBINE
+                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ'
+                # 8. SOUTH-EAST - CUSTOM AUTO-COMBINE
+                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR'
             else:
-                pie.operator("node.add_node", text="Mix Shader", icon='SHADING_RENDERED').type = 'ShaderNodeMixShader'
-                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath'
-                pie.separator()
-                pie.operator("node.add_node", text="Add Shader", icon='ADD').type = 'ShaderNodeAddShader'
-                pie.separator()
-                pie.separator()
-                pie.separator()
-                pie.separator()
+                pie.operator("node.add_node", text="Mix Shader", icon='SHADING_RENDERED').type = 'ShaderNodeMixShader' # 1
+                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath' # 2
+                pie.separator() # 3
+                pie.operator("node.add_node", text="Add Shader", icon='ADD').type = 'ShaderNodeAddShader' # 4
+                pie.separator() # 5
+                pie.separator() # 6
+                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ' # 7
+                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR' # 8
 
         elif tree_type == 'CompositorNodeTree':
             if nw_loaded:
-                # WEST
+                # 1. WEST
                 op = pie.operator("node.nw_merge_nodes", text="Color Mix", icon='COLOR')
-                op.mode = 'MIX'
-                op.merge_type = 'MIX'
-                # EAST - math, moving south
+                op.mode = 'MIX'; op.merge_type = 'MIX'
+                # 2. EAST
                 op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
-                op.mode = 'ADD'
-                op.merge_type = 'MATH'
-                # SOUTH - furthest
+                op.mode = 'ADD'; op.merge_type = 'MATH'
+                # 3. SOUTH
                 op = pie.operator("node.nw_merge_nodes", text="Depth Combine", icon='MOD_ARRAY')
-                op.mode = 'MIX'
-                op.merge_type = 'DEPTH_COMBINE'
-                # NORTH - primary
+                op.mode = 'MIX'; op.merge_type = 'DEPTH_COMBINE'
+                # 4. NORTH
                 op = pie.operator("node.nw_merge_nodes", text="Alpha Over", icon='IMAGE_ALPHA')
-                op.mode = 'MIX'
-                op.merge_type = 'ALPHAOVER'
-                # NORTH-WEST
+                op.mode = 'MIX'; op.merge_type = 'ALPHAOVER'
+                # 5. NORTH-WEST
                 op = pie.operator("node.nw_merge_nodes", text="Color Add")
-                op.mode = 'ADD'
-                op.merge_type = 'MIX'
-                # NORTH-EAST
+                op.mode = 'ADD'; op.merge_type = 'MIX'
+                # 6. NORTH-EAST
                 op = pie.operator("node.nw_merge_nodes", text="Math Multiply")
-                op.mode = 'MULTIPLY'
-                op.merge_type = 'MATH'
-                # SOUTH-WEST
+                op.mode = 'MULTIPLY'; op.merge_type = 'MATH'
+                # 7. SOUTH-WEST 
                 pie.separator()
-                # SOUTH-EAST
-                pie.separator()
+                # 8. SOUTH-EAST - CUSTOM AUTO-COMBINE
+                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR'
             else:
-                pie.operator("node.add_node", text="Alpha Over", icon='IMAGE_ALPHA').type = 'CompositorNodeAlphaOver'
-                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'CompositorNodeMath'
-                pie.separator()
-                pie.operator("node.add_node", text="Mix", icon='COLOR').type = 'CompositorNodeMixRGB'
-                pie.separator()
-                pie.separator()
-                pie.separator()
-                pie.separator()
+                pie.operator("node.add_node", text="Alpha Over", icon='IMAGE_ALPHA').type = 'CompositorNodeAlphaOver' # 1
+                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'CompositorNodeMath' # 2
+                pie.separator() # 3
+                pie.operator("node.add_node", text="Mix", icon='COLOR').type = 'CompositorNodeMixRGB' # 4
+                pie.separator() # 5
+                pie.separator() # 6
+                pie.separator() # 7
+                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR' # 8
         else:
             pie.label(text="No merge options for this tree")
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
+            for _ in range(7): pie.separator()
 
 
 class SUBPIE_MT_node_duplicate(Menu):
@@ -790,6 +847,7 @@ class NODE_PIE_MT_context(Menu):
 # ==============================================================================
 
 registry = [
+    CONTEXTPIE_OT_combine_selected,
     SUBPIE_MT_gn_mesh,
     SUBPIE_MT_gn_curve,
     SUBPIE_MT_gn_utilities,
