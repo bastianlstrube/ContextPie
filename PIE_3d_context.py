@@ -744,6 +744,7 @@ class VIEW3D_PIE_MT_context(Menu):
             'SCULPT': self.draw_sculpt,
             'POSE': self.draw_pose,
             'PAINT_VERTEX': self.draw_paint_vertex,
+            'PAINT_TEXTURE': self.draw_paint_texture,
         }
 
         if context.mode in mode_actions:
@@ -1047,6 +1048,40 @@ class VIEW3D_PIE_MT_context(Menu):
         # SOUTH-EAST
         pie.separator()
 
+    def draw_paint_texture(self, pie, context):
+        pie.scale_y = 1.2
+
+        # WEST
+        draw_brush_operator(pie, 'Smear', 'smear')
+        # EAST
+        draw_brush_operator(pie, 'Soften', 'smooth')
+
+        # SOUTH
+        if blender_uses_brush_assets():
+            paint_settings = context.tool_settings.image_paint
+            brush = paint_settings.brush
+            col = pie.column()
+            brush_row = col.row()
+            brush_row.scale_y = 0.75
+            brush_row.scale_x = 0.15
+            BrushAssetShelf.draw_popup_selector(brush_row, context, brush, show_name=False)
+            name_row = col.row().box()
+            if brush:
+                name_row.label(text=brush.name)
+        else:
+            pie.separator()
+
+        # NORTH
+        draw_brush_operator(pie, 'Mask', 'mask')
+        # NORTH-WEST
+        draw_brush_operator(pie, 'Paint Soft', 'paint')
+        # NORTH-EAST
+        draw_brush_operator(pie, 'Paint Hard', 'paint')
+        # SOUTH-WEST
+        draw_brush_operator(pie, 'Fill', 'fill')
+        # SOUTH-EAST
+        draw_brush_operator(pie, 'Clone', '')
+
 
 # HELPER FUNCTIONS ######################################################################
 
@@ -1066,6 +1101,9 @@ def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
         elif bpy.context.mode == 'PAINT_VERTEX':
             op.relative_asset_identifier = os.path.join(
                 "brushes", "essentials_brushes-mesh_vertex.blend", "Brush", brush_name)
+        elif bpy.context.mode == 'PAINT_TEXTURE':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_texture.blend", "Brush", brush_name)
     else:
         if brush_icon:
             op = layout.operator("paint.brush_select", text="     " + brush_name,
