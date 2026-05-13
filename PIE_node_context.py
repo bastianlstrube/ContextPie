@@ -34,13 +34,13 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
         links = tree.links
         selected_nodes = context.selected_nodes
 
-        # Sort nodes visually from top to bottom
-        selected_nodes.sort(key=lambda n: n.location.y, reverse=True)
+        if not selected_nodes:
+            return {'CANCELLED'}
+
         tree_type = tree.bl_idname
 
         # Determine Target Node Type based on the editor context
         if self.combine_type == 'XYZ':
-            # Both GN and Shader share the Shader Vector nodes
             if tree_type in ('GeometryNodeTree', 'ShaderNodeTree'):
                 target_type = 'ShaderNodeCombineXYZ'
             else:
@@ -50,7 +50,7 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
             if tree_type == 'ShaderNodeTree':
                 target_type = 'ShaderNodeCombineColor'
             elif tree_type == 'GeometryNodeTree':
-                target_type = 'FunctionNodeCombineColor' # GN uses Function for colors
+                target_type = 'FunctionNodeCombineColor'
             elif tree_type == 'CompositorNodeTree':
                 target_type = 'CompositorNodeCombineColor'
             else:
@@ -66,28 +66,61 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
         max_width = max(n.width for n in selected_nodes)
         new_node.location = (avg_x + max_width + 40, avg_y)
 
-        # Gather output sockets based on connection priority
-        unlinked_sockets = []
-        linked_sockets = []
+        # Helper Function: Recursively trace upstream to find the channel identity (X/Y/Z/W or R/G/B/A)
+        def get_logical_index(socket, depth=0):
+            if depth > 5: return None # Prevent infinite loops
+            
+            name = socket.name.upper()
+            if name in ('X', 'R', 'RED'): return 0
+            if name in ('Y', 'G', 'GREEN'): return 1
+            if name in ('Z', 'B', 'BLUE'): return 2
+            if name in ('W', 'A', 'ALPHA'): return 3
+            
+            # If the socket name is generic (like "Value"), trace its node's inputs backward
+            for inp in socket.node.inputs:
+                if inp.is_linked:
+                    idx = get_logical_index(inp.links[0].from_socket, depth + 1)
+                    if idx is not None:
+                        return idx
+            return None
 
+        # Gather "Terminal" outputs: outputs that don't plug into another selected node
+        selected_nodes.sort(key=lambda n: n.location.y, reverse=True) # Fallback sorting
+        terminal_sockets = []
+        
         for node in selected_nodes:
             for out in node.outputs:
-                # Look for valid, visible sockets
-                if not out.hide and out.enabled:
-                    # Separate them into priority lists
-                    if len(out.links) == 0:
-                        unlinked_sockets.append(out)
-                    else:
-                        linked_sockets.append(out)
+                if out.hide or not out.enabled:
+                    continue
+                
+                # Check if this output feeds internally into our selected group
+                is_internal = any((link.to_node in selected_nodes) for link in out.links)
+                
+                if not is_internal:
+                    terminal_sockets.append(out)
 
-        # Combine the lists: Unlinked sockets first, followed by linked ones
-        prioritized_sockets = unlinked_sockets + linked_sockets
+        # Setup target slots (Combine XYZ has 3, Combine Color has 4)
+        num_slots = min(len(new_node.inputs), 4)
+        slots = [None] * num_slots
+        leftovers = []
 
-        # Link up to the first 3 sockets available in our prioritized list
-        for target_idx, out_socket in enumerate(prioritized_sockets):
-            if target_idx >= 3:
-                break
-            links.new(out_socket, new_node.inputs[target_idx])
+        # Pass 1: Analyze terminal sockets and place them in their traced logical slots
+        for out in terminal_sockets:
+            idx = get_logical_index(out)
+            if idx is not None and idx < num_slots and slots[idx] is None:
+                slots[idx] = out
+            else:
+                leftovers.append(out)
+
+        # Pass 2: Fill any remaining empty slots with the leftovers top-to-bottom
+        for i in range(num_slots):
+            if slots[i] is None and leftovers:
+                slots[i] = leftovers.pop(0)
+
+        # Connect the slots to the new node
+        for i, out in enumerate(slots):
+            if out is not None:
+                links.new(out, new_node.inputs[i])
 
         # Deselect old nodes, make the new node active
         for n in selected_nodes:
@@ -96,7 +129,7 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
         tree.nodes.active = new_node
 
         return {'FINISHED'}
-
+        
 # ==============================================================================
 # 1. GEOMETRY NODES SUB-MENUS
 # ==============================================================================
