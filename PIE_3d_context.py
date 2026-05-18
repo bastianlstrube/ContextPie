@@ -11,8 +11,9 @@ from bl_ui.properties_paint_common import BrushAssetShelf
 
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
-
-# CUSTOM OPERATORS ######################################################################
+###-----------------------------------------------------------------------------###
+###                             CUSTOM OPERATORS                                ###
+###-----------------------------------------------------------------------------###
 
 class SetKnifeTool(bpy.types.Operator):
     bl_idname = "mesh.set_knife_tool"
@@ -81,8 +82,9 @@ class CURVE_OT_clear_radius(bpy.types.Operator):
             self.report({'INFO'}, "No control points were selected.")
         return {'FINISHED'}
 
-
-# MESH SUB MENUS ######################################################################
+###-----------------------------------------------------------------------------###
+###                             MESH SUB MENUS                                  ###
+###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_merge(Menu):
     bl_label = "Merge"
@@ -341,8 +343,9 @@ class SUBPIE_MT_curveDelete(Menu):
         pie.operator("curve.delete", text="Delete Vert").type = 'VERT'
         pie.separator()
 
-
-# OBJECT MODE SUB MENUS ######################################################################
+###-----------------------------------------------------------------------------###
+###                          OBJECT MODE SUB MENUS                              ###
+###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_parent(Menu):
     bl_label = "Parent"
@@ -500,8 +503,9 @@ class SUBPIE_MT_CopyTransfer(Menu):
         pie.operator('object.datalayout_transfer')
         pie.separator()
 
-
-# POSE MODE SUB MENUS ######################################################################
+###-----------------------------------------------------------------------------###
+###                            POSE MODE SUB MENUS                              ###
+###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_inbetweens(Menu):
     bl_label = "Inbetweens"
@@ -591,8 +595,9 @@ class SUBPIE_MT_motionpaths(Menu):
         pie.separator()
         pie.separator()
 
-
-# SCULPT BRUSH SUB MENUS ######################################################################
+###-----------------------------------------------------------------------------###
+###                          SCULPT BRUSH SUB MENUS                             ###
+###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_sculpt_brush_select_contrast(Menu):
     bl_idname = "SUBPIE_MT_sculpt_brush_select_contrast"
@@ -653,8 +658,37 @@ class SUBPIE_MT_sculpt_brush_select_special(Menu):
         draw_brush_operator(pie, 'Boundary', 'boundary')
         draw_brush_operator(pie, 'Smear Multires Displacement', 'displacement_smear')
 
+###-----------------------------------------------------------------------------###
+###                      PAINT TEXTURE BRUSH SUB MENUS                          ###
+###-----------------------------------------------------------------------------###
 
-# ADD OBJECT SUB MENUS ######################################################################
+class SUBPIE_MT_painttex_brush_select_eraser(Menu):
+    bl_idname = "SUBPIE_MT_painttex_brush_select_eraser"
+    bl_label = "Erasers"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+
+        # WEST
+        pie.separator()
+        # EAST
+        draw_brush_operator(pie, 'Erase Soft', 'erase')
+        # SOUTH
+        pie.separator()
+        # NORTH
+        draw_brush_operator(pie, 'Erase Hard Pressure', 'erase')
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        draw_brush_operator(pie, 'Erase Hard', 'erase')
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        draw_brush_operator(pie, 'Erase Pixel Art', 'erase')
+
+###-----------------------------------------------------------------------------###
+###                          ADD OBJECT SUB MENUS                               ###
+###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_add_mesh(Menu):
     bl_label = "Mesh"
@@ -1052,9 +1086,9 @@ class VIEW3D_PIE_MT_context(Menu):
         pie.scale_y = 1.2
 
         # WEST
-        draw_brush_operator(pie, 'Smear', 'smear')
+        draw_brush_operator(pie, 'Paint Soft', 'paint')
         # EAST
-        draw_brush_operator(pie, 'Soften', 'smooth')
+        draw_brush_operator(pie, 'Paint Hard', 'paint')
 
         # SOUTH
         if blender_uses_brush_assets():
@@ -1074,9 +1108,9 @@ class VIEW3D_PIE_MT_context(Menu):
         # NORTH
         draw_brush_operator(pie, 'Mask', 'mask')
         # NORTH-WEST
-        draw_brush_operator(pie, 'Paint Soft', 'paint')
+        draw_brush_operator(pie, 'Airbrush', 'paint')
         # NORTH-EAST
-        draw_brush_operator(pie, 'Paint Hard', 'paint')
+        pie.operator("wm.call_menu_pie", text='Erasers...').name = "SUBPIE_MT_painttex_brush_select_eraser"
         # SOUTH-WEST
         draw_brush_operator(pie, 'Fill', 'fill')
         # SOUTH-EAST
@@ -1164,6 +1198,7 @@ registry = [
     SUBPIE_MT_sculpt_brush_select_transform,
     SUBPIE_MT_sculpt_brush_select_volume,
     SUBPIE_MT_sculpt_brush_select_special,
+    SUBPIE_MT_painttex_brush_select_eraser,
     SUBPIE_MT_add_mesh,
     SUBPIE_MT_add_curves_text,
     SUBPIE_MT_add_empties,
