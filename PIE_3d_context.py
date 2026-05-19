@@ -223,6 +223,8 @@ class SUBPIE_MT_delete_vertex(Menu):
         pie.separator()
         # SOUTH-WEST
         pie.operator("mesh.delete", text="Delete Vertices", icon='VERTEXSEL').type = 'VERT'
+        # SOUTH-EAST
+        pie.separator()
 
 
 class SUBPIE_MT_delete_edge(Menu):
@@ -247,6 +249,8 @@ class SUBPIE_MT_delete_edge(Menu):
         pie.separator()
         # SOUTH-WEST
         pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
+        # SOUTH-EAST
+        pie.separator()
 
 class SUBPIE_MT_delete_face(Menu):
     bl_label = "Delete Faces"
@@ -270,6 +274,8 @@ class SUBPIE_MT_delete_face(Menu):
         pie.separator()
         # SOUTH-WEST
         pie.operator("mesh.delete", text="Delete Faces", icon='FACESEL').type = 'FACE'
+        # SOUTH-EAST
+        pie.separator()
 
 # OLD AND UNUSED
 class SUBPIE_MT_delete_mesh(Menu):
@@ -341,166 +347,6 @@ class SUBPIE_MT_curveDelete(Menu):
         pie.separator()
         pie.operator("curve.clear_radius")
         pie.operator("curve.delete", text="Delete Vert").type = 'VERT'
-        pie.separator()
-
-###-----------------------------------------------------------------------------###
-###                          OBJECT MODE SUB MENUS                              ###
-###-----------------------------------------------------------------------------###
-
-class SUBPIE_MT_parent(Menu):
-    bl_label = "Parent"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        pie.operator('object.make_links_data', text='Link Collections').type = 'GROUPS'
-        pie.operator('object.make_links_data', text='Link Instance Collection').type = 'DUPLICOLLECTION'
-        pie.operator('object.make_links_data', text='Link Material').type = 'MATERIAL'
-        pie.separator()                         # NORTH
-        pie.operator("object.parent_set")       # NE
-        pie.operator("object.parent_clear")     # NW
-        pie.operator('object.make_links_data', text='Link Animation Data').type = 'ANIMATION'
-        pie.operator('object.make_links_data', text='Link Object Data').type = 'OBDATA'
-
-class SUBPIE_MT_convert(Menu):
-    bl_label = "Convert"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-        pie.operator_enum("object.convert", "target")
-
-class SUBPIE_MT_joinMeshes(Menu):
-    bl_label = "Join/Boolean"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        has_bool_tool = any(name.endswith("bool_tool") for name in bpy.context.preferences.addons.keys())
-
-        if has_bool_tool:
-            pie.operator("object.boolean_brush_difference", text="Difference", icon='SELECT_SUBTRACT')
-            pie.operator("object.boolean_brush_union", text="Union", icon='SELECT_EXTEND')
-            pie.operator("object.boolean_brush_intersect", text="Intersect", icon='SELECT_INTERSECT')
-            pie.operator("object.join")
-            sub = pie.operator("object.join_modifier")
-            sub.use_collections = False
-            sub.name_source = 'ACTIVE_OBJECT'
-            sub.parent_destination = 'ACTIVE_COLLECTION'
-            sub = pie.operator("object.join_modifier", text="Join Parent Collections")
-            sub.use_collections = True
-            sub.inherit_name = True
-            sub.name_source = 'PARENT_COLLECTION'
-            sub.parent_destination = 'ACTIVE_COLLECTION'
-            pie.operator("object.boolean_brush_slice", text="Slice", icon='SELECT_DIFFERENCE')
-            pie.separator()
-        else:
-            pie.operator("object.add_pie_boolean", text="Difference", icon='SELECT_SUBTRACT').boolean_type = 'DIFFERENCE'
-            pie.operator("object.add_pie_boolean", text="Union", icon='SELECT_EXTEND').boolean_type = 'UNION'
-            pie.operator("object.add_pie_boolean", text="Intersect", icon='SELECT_INTERSECT').boolean_type = 'INTERSECT'
-            pie.operator("object.join")
-            sub = pie.operator("object.join_modifier")
-            sub.use_collections = False
-            sub.name_source = 'ACTIVE_OBJECT'
-            sub.parent_destination = 'ACTIVE_COLLECTION'
-            sub = pie.operator("object.join_modifier", text="Join Parent Collections")
-            sub.use_collections = True
-            sub.inherit_name = True
-            sub.name_source = 'PARENT_COLLECTION'
-            sub.parent_destination = 'ACTIVE_COLLECTION'
-            pie.separator()
-            pie.separator()
-
-class SUBPIE_MT_addMeshInteractive(Menu):
-    bl_label = "Add Mesh Interactively"
-
-    def draw(self, context):
-        pie = self.layout.menu_pie()
-
-        pie.operator("wm.tool_set_by_id", text="Cube", icon='MESH_CUBE').name = "builtin.primitive_cube_add"
-        pie.operator("wm.tool_set_by_id", text="Cone", icon='MESH_CONE').name = "builtin.primitive_cone_add"
-        pie.operator("wm.tool_set_by_id", text="Cylinder", icon='MESH_CYLINDER').name = "builtin.primitive_cylinder_add"
-        pie.operator("wm.tool_set_by_id", text="UV Sphere", icon='MESH_UVSPHERE').name = "builtin.primitive_uv_sphere_add"
-        pie.operator("wm.tool_set_by_id", text="Ico Sphere", icon='MESH_ICOSPHERE').name = "builtin.primitive_ico_sphere_add"
-        pie.separator()
-        pie.separator()
-        pie.separator()
-
-class SUBPIE_MT_applyTransform(Menu):
-    bl_label = "Apply"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        op = pie.operator("object.transform_apply", text="Location")
-        op.location, op.rotation, op.scale = True, False, False
-        op = pie.operator("object.transform_apply", text="Scale")
-        op.location, op.rotation, op.scale = False, False, True
-        op = pie.operator("object.transform_apply", text="Rotation")
-        op.location, op.rotation, op.scale = False, True, False
-        op = pie.operator("object.transform_apply", text="All Transforms")
-        op.location, op.rotation, op.scale = True, True, True
-        pie.separator()
-        pie.operator("object.convert", text="Visual Geo to Mesh").target = 'MESH'
-        pie.separator()
-        pie.separator()
-
-class SUBPIE_MT_shadeObject(Menu):
-    bl_label = "Shade/Display"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        pie.operator("object.shade_smooth")
-        pie.operator("object.edit_display_type", text="Solid", icon='SHADING_SOLID').display_type = 'SOLID'
-        pie.operator("object.edit_obj_color", text="Set Object Colour")
-        pie.operator("object.edit_display_type", text="Bounding Box", icon='CUBE').display_type = 'BOUNDS'
-        pie.operator("object.shade_auto_smooth")
-        pie.operator("object.edit_display_type", text="Wireframe", icon='SHADING_WIRE').display_type = 'WIRE'
-        pie.operator("object.shade_flat")
-        pie.operator("object.edit_display_type", text="Textured", icon='SHADING_TEXTURE').display_type = 'TEXTURED'
-
-class SUBPIE_MT_LinkTransfer(Menu):
-    bl_label = "Link"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        pie.operator("wm.call_menu_pie", text='Copy/Transfer...').name = "SUBPIE_MT_CopyTransfer"
-        pie.operator('object.make_links_data', text='Link Material').type = 'MATERIAL'
-        pie.operator('object.make_links_data', text='Link Animation Data').type = 'ANIMATION'
-        pie.operator('object.make_links_data', text='Link Collections').type = 'GROUPS'
-        pie.operator('object.make_links_data', text='Link Instance Collection').type = 'DUPLICOLLECTION'
-        pie.operator('object.make_links_data', text='Link Object Data').type = 'OBDATA'
-        pie.separator()
-        pie.separator()
-
-class SUBPIE_MT_CopyTransfer(Menu):
-    bl_label = "Copy/Transfer"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        pie.operator('object.data_transfer')
-        pie.operator('object.constraints_copy', text='Copy Constraints')
-        pie.operator('object.join_uvs', text='Copy UV Maps')
-        pie.separator()
-        pie.operator('object.make_links_data', text='Copy Grease Pencil FX').type = 'EFFECTS'
-        pie.operator('object.modifiers_copy_to_selected', text='Copy Modifiers')
-        pie.operator('object.datalayout_transfer')
         pie.separator()
 
 ###-----------------------------------------------------------------------------###
@@ -687,6 +533,166 @@ class SUBPIE_MT_painttex_brush_select_eraser(Menu):
         draw_brush_operator(pie, 'Erase Pixel Art', 'erase')
 
 ###-----------------------------------------------------------------------------###
+###                          OBJECT MODE SUB MENUS                              ###
+###-----------------------------------------------------------------------------###
+
+class SUBPIE_MT_parent(Menu):
+    bl_label = "Parent"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator('object.make_links_data', text='Link Collections').type = 'GROUPS'
+        pie.operator('object.make_links_data', text='Link Instance Collection').type = 'DUPLICOLLECTION'
+        pie.operator('object.make_links_data', text='Link Material').type = 'MATERIAL'
+        pie.separator()                         # NORTH
+        pie.operator("object.parent_set")       # NE
+        pie.operator("object.parent_clear")     # NW
+        pie.operator('object.make_links_data', text='Link Animation Data').type = 'ANIMATION'
+        pie.operator('object.make_links_data', text='Link Object Data').type = 'OBDATA'
+
+class SUBPIE_MT_convert(Menu):
+    bl_label = "Convert"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        pie.operator_enum("object.convert", "target")
+
+class SUBPIE_MT_joinMeshes(Menu):
+    bl_label = "Join/Boolean"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        has_bool_tool = any(name.endswith("bool_tool") for name in bpy.context.preferences.addons.keys())
+
+        if has_bool_tool:
+            pie.operator("object.boolean_brush_difference", text="Difference", icon='SELECT_SUBTRACT')
+            pie.operator("object.boolean_brush_union", text="Union", icon='SELECT_EXTEND')
+            pie.operator("object.boolean_brush_intersect", text="Intersect", icon='SELECT_INTERSECT')
+            pie.operator("object.join")
+            sub = pie.operator("object.join_modifier")
+            sub.use_collections = False
+            sub.name_source = 'ACTIVE_OBJECT'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
+            sub = pie.operator("object.join_modifier", text="Join Parent Collections")
+            sub.use_collections = True
+            sub.inherit_name = True
+            sub.name_source = 'PARENT_COLLECTION'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
+            pie.operator("object.boolean_brush_slice", text="Slice", icon='SELECT_DIFFERENCE')
+            pie.separator()
+        else:
+            pie.operator("object.add_pie_boolean", text="Difference", icon='SELECT_SUBTRACT').boolean_type = 'DIFFERENCE'
+            pie.operator("object.add_pie_boolean", text="Union", icon='SELECT_EXTEND').boolean_type = 'UNION'
+            pie.operator("object.add_pie_boolean", text="Intersect", icon='SELECT_INTERSECT').boolean_type = 'INTERSECT'
+            pie.operator("object.join")
+            sub = pie.operator("object.join_modifier")
+            sub.use_collections = False
+            sub.name_source = 'ACTIVE_OBJECT'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
+            sub = pie.operator("object.join_modifier", text="Join Parent Collections")
+            sub.use_collections = True
+            sub.inherit_name = True
+            sub.name_source = 'PARENT_COLLECTION'
+            sub.parent_destination = 'ACTIVE_COLLECTION'
+            pie.separator()
+            pie.separator()
+
+class SUBPIE_MT_addMeshInteractive(Menu):
+    bl_label = "Add Mesh Interactively"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+
+        pie.operator("wm.tool_set_by_id", text="Cube", icon='MESH_CUBE').name = "builtin.primitive_cube_add"
+        pie.operator("wm.tool_set_by_id", text="Cone", icon='MESH_CONE').name = "builtin.primitive_cone_add"
+        pie.operator("wm.tool_set_by_id", text="Cylinder", icon='MESH_CYLINDER').name = "builtin.primitive_cylinder_add"
+        pie.operator("wm.tool_set_by_id", text="UV Sphere", icon='MESH_UVSPHERE').name = "builtin.primitive_uv_sphere_add"
+        pie.operator("wm.tool_set_by_id", text="Ico Sphere", icon='MESH_ICOSPHERE').name = "builtin.primitive_ico_sphere_add"
+        pie.separator()
+        pie.separator()
+        pie.separator()
+
+class SUBPIE_MT_applyTransform(Menu):
+    bl_label = "Apply"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        op = pie.operator("object.transform_apply", text="Location")
+        op.location, op.rotation, op.scale = True, False, False
+        op = pie.operator("object.transform_apply", text="Scale")
+        op.location, op.rotation, op.scale = False, False, True
+        op = pie.operator("object.transform_apply", text="Rotation")
+        op.location, op.rotation, op.scale = False, True, False
+        op = pie.operator("object.transform_apply", text="All Transforms")
+        op.location, op.rotation, op.scale = True, True, True
+        pie.separator()
+        pie.operator("object.convert", text="Visual Geo to Mesh").target = 'MESH'
+        pie.separator()
+        pie.separator()
+
+class SUBPIE_MT_shadeObject(Menu):
+    bl_label = "Shade/Display"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator("object.shade_smooth")
+        pie.operator("object.edit_display_type", text="Solid", icon='SHADING_SOLID').display_type = 'SOLID'
+        pie.operator("object.edit_obj_color", text="Set Object Colour")
+        pie.operator("object.edit_display_type", text="Bounding Box", icon='CUBE').display_type = 'BOUNDS'
+        pie.operator("object.shade_auto_smooth")
+        pie.operator("object.edit_display_type", text="Wireframe", icon='SHADING_WIRE').display_type = 'WIRE'
+        pie.operator("object.shade_flat")
+        pie.operator("object.edit_display_type", text="Textured", icon='SHADING_TEXTURE').display_type = 'TEXTURED'
+
+class SUBPIE_MT_LinkTransfer(Menu):
+    bl_label = "Link"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator("wm.call_menu_pie", text='Copy/Transfer...').name = "SUBPIE_MT_CopyTransfer"
+        pie.operator('object.make_links_data', text='Link Material').type = 'MATERIAL'
+        pie.operator('object.make_links_data', text='Link Animation Data').type = 'ANIMATION'
+        pie.operator('object.make_links_data', text='Link Collections').type = 'GROUPS'
+        pie.operator('object.make_links_data', text='Link Instance Collection').type = 'DUPLICOLLECTION'
+        pie.operator('object.make_links_data', text='Link Object Data').type = 'OBDATA'
+        pie.separator()
+        pie.separator()
+
+class SUBPIE_MT_CopyTransfer(Menu):
+    bl_label = "Copy/Transfer"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator('object.data_transfer')
+        pie.operator('object.constraints_copy', text='Copy Constraints')
+        pie.operator('object.join_uvs', text='Copy UV Maps')
+        pie.separator()
+        pie.operator('object.make_links_data', text='Copy Grease Pencil FX').type = 'EFFECTS'
+        pie.operator('object.modifiers_copy_to_selected', text='Copy Modifiers')
+        pie.operator('object.datalayout_transfer')
+        pie.separator()
+
+###-----------------------------------------------------------------------------###
 ###                          ADD OBJECT SUB MENUS                               ###
 ###-----------------------------------------------------------------------------###
 
@@ -758,8 +764,13 @@ class SUBPIE_MT_add_forcefield(Menu):
         pie = self.layout.menu_pie()
         pie.operator_enum("object.effector_add", "type")
 
-
-# MAIN CONTEXT PIE MENU ######################################################################
+###-----------------------------------------------------------------------------###
+###-----------------------------------------------------------------------------###
+###-----------------------------------------------------------------------------###
+###                          MAIN CONTEXT PIE MENU                              ###
+###-----------------------------------------------------------------------------###
+###-----------------------------------------------------------------------------###
+###-----------------------------------------------------------------------------###
 
 class VIEW3D_PIE_MT_context(Menu):
     bl_idname = "PIE_MT_context_pie"
@@ -1146,6 +1157,76 @@ def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
         else:
             layout.separator()
 
+
+'''
+# GEMINI HELPER FUNCTIONS 
+import os
+import bpy
+# Import the internal Blender tool icon loader
+from bl_ui.space_toolsystem_common import ToolSelectPanelHelper 
+
+# HELPER FUNCTIONS ######################################################################
+
+def blender_uses_brush_assets():
+    return 'asset_activate' in dir(bpy.ops.brush)
+
+
+def get_toolbar_icon_id(icon_key: str) -> int:
+    """
+    Maps your shorthand string to the exact filename in datafiles/icons/
+    and converts it into Blender's runtime integer ID.
+    """
+    if not icon_key:
+        return 0
+        
+    # MAP YOUR SHORTHAND HERE TO THE DATAFILES/ICONS FILENAMES
+    # Do NOT include '.dat' or '.svg' extensions
+    icon_mapping = {
+        'paint': 'ops.paint.texture_paint',
+        'mask':  'ops.paint.texture_mask',
+        'fill':  'ops.paint.texture_fill',
+        'clone': 'ops.paint.texture_clone',
+    }
+    
+    icon_handle = icon_mapping.get(icon_key, "")
+    
+    if icon_handle:
+        try:
+            # Tell Blender to fetch the active integer ID for this icon name
+            return ToolSelectPanelHelper._icon_value_from_icon_handle(icon_handle)
+        except Exception:
+            # Fallback if Blender changes an icon name internally in a future version
+            return 0
+    return 0
+
+
+def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
+    """Draw a brush select operator with pre-4.3 icons."""
+    
+    # Dynamically fetch the integer ID from your toolbar string name
+    icon_id = get_toolbar_icon_id(brush_icon)
+
+    if blender_uses_brush_assets():
+        op = layout.operator('brush.asset_activate', text="     " + brush_name,
+                             icon_value=icon_id)
+        op.asset_library_type = 'ESSENTIALS'
+        if bpy.context.mode == 'SCULPT':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", brush_name)
+        elif bpy.context.mode == 'PAINT_VERTEX':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_vertex.blend", "Brush", brush_name)
+        elif bpy.context.mode == 'PAINT_TEXTURE':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_texture.blend", "Brush", brush_name)
+    else:
+        if brush_icon:
+            op = layout.operator("paint.brush_select", text="     " + brush_name,
+                                 icon_value=icon_id)
+            op.sculpt_tool = brush_icon.upper()
+        else:
+            layout.separator()
+'''
 
 brush_icons = {}
 
