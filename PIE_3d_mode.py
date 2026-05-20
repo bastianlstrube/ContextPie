@@ -168,6 +168,17 @@ class VIEW3D_PIE_MT_mode(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
+        _GP_MODES = frozenset({
+            'EDIT_GPENCIL', 'EDIT_GREASE_PENCIL',
+            'PAINT_GREASE_PENCIL', 'PAINT_GPENCIL',
+            'SCULPT_GREASE_PENCIL', 'SCULPT_GPENCIL',
+        })
+
+        if context.mode in _GP_MODES:
+            from .PIE_greasepencil_mode import draw_gp_mode_pie
+            draw_gp_mode_pie(pie, context)
+            return
+
         mode_actions = {
             'OBJECT': self.draw_object_mode,
             'EDIT_MESH': self.draw_edit_mesh_mode,
@@ -175,10 +186,6 @@ class VIEW3D_PIE_MT_mode(Menu):
             'POSE': self.draw_pose_mode,
             'EDIT_LATTICE': self.draw_edit_lattice_mode,
             'EDIT_ARMATURE': self.draw_edit_armature_mode,
-            'EDIT_GPENCIL': self.draw_edit_gpencil_mode,
-            'EDIT_GREASE_PENCIL': self.draw_edit_gpencil_mode,
-            'PAINT_GREASE_PENCIL': self.draw_edit_gpencil_mode,
-            'SCULPT_GREASE_PENCIL': self.draw_edit_gpencil_mode,
             'PAINT_VERTEX': self.draw_paint_vertex_mode,
             'PAINT_TEXTURE': self.draw_paint_texture_mode,
             'PAINT_WEIGHT': self.draw_paint_weight_mode,
@@ -338,9 +345,6 @@ class VIEW3D_PIE_MT_mode(Menu):
         pie.separator()
         # SOUTH WEST
         pie.menu("VIEW3D_MT_edit_lattice_context_menu")
-
-    def draw_edit_gpencil_mode(self, pie, context):
-        pie.operator_enum("OBJECT_OT_mode_set", "mode")
 
     def draw_paint_vertex_mode(self, pie, context):
         # WEST

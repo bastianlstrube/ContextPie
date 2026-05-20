@@ -262,7 +262,16 @@ class VIEW3D_PIE_MT_pivots(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
-        if context.mode == 'SCULPT':
+        _GP_MODES = frozenset({
+            'EDIT_GPENCIL', 'EDIT_GREASE_PENCIL',
+            'PAINT_GREASE_PENCIL', 'PAINT_GPENCIL',
+            'SCULPT_GREASE_PENCIL', 'SCULPT_GPENCIL',
+        })
+
+        if context.mode in _GP_MODES:
+            from .PIE_greasepencil_pivots import draw_gp_pivots_pie
+            draw_gp_pivots_pie(pie, context)
+        elif context.mode == 'SCULPT':
             self.draw_sculpt(pie, context)
         elif context.mode == 'PAINT_TEXTURE':
             self.draw_texture_paint(pie, context)
@@ -367,8 +376,15 @@ registry = [
 ]
 
 
+_GP_KEYMAPS = (
+    "Grease Pencil Paint Mode",
+    "Grease Pencil Sculpt Mode",
+    "Grease Pencil Edit Mode",
+)
+
+
 def register():
-    for keymap_name in ("3D View", "Sculpt", "Image Paint"):
+    for keymap_name in ("3D View", "Sculpt", "Image Paint") + _GP_KEYMAPS:
         WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
             pie_name=VIEW3D_PIE_MT_pivots.bl_idname,
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'ctrl': True},
