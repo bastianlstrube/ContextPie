@@ -31,12 +31,14 @@ module_names = (
     "PIE_3d_context",
     "PIE_3d_mode",
     "PIE_3d_pivots",
-    "PIE_node_context",
-    "PIE_node_mode",
-    "PIE_node_pivots",
+
     "PIE_uv_context",
     "PIE_uv_mode",
     "PIE_uv_pivots",
+
+    "PIE_node_context",
+    "PIE_node_mode",
+    "PIE_node_pivots",
 
     "SUBPIE_proportional_menu",
     "SUBPIE_snap_menu",
