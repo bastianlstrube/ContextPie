@@ -17,13 +17,6 @@ _GP_MODES = frozenset({
     'EDIT_GREASE_PENCIL', 'EDIT_GPENCIL',
 })
 
-_GP_KEYMAPS = (
-    "Grease Pencil Paint Mode",
-    "Grease Pencil Sculpt Mode",
-    "Grease Pencil Edit Mode",
-)
-
-
 ###-----------------------------------------------------------------------------###
 ###                          MAIN CONTEXT PIE MENU                              ###
 ###-----------------------------------------------------------------------------###
@@ -129,7 +122,7 @@ registry = [
 
 def register():
     create_icons()
-    for keymap_name in ("3D View", "Sculpt") + _GP_KEYMAPS:
+    for keymap_name in ("3D View",):
         WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
             pie_name=VIEW3D_PIE_MT_context.bl_idname,
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': True},

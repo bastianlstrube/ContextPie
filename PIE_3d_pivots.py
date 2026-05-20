@@ -376,15 +376,8 @@ registry = [
 ]
 
 
-_GP_KEYMAPS = (
-    "Grease Pencil Paint Mode",
-    "Grease Pencil Sculpt Mode",
-    "Grease Pencil Edit Mode",
-)
-
-
 def register():
-    for keymap_name in ("3D View", "Sculpt", "Image Paint") + _GP_KEYMAPS:
+    for keymap_name in ("3D View",):
         WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
             pie_name=VIEW3D_PIE_MT_pivots.bl_idname,
             hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'ctrl': True},
