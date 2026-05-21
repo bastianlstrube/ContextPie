@@ -28,8 +28,6 @@ module_names = (
     "prefs",
     "PieAppender",
 
-    # PIE_3d_context must be first: provides draw_brush_operator / brush_icons
-    # used by PIE_3d_context_paintsculpt at import time.
     "PIE_3d_context",
     "PIE_3d_context_editmesh",
     "PIE_3d_context_editcurve",
@@ -38,18 +36,22 @@ module_names = (
     "PIE_3d_context_paintsculpt",
     "PIE_3d_context_greasepencil",
 
-    "PIE_3d_mode",
+    "PIE_mode_object",
+    "PIE_mode_editmesh",
+    "PIE_mode_editcurve",
+    "PIE_mode_armature",
+    "PIE_mode_paintsculpt",
     "PIE_3d_pivots",
 
     "PIE_uv_context",
-    "PIE_uv_mode",
+    "PIE_mode_uv",
     "PIE_uv_pivots",
 
     "PIE_node_context",
-    "PIE_node_mode",
+    "PIE_mode_node",
     "PIE_node_pivots",
 
-    "PIE_greasepencil_mode",
+    "PIE_mode_greasepencil",
     "PIE_greasepencil_pivots",
 
     "SUBPIE_proportional_menu",

@@ -51,8 +51,8 @@ class SUBPIE_MT_nodeSelect(Menu):
 # 2. MAIN NODE MODE PIE
 # ==============================================================================
 
-class NODE_PIE_MT_mode(Menu):
-    bl_idname = "NODE_PIE_MT_mode_pie"
+class CPIE_MT_mode_node(Menu):
+    bl_idname = "CPIE_MT_mode_node"
     bl_label = "Node Navigation"
 
     def draw(self, context):
@@ -108,12 +108,12 @@ class NODE_PIE_MT_mode(Menu):
 
 registry = [
     SUBPIE_MT_nodeSelect,
-    NODE_PIE_MT_mode,
+    CPIE_MT_mode_node,
 ]
 
 def register():
     WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
-        pie_name=NODE_PIE_MT_mode.bl_idname,
+        pie_name=CPIE_MT_mode_node.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
         keymap_name="Node Editor",
         on_drag=True,

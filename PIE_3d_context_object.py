@@ -168,42 +168,6 @@ class SUBPIE_MT_shadeObject(Menu):
         pie.operator("object.edit_display_type", text="Textured", icon='SHADING_TEXTURE').display_type = 'TEXTURED'
 
 
-class SUBPIE_MT_LinkTransfer(Menu):
-    bl_label = "Link"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        pie.operator("wm.call_menu_pie", text='Copy/Transfer...').name = "SUBPIE_MT_CopyTransfer"
-        pie.operator('object.make_links_data', text='Link Material').type = 'MATERIAL'
-        pie.operator('object.make_links_data', text='Link Animation Data').type = 'ANIMATION'
-        pie.operator('object.make_links_data', text='Link Collections').type = 'GROUPS'
-        pie.operator('object.make_links_data', text='Link Instance Collection').type = 'DUPLICOLLECTION'
-        pie.operator('object.make_links_data', text='Link Object Data').type = 'OBDATA'
-        pie.separator()
-        pie.separator()
-
-
-class SUBPIE_MT_CopyTransfer(Menu):
-    bl_label = "Copy/Transfer"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        pie.operator('object.data_transfer')
-        pie.operator('object.constraints_copy', text='Copy Constraints')
-        pie.operator('object.join_uvs', text='Copy UV Maps')
-        pie.separator()
-        pie.operator('object.make_links_data', text='Copy Grease Pencil FX').type = 'EFFECTS'
-        pie.operator('object.modifiers_copy_to_selected', text='Copy Modifiers')
-        pie.operator('object.datalayout_transfer')
-        pie.separator()
-
-
 ###-----------------------------------------------------------------------------###
 ###                          ADD OBJECT SUB MENUS                               ###
 ###-----------------------------------------------------------------------------###
@@ -294,8 +258,6 @@ registry = [
     SUBPIE_MT_addMeshInteractive,
     SUBPIE_MT_applyTransform,
     SUBPIE_MT_shadeObject,
-    SUBPIE_MT_LinkTransfer,
-    SUBPIE_MT_CopyTransfer,
     SUBPIE_MT_add_mesh,
     SUBPIE_MT_add_curves_text,
     SUBPIE_MT_add_empties,

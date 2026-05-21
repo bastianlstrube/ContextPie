@@ -33,8 +33,8 @@ class SUBPIE_MT_gp_select(Menu):
         pie.operator("grease_pencil.select_linked", text='Linked')
 
 
-class VIEW3D_PIE_MT_gp_mode(Menu):
-    bl_idname = "PIE_MT_gp_mode"
+class CPIE_MT_mode_greasepencil(Menu):
+    bl_idname = "CPIE_MT_mode_greasepencil"
     bl_label = "Grease Pencil Mode Selection"
 
     def draw(self, context):
@@ -95,7 +95,7 @@ class VIEW3D_PIE_MT_gp_mode(Menu):
 
 registry = [
     SUBPIE_MT_gp_select,
-    VIEW3D_PIE_MT_gp_mode,
+    CPIE_MT_mode_greasepencil,
 ]
 
 def register():
@@ -109,7 +109,7 @@ def register():
             continue
         try:
             WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
-                pie_name=VIEW3D_PIE_MT_gp_mode.bl_idname,
+                pie_name=CPIE_MT_mode_greasepencil.bl_idname,
                 hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
                 keymap_name=km,
                 on_drag=True,

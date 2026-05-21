@@ -26,19 +26,34 @@ The `blender_studio_utils` directory is a **git submodule** — run `git submodu
 All hotkeys go through `WM_OT_call_menu_pie_drag_only_cpie` in `op_pie_wrappers.py`, registered via `blender_studio_utils/hotkeys.py:register_hotkey()`. Each pie's `register()` function calls `WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(...)`. The `on_drag` flag makes the pie appear only on mouse drag, falling back to the default keymap action on click.
 
 ### Pie menu files
+Context pies (`PIE_3d_context.py`, `PIE_node_context.py`, `PIE_uv_context.py`) are
+**switchboards**: one menu registered to a broad keymap that spans many modes, dispatching
+by `context.mode` to per-area `draw_*` functions. Mode pies are the opposite — each Blender
+mode maps 1:1 to its own keymap category, so every `PIE_mode_*.py` file owns a complete,
+self-registering `CPIE_MT_mode_*` menu class with no dispatch layer.
+
 | File | Keymap | Trigger |
 |---|---|---|
 | `PIE_3d_context.py` | 3D View + Sculpt | Shift+RMB |
-| `PIE_3d_mode.py` | 3D View | RMB |
 | `PIE_3d_pivots.py` | 3D View | Ctrl+RMB |
+| `PIE_mode_object.py` | Object Mode, Lattice | RMB |
+| `PIE_mode_editmesh.py` | Mesh | RMB |
+| `PIE_mode_editcurve.py` | Curve | RMB |
+| `PIE_mode_armature.py` | Armature, Pose | RMB |
+| `PIE_mode_paintsculpt.py` | Sculpt, Vertex/Weight/Image Paint | RMB |
 | `PIE_node_context.py` | Node Editor | Shift+RMB |
-| `PIE_node_mode.py` | Node Editor | RMB |
+| `PIE_mode_node.py` | Node Editor | RMB |
 | `PIE_node_pivots.py` | Node Editor | Ctrl+RMB |
 | `PIE_uv_context.py` | UV Editor | Shift+RMB |
-| `PIE_uv_mode.py` | UV Editor | RMB |
+| `PIE_mode_uv.py` | UV Editor | RMB |
 | `PIE_uv_pivots.py` | UV Editor | Ctrl+RMB |
+| `PIE_mode_greasepencil.py` | Grease Pencil modes | RMB |
+| `PIE_greasepencil_pivots.py` | Grease Pencil modes | Ctrl+RMB |
 
-`SUBPIE_MT_*` classes are sub-pie menus called via `wm.call_menu_pie` with `.name = "SUBPIE_MT_..."`. They live either in the same file as their parent or in dedicated `SUBPIE_*.py` files.
+Mode-pie menu classes follow `CPIE_MT_mode_<area>` (the addon `ADDONNAME_MT_name`
+convention). `SUBPIE_MT_*` classes are sub-pie menus called via `wm.call_menu_pie` with
+`.name = "SUBPIE_MT_..."`. They live either in the same file as their parent or in
+dedicated `SUBPIE_*.py` files.
 
 ### Conditional addon integration
 Check for optional addons at draw time, never at register time:

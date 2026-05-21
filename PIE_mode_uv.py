@@ -67,8 +67,8 @@ class SUBPIE_MT_uvTools(Menu):
         pie.separator()
 
 
-class IMAGE_PIE_MT_uvMode(Menu):
-    bl_idname = "PIE_MT_context_uvmode"
+class CPIE_MT_mode_uv(Menu):
+    bl_idname = "CPIE_MT_mode_uv"
     bl_label = "UV Mode Selection"
 
     def draw(self, context):
@@ -126,13 +126,13 @@ registry = [
     SUBPIE_MT_uvSelect,
     SUBPIE_MT_uvSticky,
     SUBPIE_MT_uvTools,
-    IMAGE_PIE_MT_uvMode,
+    CPIE_MT_mode_uv,
 ]
 
 
 def register():
     WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
-        pie_name=IMAGE_PIE_MT_uvMode.bl_idname,
+        pie_name=CPIE_MT_mode_uv.bl_idname,
         hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
         keymap_name="UV Editor",
         on_drag=True,
