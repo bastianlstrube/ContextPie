@@ -79,8 +79,13 @@ class SUBPIE_MT_connect(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
+        is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
+
         # WEST
-        pie.separator()
+        if is_edge_mode:
+            pie.operator("mesh.edge_rotate", text="Rotate CW").use_ccw = False
+        else:
+            pie.separator()
         # EAST
         pie.operator("mesh.bridge_edge_loops", text="Bridge")
         # SOUTH
@@ -92,7 +97,10 @@ class SUBPIE_MT_connect(Menu):
         # NORTH-EAST
         pie.operator("mesh.edge_face_add", text="Add Edge/Face")
         # SOUTH-WEST
-        pie.separator()
+        if is_edge_mode:
+            pie.operator("mesh.edge_rotate", text="Rotate CCW").use_ccw = True
+        else:
+            pie.separator()
         # SOUTH-EAST
         pie.operator("mesh.fill", text="Fill Loop")
 
@@ -126,33 +134,48 @@ class SUBPIE_MT_divide(Menu):
         is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
 
         if is_vert_mode:
+            # W
             pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+            # E
             pie.operator("mesh.subdivide", text='Subdivide')
+            # S
             pie.operator("mesh.rip_move")
+            # N
             pie.operator("mesh.poke")
+            # NW
             pie.separator()
+            # NE
             pie.operator("mesh.bevel", text='Bevel').affect = 'VERTICES'
+            # SW
             pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+            # SE
             pie.separator()
         elif is_edge_mode:
-            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+            # W
+            pie.operator("transform.edge_bevelweight")
+            # E
             pie.operator("mesh.subdivide", text='Subdivide')
+            # S
             pie.operator("mesh.rip_move")
-            pie.operator("mesh.poke")
-            pie.separator()
+            # N
+            pie.operator("mesh.mark_seam", text='Mark Seam').clear = False
+            # NW
+            pie.operator("mesh.mark_sharp", text="Mark Sharp").clear = False
+            # NE
             pie.operator("mesh.bevel", text='Bevel').affect = 'EDGES'
-            pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+            # SW
+            pie.operator("transform.edge_crease")
+            # SE
             pie.operator("mesh.edge_split")
         elif is_face_mode:
             pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
-            pie.operator("mesh.bevel", text='Bevel')
+            pie.operator("mesh.flip_normals")
             pie.operator("mesh.rip_move")
             pie.operator("mesh.poke")
-            pie.separator()
+            pie.operator("mesh.bisect")
             pie.operator("mesh.subdivide", text='Subdivide')
             pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
             pie.operator("mesh.split")
-
 
 class SUBPIE_MT_extrudeFaces(Menu):
     bl_label = "Extrude Faces"
@@ -224,11 +247,11 @@ class SUBPIE_MT_delete_edge(Menu):
         # SOUTH
         pie.operator("mesh.delete_edgeloop", text="Delete Edge Loops", icon='NONE')
         # NORTH
-        pie.separator()
+        pie.operator("mesh.mark_seam", text='Clear Seam').clear = True
         # NORTH-WEST
         pie.operator("mesh.dissolve_edges", text="Dissolve Keep Vert", icon='MOD_CAST').use_verts = False
         # NORTH-EAST
-        pie.separator()
+        pie.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
         # SOUTH-WEST
         pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
         # SOUTH-EAST
@@ -259,26 +282,6 @@ class SUBPIE_MT_delete_face(Menu):
         pie.operator("mesh.delete", text="Delete Faces", icon='FACESEL').type = 'FACE'
         # SOUTH-EAST
         pie.separator()
-
-
-###-----------------------------------------------------------------------------###
-###                              REGISTRY                                       ###
-###-----------------------------------------------------------------------------###
-
-registry = [
-    SetKnifeTool,
-    SetLoopCutTool,
-    SUBPIE_MT_merge,
-    SUBPIE_MT_connect,
-    SUBPIE_MT_divide,
-    SUBPIE_MT_extrudeFaces,
-    SUBPIE_MT_delete_vertex,
-    SUBPIE_MT_delete_edge,
-    SUBPIE_MT_delete_face,
-]
-
-if "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
-    registry.append(SUBPIE_MT_edit_mesh_looptools)
 
 
 ###-----------------------------------------------------------------------------###
@@ -313,18 +316,6 @@ def _draw_vert(pie, context):
     # SOUTH-EAST
     pie.operator("transform.vert_slide", text="Slide Vertex")
 
-    pie.separator()
-    pie.separator()
-    dropdown = pie.column()
-    gap = dropdown.column()
-    gap.separator()
-    gap.scale_y = 8
-    menu = dropdown.box().column()
-    menu.scale_y = 1
-    menu.operator("mesh.bisect", text="Bisect")
-    menu.operator("wm.call_menu_pie", text='Separate...').name = "SUBPIE_MT_separate"
-
-
 def _draw_edge(pie, context):
     # WEST
     pie.operator("mesh.set_knife_tool", text="Knife")
@@ -342,25 +333,6 @@ def _draw_edge(pie, context):
     pie.operator("wm.call_menu_pie", text="Edges...", icon='TRASH').name = "SUBPIE_MT_delete_edge"
     # SOUTH-EAST
     pie.operator("transform.edge_slide", text="Slide Edge")
-
-    pie.separator()
-    pie.separator()
-    dropdown = pie.column()
-    gap = dropdown.column()
-    gap.separator()
-    gap.scale_y = 8
-    menu = dropdown.box().column()
-    menu.scale_y = 1
-    menu.operator("mesh.mark_sharp", text="Mark Sharp").clear = False
-    menu.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
-    menu.operator("mesh.edge_rotate", text="Rotate CW").use_ccw = False
-    menu.operator("mesh.edge_rotate", text="Rotate CCW").use_ccw = True
-    menu.operator("mesh.mark_seam", text='Mark Seam').clear = False
-    menu.operator("mesh.mark_seam", text='Clear Seam').clear = True
-    menu.operator("transform.edge_crease")
-    menu.operator("transform.edge_bevelweight")
-    menu.operator("wm.call_menu_pie", text='Separate').name = "SUBPIE_MT_separate"
-
 
 def _draw_face(pie, context):
     # WEST
@@ -391,5 +363,24 @@ def _draw_face(pie, context):
     gap.scale_y = 8
     menu = dropdown.box().column()
     menu.scale_y = 1
-    menu.operator("mesh.bisect")
     menu.operator("mesh.flip_normals")
+
+
+###-----------------------------------------------------------------------------###
+###                              REGISTRY                                       ###
+###-----------------------------------------------------------------------------###
+
+registry = [
+    SetKnifeTool,
+    SetLoopCutTool,
+    SUBPIE_MT_merge,
+    SUBPIE_MT_connect,
+    SUBPIE_MT_divide,
+    SUBPIE_MT_extrudeFaces,
+    SUBPIE_MT_delete_vertex,
+    SUBPIE_MT_delete_edge,
+    SUBPIE_MT_delete_face,
+]
+
+if "bl_ext.blender_org.looptools" in bpy.context.preferences.addons:
+    registry.append(SUBPIE_MT_edit_mesh_looptools)

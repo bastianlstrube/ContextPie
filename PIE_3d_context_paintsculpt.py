@@ -2,9 +2,66 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import os
+from pathlib import Path
+import bpy
 from bpy.types import Menu
 from bl_ui.properties_paint_common import BrushAssetShelf
-from . import PIE_3d_context as _ctx
+
+# Look Ma, no circular imports!
+
+###-----------------------------------------------------------------------------###
+###                          BRUSH & ICON UTILITIES                             ###
+###-----------------------------------------------------------------------------###
+
+brush_icons = {}
+
+def blender_uses_brush_assets():
+    return 'asset_activate' in dir(bpy.ops.brush)
+
+
+def draw_brush_operator(layout, brush_name: str, brush_icon: str = ""):
+    """Draw a brush select operator with pre-4.3 icon support."""
+    if blender_uses_brush_assets():
+        op = layout.operator('brush.asset_activate', text="     " + brush_name,
+                             icon_value=brush_icons.get(brush_icon, 0))
+        op.asset_library_type = 'ESSENTIALS'
+        if bpy.context.mode == 'SCULPT':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_sculpt.blend", "Brush", brush_name)
+        elif bpy.context.mode == 'PAINT_VERTEX':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_vertex.blend", "Brush", brush_name)
+        elif bpy.context.mode == 'PAINT_TEXTURE':
+            op.relative_asset_identifier = os.path.join(
+                "brushes", "essentials_brushes-mesh_texture.blend", "Brush", brush_name)
+    else:
+        if brush_icon:
+            op = layout.operator("paint.brush_select", text="     " + brush_name,
+                                 icon_value=brush_icons.get(brush_icon, 0))
+            op.sculpt_tool = brush_icon.upper()
+        else:
+            layout.separator()
+
+
+def create_icons():
+    global brush_icons
+    # Point directly to the parent folder's icon stash
+    icons_directory = Path(__file__).parent / "icons"
+    if not icons_directory.exists():
+        return
+    for icon_path in icons_directory.iterdir():
+        if icon_path.is_file():
+            icon_value = bpy.app.icons.new_triangles_from_file(icon_path.as_posix())
+            brush_name = icon_path.stem.split(".")[-1]
+            brush_icons[brush_name] = icon_value
+
+
+def release_icons():
+    global brush_icons
+    for value in brush_icons.values():
+        bpy.app.icons.release(value)
+    brush_icons = {}
 
 
 ###-----------------------------------------------------------------------------###
@@ -17,13 +74,13 @@ class SUBPIE_MT_sculpt_brush_select_contrast(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        _ctx.draw_brush_operator(pie, 'Flatten/Contrast', 'flatten')
-        _ctx.draw_brush_operator(pie, 'Scrape/Fill', 'scrape')
-        _ctx.draw_brush_operator(pie, 'Fill/Deepen', 'fill')
-        _ctx.draw_brush_operator(pie, 'Scrape Multiplane', 'multiplane_scrape')
+        draw_brush_operator(pie, 'Flatten/Contrast', 'flatten')
+        draw_brush_operator(pie, 'Scrape/Fill', 'scrape')
+        draw_brush_operator(pie, 'Fill/Deepen', 'fill')
+        draw_brush_operator(pie, 'Scrape Multiplane', 'multiplane_scrape')
         pie.separator()
         pie.separator()
-        _ctx.draw_brush_operator(pie, 'Smooth', 'smooth')
+        draw_brush_operator(pie, 'Smooth', 'smooth')
 
 
 class SUBPIE_MT_sculpt_brush_select_transform(Menu):
@@ -32,14 +89,14 @@ class SUBPIE_MT_sculpt_brush_select_transform(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        _ctx.draw_brush_operator(pie, 'Elastic Grab', 'elastic_deform')
-        _ctx.draw_brush_operator(pie, 'Nudge', 'nudge')
-        _ctx.draw_brush_operator(pie, 'Relax Slide', 'topology')
-        _ctx.draw_brush_operator(pie, 'Snake Hook', 'snake_hook')
-        _ctx.draw_brush_operator(pie, 'Twist', 'rotate')
-        _ctx.draw_brush_operator(pie, 'Pose', 'pose')
-        _ctx.draw_brush_operator(pie, 'Pinch/Magnify', 'pinch')
-        _ctx.draw_brush_operator(pie, 'Thumb', 'thumb')
+        draw_brush_operator(pie, 'Elastic Grab', 'elastic_deform')
+        draw_brush_operator(pie, 'Nudge', 'nudge')
+        draw_brush_operator(pie, 'Relax Slide', 'topology')
+        draw_brush_operator(pie, 'Snake Hook', 'snake_hook')
+        draw_brush_operator(pie, 'Twist', 'rotate')
+        draw_brush_operator(pie, 'Pose', 'pose')
+        draw_brush_operator(pie, 'Pinch/Magnify', 'pinch')
+        draw_brush_operator(pie, 'Thumb', 'thumb')
 
 
 class SUBPIE_MT_sculpt_brush_select_volume(Menu):
@@ -48,14 +105,14 @@ class SUBPIE_MT_sculpt_brush_select_volume(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        _ctx.draw_brush_operator(pie, 'Blob', 'blob')
-        _ctx.draw_brush_operator(pie, 'Clay', 'clay')
-        _ctx.draw_brush_operator(pie, 'Inflate/Deflate', 'inflate')
-        _ctx.draw_brush_operator(pie, 'Draw Sharp', 'draw_sharp')
-        _ctx.draw_brush_operator(pie, 'Clay Strips', 'clay_strips')
-        _ctx.draw_brush_operator(pie, 'Crease', 'crease')
-        _ctx.draw_brush_operator(pie, 'Clay Thumb', 'clay_thumb')
-        _ctx.draw_brush_operator(pie, 'Layer', 'layer')
+        draw_brush_operator(pie, 'Blob', 'blob')
+        draw_brush_operator(pie, 'Clay', 'clay')
+        draw_brush_operator(pie, 'Inflate/Deflate', 'inflate')
+        draw_brush_operator(pie, 'Draw Sharp', 'draw_sharp')
+        draw_brush_operator(pie, 'Clay Strips', 'clay_strips')
+        draw_brush_operator(pie, 'Crease', 'crease')
+        draw_brush_operator(pie, 'Clay Thumb', 'clay_thumb')
+        draw_brush_operator(pie, 'Layer', 'layer')
 
 
 class SUBPIE_MT_sculpt_brush_select_special(Menu):
@@ -64,14 +121,14 @@ class SUBPIE_MT_sculpt_brush_select_special(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        _ctx.draw_brush_operator(pie, 'Cloth', 'cloth')
-        _ctx.draw_brush_operator(pie, 'Erase Multires Displacement', 'displacement_eraser')
-        _ctx.draw_brush_operator(pie, 'Density', 'simplify')
-        _ctx.draw_brush_operator(pie, 'Paint', 'paint')
-        _ctx.draw_brush_operator(pie, 'Smear', 'smear')
-        _ctx.draw_brush_operator(pie, 'Face Set Paint', 'draw_face_sets')
-        _ctx.draw_brush_operator(pie, 'Boundary', 'boundary')
-        _ctx.draw_brush_operator(pie, 'Smear Multires Displacement', 'displacement_smear')
+        draw_brush_operator(pie, 'Cloth', 'cloth')
+        draw_brush_operator(pie, 'Erase Multires Displacement', 'displacement_eraser')
+        draw_brush_operator(pie, 'Density', 'simplify')
+        draw_brush_operator(pie, 'Paint', 'paint')
+        draw_brush_operator(pie, 'Smear', 'smear')
+        draw_brush_operator(pie, 'Face Set Paint', 'draw_face_sets')
+        draw_brush_operator(pie, 'Boundary', 'boundary')
+        draw_brush_operator(pie, 'Smear Multires Displacement', 'displacement_smear')
 
 
 ###-----------------------------------------------------------------------------###
@@ -84,23 +141,14 @@ class SUBPIE_MT_painttex_brush_select_eraser(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-
-        # WEST
         pie.separator()
-        # EAST
-        _ctx.draw_brush_operator(pie, 'Erase Soft', 'erase')
-        # SOUTH
+        draw_brush_operator(pie, 'Erase Soft', 'erase')
         pie.separator()
-        # NORTH
-        _ctx.draw_brush_operator(pie, 'Erase Hard Pressure', 'erase')
-        # NORTH-WEST
+        draw_brush_operator(pie, 'Erase Hard Pressure', 'erase')
         pie.separator()
-        # NORTH-EAST
-        _ctx.draw_brush_operator(pie, 'Erase Hard', 'erase')
-        # SOUTH-WEST
+        draw_brush_operator(pie, 'Erase Hard', 'erase')
         pie.separator()
-        # SOUTH-EAST
-        _ctx.draw_brush_operator(pie, 'Erase Pixel Art', 'erase')
+        draw_brush_operator(pie, 'Erase Pixel Art', 'erase')
 
 
 ###-----------------------------------------------------------------------------###
@@ -123,17 +171,15 @@ registry = [
 def draw_context_sculpt(pie, context):
     pie.scale_y = 1.2
 
-    # WEST
     pie.operator('wm.call_menu_pie', text="    Transform Brushes...",
-                 icon_value=_ctx.brush_icons.get('snake_hook', 0),
+                 icon_value=brush_icons.get('snake_hook', 0),
                  ).name = SUBPIE_MT_sculpt_brush_select_transform.bl_idname
-    # EAST
+    
     pie.operator('wm.call_menu_pie', text="    Volume Brushes...",
-                 icon_value=_ctx.brush_icons.get('blob', 0),
+                 icon_value=brush_icons.get('blob', 0),
                  ).name = SUBPIE_MT_sculpt_brush_select_volume.bl_idname
 
-    # SOUTH — brush asset shelf or fallback
-    if _ctx.blender_uses_brush_assets():
+    if blender_uses_brush_assets():
         sculpt_settings = context.tool_settings.sculpt
         brush = sculpt_settings.brush
         col = pie.column()
@@ -147,53 +193,37 @@ def draw_context_sculpt(pie, context):
     else:
         pie.separator()
 
-    # NORTH
-    _ctx.draw_brush_operator(pie, 'Mask', 'mask')
-    # NORTH-WEST
-    _ctx.draw_brush_operator(pie, 'Grab', 'grab')
-    # NORTH-EAST
-    _ctx.draw_brush_operator(pie, 'Draw', 'draw')
-    # SOUTH-WEST
+    draw_brush_operator(pie, 'Mask', 'mask')
+    draw_brush_operator(pie, 'Grab', 'grab')
+    draw_brush_operator(pie, 'Draw', 'draw')
+    
     pie.operator('wm.call_menu_pie', text="    Contrast Brushes...",
-                 icon_value=_ctx.brush_icons.get('flatten', 0),
+                 icon_value=brush_icons.get('flatten', 0),
                  ).name = SUBPIE_MT_sculpt_brush_select_contrast.bl_idname
-    # SOUTH-EAST
+    
     pie.operator('wm.call_menu_pie', text="    Special Brushes...",
-                 icon_value=_ctx.brush_icons.get('draw_face_sets', 0),
+                 icon_value=brush_icons.get('draw_face_sets', 0),
                  ).name = SUBPIE_MT_sculpt_brush_select_special.bl_idname
 
 
 def draw_context_paint_vertex(pie, context):
     pie.scale_y = 1.2
-
-    # WEST
-    _ctx.draw_brush_operator(pie, 'Paint Hard', 'paint hard')
-    # EAST
-    _ctx.draw_brush_operator(pie, 'Paint Soft', 'paint soft')
-    # SOUTH
+    draw_brush_operator(pie, 'Paint Hard', 'paint hard')
+    draw_brush_operator(pie, 'Paint Soft', 'paint soft')
     pie.separator()
-    # NORTH
     pie.separator()
-    # NORTH-WEST
     pie.separator()
-    # NORTH-EAST
     pie.separator()
-    # SOUTH-WEST
-    _ctx.draw_brush_operator(pie, 'Paint Hard Pressure', 'paint hard pressure')
-    # SOUTH-EAST
+    draw_brush_operator(pie, 'Paint Hard Pressure', 'paint hard pressure')
     pie.separator()
 
 
 def draw_context_paint_texture(pie, context):
     pie.scale_y = 1.2
+    draw_brush_operator(pie, 'Paint Soft', 'paint')
+    draw_brush_operator(pie, 'Paint Hard', 'paint')
 
-    # WEST
-    _ctx.draw_brush_operator(pie, 'Paint Soft', 'paint')
-    # EAST
-    _ctx.draw_brush_operator(pie, 'Paint Hard', 'paint')
-
-    # SOUTH — brush asset shelf or fallback
-    if _ctx.blender_uses_brush_assets():
+    if blender_uses_brush_assets():
         paint_settings = context.tool_settings.image_paint
         brush = paint_settings.brush
         col = pie.column()
@@ -207,13 +237,8 @@ def draw_context_paint_texture(pie, context):
     else:
         pie.separator()
 
-    # NORTH
-    _ctx.draw_brush_operator(pie, 'Mask', 'mask')
-    # NORTH-WEST
-    _ctx.draw_brush_operator(pie, 'Airbrush', 'paint')
-    # NORTH-EAST
+    draw_brush_operator(pie, 'Mask', 'mask')
+    draw_brush_operator(pie, 'Airbrush', 'paint')
     pie.operator("wm.call_menu_pie", text='Erasers...').name = "SUBPIE_MT_painttex_brush_select_eraser"
-    # SOUTH-WEST
-    _ctx.draw_brush_operator(pie, 'Fill', 'fill')
-    # SOUTH-EAST
-    _ctx.draw_brush_operator(pie, 'Clone', '')
+    draw_brush_operator(pie, 'Fill', 'fill')
+    draw_brush_operator(pie, 'Clone', '')

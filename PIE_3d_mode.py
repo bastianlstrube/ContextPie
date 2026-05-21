@@ -168,17 +168,6 @@ class VIEW3D_PIE_MT_mode(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
-        _GP_MODES = frozenset({
-            'EDIT_GPENCIL', 'EDIT_GREASE_PENCIL',
-            'PAINT_GREASE_PENCIL', 'PAINT_GPENCIL',
-            'SCULPT_GREASE_PENCIL', 'SCULPT_GPENCIL',
-        })
-
-        if context.mode in _GP_MODES:
-            from .PIE_greasepencil_mode import draw_gp_mode_pie
-            draw_gp_mode_pie(pie, context)
-            return
-
         mode_actions = {
             'OBJECT': self.draw_object_mode,
             'EDIT_MESH': self.draw_edit_mesh_mode,
@@ -486,9 +475,6 @@ def register():
         "Object Mode",
         "Mesh",
         "Curve",
-        "Grease Pencil Edit Mode",
-        "Grease Pencil Sculpt Mode",
-        "Grease Pencil Paint Mode",
         "Sculpt",
         "Pose",
         "Lattice",

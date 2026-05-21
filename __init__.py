@@ -36,6 +36,7 @@ module_names = (
     "PIE_3d_context_armature",
     "PIE_3d_context_object",
     "PIE_3d_context_paintsculpt",
+    "PIE_3d_context_greasepencil",
 
     "PIE_3d_mode",
     "PIE_3d_pivots",
@@ -48,7 +49,6 @@ module_names = (
     "PIE_node_mode",
     "PIE_node_pivots",
 
-    "PIE_greasepencil_context",
     "PIE_greasepencil_mode",
     "PIE_greasepencil_pivots",
 
