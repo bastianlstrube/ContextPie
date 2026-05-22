@@ -87,22 +87,19 @@ class CPIE_MT_mode_gp_sculpt(Menu):
         pie = layout.menu_pie()
 
         brush = None
-        size_path = ""
-        strength_path = ""
-        image_id = ""
+        size_path = 'tool_settings.gpencil_sculpt_paint.brush.size'
+        strength_path = 'tool_settings.gpencil_sculpt_paint.brush.strength'
+        image_id = 'tool_settings.gpencil_sculpt_paint.brush'
 
-        # 1. Check for Modern Blender (GPv3 architecture)
+        # 1. Modern Blender (GPv3 architecture)
         if hasattr(context.tool_settings, "gpencil_sculpt_paint"):
             paint_settings = context.tool_settings.gpencil_sculpt_paint
             if paint_settings and paint_settings.brush:
                 brush = paint_settings.brush
-                size_path = 'tool_settings.gpencil_sculpt_paint.brush.size'
-                strength_path = 'tool_settings.gpencil_sculpt_paint.brush.strength'
-                image_id = 'tool_settings.gpulpt_paint.brush'
                 if hasattr(brush, "gpencil_settings") and hasattr(brush.gpencil_settings, "pen_strength"):
                     strength_path = 'tool_settings.gpencil_sculpt_paint.brush.gpencil_settings.pen_strength'
-        
-        # 2. Fallback check for Legacy Blender setup
+
+        # 2. Legacy Blender fallback
         if not brush and hasattr(context.tool_settings, "gpencil_sculpt"):
             sculpt_settings = context.tool_settings.gpencil_sculpt
             if sculpt_settings and hasattr(sculpt_settings, 'brush'):
@@ -113,25 +110,19 @@ class CPIE_MT_mode_gp_sculpt(Menu):
 
         # WEST
         pie.operator("object.mode_set", text="Object Mode", icon="OBJECT_DATAMODE").mode = 'OBJECT'
-        
+
         # EAST
         pie.separator()
-        
+
         # SOUTH
-        if size_path:
-            op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
-            op.data_path_primary = size_path
-            op.image_id = image_id
-        else:
-            pie.separator()
-        
+        op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
+        op.data_path_primary = size_path
+        op.image_id = image_id
+
         # NORTH
-        if strength_path:
-            op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
-            op.data_path_primary = strength_path
-            op.image_id = image_id
-        else:
-            pie.separator()
+        op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
+        op.data_path_primary = strength_path
+        op.image_id = image_id
 
 
 class CPIE_MT_mode_gp_edit(Menu):
@@ -150,10 +141,10 @@ class CPIE_MT_mode_gp_edit(Menu):
         pie.operator("grease_pencil.set_selection_mode", text="Point Mode", icon="VERTEXSEL").mode = 'POINT'
         
         # SOUTH
-        pie.operator("grease_pencil.set_selection_mode", text="Segment Mode", icon="EDGESEL").mode = 'SEGMENT'
-        
-        # NORTH
         pie.operator("grease_pencil.set_selection_mode", text="Stroke Mode", icon="FACESEL").mode = 'STROKE'
+
+        # NORTH
+        pie.operator("grease_pencil.set_selection_mode", text="Segment Mode", icon="EDGESEL").mode = 'SEGMENT'
         
         # NORTH-WEST
         pie.separator()
