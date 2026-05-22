@@ -4,6 +4,7 @@
 
 import bpy
 from bpy.types import Menu
+from mathutils import Matrix
 
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
@@ -35,6 +36,81 @@ def _radial(layout, text, primary, *, secondary=None, use_secondary=None,
     if image_id:
         op.image_id = image_id
     return op
+
+# ----------------------------------------------------------------------------
+#                               OPERATORS
+# ----------------------------------------------------------------------------
+
+class CPIE_OT_copy_gizmo_to_cursor(bpy.types.Operator):
+    """Copy the current transform gizmo orientation to the 3D Cursor"""
+    bl_idname = "view3d.copy_gizmo_to_cursor"
+    bl_label = "Gizmo Orientation to Cursor"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.type == 'VIEW_3D'
+
+    def execute(self, context):
+        slot = context.scene.transform_orientation_slots[0]
+        orient_type = slot.type
+        mat_3x3 = Matrix.Identity(3)
+        
+        # 1. Evaluate Built-in Orientations
+        if orient_type == 'GLOBAL':
+            mat_3x3 = Matrix.Identity(3)
+            
+        elif orient_type == 'LOCAL':
+            if context.active_object:
+                mat_3x3 = context.active_object.matrix_world.to_3x3().normalized()
+                
+        elif orient_type == 'PARENT':
+            if context.active_object and context.active_object.parent:
+                mat_3x3 = context.active_object.parent.matrix_world.to_3x3().normalized()
+                
+        elif orient_type == 'VIEW':
+            rv3d = context.region_data
+            if rv3d:
+                # Invert the view matrix to get world-space camera/view vectors
+                mat_3x3 = rv3d.view_matrix.to_3x3().inverted().normalized()
+                
+        elif orient_type == 'CURSOR':
+            self.report({'INFO'}, "Orientation is already set to Cursor.")
+            return {'FINISHED'}
+            
+        elif orient_type in {'NORMAL', 'GIMBAL'}:
+            # For dynamic selections like Normal/Gimbal, let Blender generate a 
+            # temporary custom orientation from the active context to catch its matrix.
+            try:
+                old_type = slot.type
+                bpy.ops.transform.create_orientation(name="TEMP_GIZMO_ORIENT", use=True, overwrite=True)
+                mat_3x3 = slot.custom_orientation.matrix.copy()
+                bpy.ops.transform.delete_orientation()
+                slot.type = old_type
+            except Exception as e:
+                self.report({'WARNING'}, f"Could not determine selection orientation: {e}")
+                if context.active_object:
+                    mat_3x3 = context.active_object.matrix_world.to_3x3().normalized()
+        
+        else:
+            # 2. Handle Existing Custom Orientations
+            if slot.custom_orientation:
+                mat_3x3 = slot.custom_orientation.matrix.copy()
+            else:
+                self.report({'WARNING'}, "Custom orientation matrix not found. Falling back to Global.")
+
+        # 3. Apply the 3x3 Rotation Matrix to the 4x4 Cursor Matrix
+        cursor = context.scene.cursor
+        cursor_loc = cursor.location.copy()
+        
+        # Build 4x4 matrix from 3x3 rotation and re-insert the original location
+        new_cursor_matrix = mat_3x3.to_4x4()
+        new_cursor_matrix.translation = cursor_loc
+        
+        cursor.matrix = new_cursor_matrix
+        
+        self.report({'INFO'}, f"Copied '{orient_type}' orientation to 3D Cursor.")
+        return {'FINISHED'}
 
 
 # ----------------------------------------------------------------------------
@@ -291,7 +367,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
         # NORTH
         pie.operator("wm.call_menu_pie", text='Proportional...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_proportional_edt"
         # NORTH-WEST
-        pie.separator()
+        pie.operator("view3d.copy_gizmo_to_cursor", text='Orient Cursor to Gizmo', icon='ORIENTATION_CURSOR')
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Set Origin...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_set_origin"
         # SOUTH-WEST
@@ -309,7 +385,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
         # NORTH
         pie.operator("wm.call_menu_pie", text='Proportional...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_proportional_obj"
         # NORTH-WEST
-        pie.separator()
+        pie.operator("view3d.copy_gizmo_to_cursor", text='Orient Cursor to Gizmo', icon='ORIENTATION_CURSOR')
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Set Origin...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_set_origin"
         # SOUTH-WEST
@@ -365,6 +441,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
 
 
 registry = [
+    CPIE_OT_copy_gizmo_to_cursor,
     SUBPIE_MT_brush_falloff,
     SUBPIE_MT_brush_stroke,
     SUBPIE_MT_brush_symmetry,

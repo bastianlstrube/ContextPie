@@ -7,6 +7,70 @@ from bpy.types import Menu
 
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
+###-----------------------------------------------------------------------------###
+###                             CUSTOM OPERATORS                                ###
+###-----------------------------------------------------------------------------###
+
+class CPIE_OT_interactive_automerge_threshold(bpy.types.Operator):
+    bl_idname = "mesh.interactive_automerge_threshold"
+    bl_label = "Interactive Automerge Threshold"
+    bl_description = "Drag mouse horizontally to interactively adjust the AutoMerge threshold"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    init_mouse_x: bpy.props.IntProperty()
+    init_threshold: bpy.props.FloatProperty()
+
+    def modal(self, context, event):
+        context.area.tag_redraw()
+
+        if event.type == 'MOUSEMOVE':
+            # Calculate how far the mouse moved horizontally
+            delta = event.mouse_x - self.init_mouse_x
+            
+            # Hold SHIFT for ultra-fine adjustments
+            sensitivity = 0.00005 if event.shift else 0.0005
+            
+            # Calculate and apply new threshold (clamped to 0 minimum)
+            new_threshold = self.init_threshold + (delta * sensitivity)
+            context.scene.tool_settings.double_threshold = max(0.0, new_threshold)
+            
+            # Print beautiful live feedback to the Blender status bar at the bottom
+            context.workspace.status_text_set(
+                f"AutoMerge Threshold: {context.scene.tool_settings.double_threshold:.4f}m  |  "
+                f"[L-Click] Confirm  |  [R-Click/Esc] Cancel  |  [Hold Shift] Fine-tune"
+            )
+
+        elif event.type in {'LEFTMOUSE', 'RET', 'NUMPAD_ENTER'}:
+            # Confirm and clear status bar text
+            context.workspace.status_text_set(None)
+            return {'FINISHED'}
+
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            # Revert to original value and clear status bar text
+            context.scene.tool_settings.double_threshold = self.init_threshold
+            context.workspace.status_text_set(None)
+            return {'CANCELLED'}
+
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        if context.space_data.type == 'VIEW_3D':
+            # Store starting positions
+            self.init_mouse_x = event.mouse_x
+            self.init_threshold = context.scene.tool_settings.double_threshold
+            
+            # Make AutoMerge turn on automatically if they run this tool
+            context.scene.tool_settings.use_mesh_automerge = True
+            
+            context.window_manager.modal_handler_add(self)
+            return {'RUNNING_MODAL'}
+        else:
+            return {'CANCELLED'}
+
+###-----------------------------------------------------------------------------###
+###                     SELECT & SEPARATE SUBPIES                               ###
+###-----------------------------------------------------------------------------###
+
 
 class SUBPIE_MT_meshSelect(Menu):
     bl_label = "Select"
@@ -62,6 +126,54 @@ class SUBPIE_MT_separate(Menu):
         pie.operator("mesh.separate", text='Selection').type = 'SELECTED'
 
 
+###-----------------------------------------------------------------------------###
+###                           TOOL OPTIONS SUBPIE                               ###
+###-----------------------------------------------------------------------------###
+
+class SUBPIE_MT_tool_options(Menu):
+    bl_label = "Tool Options"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        tool_settings = context.scene.tool_settings
+        obj = context.active_object
+        mesh = obj.data if (obj and obj.type == 'MESH') else None
+
+        # WEST: Mesh Symmetry (X, Y, Z)
+        col_mirror = pie.column()
+        col_mirror.label(text="Mesh Symmetry")
+        if mesh:
+            col_mirror.prop(mesh, "use_mirror_x", text="X")
+            col_mirror.prop(mesh, "use_mirror_y", text="Y")
+            col_mirror.prop(mesh, "use_mirror_z", text="Z")
+        else:
+            col_mirror.label(text="No Active Mesh")
+
+        # EAST: AutoMerge & Threshold Slider
+        pie.prop(tool_settings, "use_mesh_automerge", text="AutoMerge")
+
+        # SOUTH: Live Unwrap
+        pie.prop(tool_settings, "use_edge_path_live_unwrap", text="Live Unwrap")
+
+        # NORTH: Correct Face Attributes
+        pie.prop(tool_settings, "use_transform_correct_face_attributes", text="Correct Face Attributes")
+
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST: AutoMerge & Interactive Drag Button
+        #box_merge = pie.box().column()
+        #box_merge.prop(tool_settings, "use_mesh_automerge", text="AutoMerge")
+        # Snappy interactive tool triggers dynamic mouse adjustments
+        pie.operator("mesh.interactive_automerge_threshold", text="Automerge Threshold", icon="MOUSE_MOVE")
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
+
+
 class CPIE_MT_mode_editmesh(Menu):
     bl_idname = "CPIE_MT_mode_editmesh"
     bl_label = "Mode Selection"
@@ -79,8 +191,8 @@ class CPIE_MT_mode_editmesh(Menu):
         pie.operator('mesh.select_mode', text="Face", icon="FACESEL").type = 'FACE'
         # NORTH
         pie.operator('mesh.select_mode', text="Edge", icon="EDGESEL").type = 'EDGE'
-        # NORTH-WEST — reserved for a normals sub-pie
-        pie.separator()
+        # NORTH-WEST
+        pie.operator("wm.call_menu_pie", text='Tool Options...').name = "SUBPIE_MT_tool_options"
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Split/Separate...').name = "SUBPIE_MT_separate"
         # SOUTH-WEST
@@ -90,8 +202,10 @@ class CPIE_MT_mode_editmesh(Menu):
 
 
 registry = [
+    CPIE_OT_interactive_automerge_threshold,
     SUBPIE_MT_meshSelect,
     SUBPIE_MT_separate,
+    SUBPIE_MT_tool_options,
     CPIE_MT_mode_editmesh,
 ]
 
