@@ -125,6 +125,82 @@ class CPIE_MT_mode_gp_sculpt(Menu):
         op.image_id = image_id
 
 
+class CPIE_MT_mode_gp_vertexpaint(Menu):
+    bl_idname = "CPIE_MT_mode_gp_vertexpaint"
+    bl_label = "Grease Pencil Vertex Paint Options"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        brush = None
+        size_path = 'tool_settings.gpencil_vertex_paint.brush.size'
+        strength_path = 'tool_settings.gpencil_vertex_paint.brush.strength'
+        image_id = 'tool_settings.gpencil_vertex_paint.brush'
+
+        if hasattr(context.tool_settings, "gpencil_vertex_paint"):
+            paint_settings = context.tool_settings.gpencil_vertex_paint
+            if paint_settings and paint_settings.brush:
+                brush = paint_settings.brush
+                if hasattr(brush, "gpencil_settings") and hasattr(brush.gpencil_settings, "pen_strength"):
+                    strength_path = 'tool_settings.gpencil_vertex_paint.brush.gpencil_settings.pen_strength'
+
+        # WEST
+        pie.operator("object.mode_set", text="Object Mode", icon="OBJECT_DATAMODE").mode = 'OBJECT'
+
+        # EAST
+        pie.separator()
+
+        # SOUTH
+        op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
+        op.data_path_primary = size_path
+        op.image_id = image_id
+
+        # NORTH
+        op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
+        op.data_path_primary = strength_path
+        op.image_id = image_id
+
+
+class CPIE_MT_mode_gp_weightpaint(Menu):
+    bl_idname = "CPIE_MT_mode_gp_weightpaint"
+    bl_label = "Grease Pencil Weight Paint Options"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        brush = None
+        size_path = 'tool_settings.gpencil_weight_paint.brush.size'
+        strength_path = 'tool_settings.gpencil_weight_paint.brush.strength'
+        image_id = 'tool_settings.gpencil_weight_paint.brush'
+
+        if hasattr(context.tool_settings, "gpencil_weight_paint"):
+            paint_settings = context.tool_settings.gpencil_weight_paint
+            if paint_settings and paint_settings.brush:
+                brush = paint_settings.brush
+                if hasattr(brush, "gpencil_settings") and hasattr(brush.gpencil_settings, "pen_strength"):
+                    strength_path = 'tool_settings.gpencil_weight_paint.brush.gpencil_settings.pen_strength'
+
+        # WEST
+        pie.operator("object.mode_set", text="Object Mode", icon="OBJECT_DATAMODE").mode = 'OBJECT'
+
+        # EAST
+        pie.separator()
+
+        # SOUTH
+        op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
+        op.data_path_primary = size_path
+        op.image_id = image_id
+
+        # NORTH
+        op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
+        op.data_path_primary = strength_path
+        op.image_id = image_id
+
+
 class CPIE_MT_mode_gp_edit(Menu):
     bl_idname = "CPIE_MT_mode_gp_edit"
     bl_label = "Grease Pencil Edit Options"
@@ -163,6 +239,8 @@ registry = [
     SUBPIE_MT_gp_select,
     CPIE_MT_mode_gp_paint,
     CPIE_MT_mode_gp_sculpt,
+    CPIE_MT_mode_gp_vertexpaint,
+    CPIE_MT_mode_gp_weightpaint,
     CPIE_MT_mode_gp_edit,
 ]
 
@@ -176,6 +254,10 @@ def register():
         (CPIE_MT_mode_gp_paint, "Grease Pencil Stroke Paint Mode"),
         (CPIE_MT_mode_gp_sculpt, "Grease Pencil Sculpt Mode"),
         (CPIE_MT_mode_gp_sculpt, "Grease Pencil Stroke Sculpt Mode"),
+        (CPIE_MT_mode_gp_vertexpaint, "Grease Pencil Vertex Paint Mode"),
+        (CPIE_MT_mode_gp_vertexpaint, "Grease Pencil Stroke Vertex Mode"),
+        (CPIE_MT_mode_gp_weightpaint, "Grease Pencil Weight Paint Mode"),
+        (CPIE_MT_mode_gp_weightpaint, "Grease Pencil Stroke Weight Mode"),
         (CPIE_MT_mode_gp_edit, "Grease Pencil Edit Mode"),
         (CPIE_MT_mode_gp_edit, "Grease Pencil Stroke Edit Mode"),
     )
