@@ -52,7 +52,6 @@ module_names = (
     "PIE_node_pivots",
 
     "PIE_mode_greasepencil",
-    "PIE_greasepencil_pivots",
 
     "SUBPIE_proportional_menu",
     "SUBPIE_snap_menu",

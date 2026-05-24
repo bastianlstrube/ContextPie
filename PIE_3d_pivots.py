@@ -488,6 +488,58 @@ class SUBPIE_MT_weight_paint_options(Menu):
 
 
 # ----------------------------------------------------------------------------
+# Grease Pencil pivots (inlined — formerly PIE_greasepencil_pivots.py)
+# ----------------------------------------------------------------------------
+
+def draw_gp_pivots_pie(pie, context):
+    if "EDIT" in context.mode:
+        # Same transform tools as mesh edit mode
+        # WEST
+        pie.operator("wm.call_menu_pie", text='Orientation...', icon='RIGHTARROW_THIN').name = "VIEW3D_MT_orientations_pie"
+        # EAST
+        pie.operator("wm.call_menu_pie", text='Pivot...', icon='RIGHTARROW_THIN').name = "VIEW3D_MT_pivot_pie"
+        # SOUTH
+        pie.operator("wm.call_menu_pie", text='Snap...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_snap"
+        # NORTH
+        pie.operator("wm.call_menu_pie", text='Proportional...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_proportional_edt"
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.operator("wm.call_menu_pie", text='Set Origin...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_set_origin"
+        # SOUTH-WEST / SOUTH-EAST
+        pie.separator()
+        pie.separator()
+    else:
+        # Paint / Sculpt GP: reuse the generic brush tool-settings sub-pies.
+        # _brush_path() doesn't know GP modes, so these open with limited content.
+        # WEST
+        pie.operator("wm.call_menu_pie", text='Falloff...', icon='SMOOTHCURVE').name = SUBPIE_MT_brush_falloff.bl_idname
+        # EAST
+        pie.operator("wm.call_menu_pie", text='Stroke...', icon='IPO_LINEAR').name = SUBPIE_MT_brush_stroke.bl_idname
+        # SOUTH
+        pie.separator()
+        # NORTH
+        pie.separator()
+        # NORTH-WEST
+        pie.operator("wm.call_menu_pie", text='Symmetry...', icon='MOD_MIRROR').name = SUBPIE_MT_brush_symmetry.bl_idname
+        # NORTH-EAST / SOUTH-WEST / SOUTH-EAST
+        pie.separator()
+        pie.separator()
+        pie.separator()
+
+
+class VIEW3D_PIE_MT_gp_pivots(Menu):
+    bl_idname = "PIE_MT_gp_pivots"
+    bl_label = "Grease Pencil Workspace Settings"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+        draw_gp_pivots_pie(pie, context)
+
+
+# ----------------------------------------------------------------------------
 # Main pivots / tool-settings pie
 # ----------------------------------------------------------------------------
 
@@ -507,7 +559,6 @@ class VIEW3D_PIE_MT_pivots(Menu):
         })
 
         if context.mode in _GP_MODES:
-            from .PIE_greasepencil_pivots import draw_gp_pivots_pie
             draw_gp_pivots_pie(pie, context)
         elif context.mode == 'SCULPT':
             self.draw_sculpt(pie, context)
@@ -670,6 +721,7 @@ registry = [
     SUBPIE_MT_weight_paint_options,
     SUBPIE_MT_brush_mapping,
     SUBPIE_MT_vertex_paint_options,
+    VIEW3D_PIE_MT_gp_pivots,
     VIEW3D_PIE_MT_pivots,
 ]
 

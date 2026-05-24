@@ -48,7 +48,7 @@ self-registering `CPIE_MT_mode_*` menu class with no dispatch layer.
 | `PIE_mode_uv.py` | UV Editor | RMB |
 | `PIE_uv_pivots.py` | UV Editor | Ctrl+RMB |
 | `PIE_mode_greasepencil.py` | Grease Pencil modes | RMB |
-| `PIE_greasepencil_pivots.py` | Grease Pencil modes | Ctrl+RMB |
+| `PIE_3d_pivots.py` *(GP branch)* | Grease Pencil modes | Ctrl+RMB |
 
 Mode-pie menu classes follow `CPIE_MT_mode_<area>` (the addon `ADDONNAME_MT_name`
 convention). `SUBPIE_MT_*` classes are sub-pie menus called via `wm.call_menu_pie` with
