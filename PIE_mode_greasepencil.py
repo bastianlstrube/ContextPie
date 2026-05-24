@@ -135,22 +135,23 @@ class CPIE_MT_mode_gp_vertexpaint(Menu):
         pie = layout.menu_pie()
 
         brush = None
-        size_path = 'tool_settings.gpencil_vertex_paint.brush.size'
-        strength_path = 'tool_settings.gpencil_vertex_paint.brush.strength'
-        image_id = 'tool_settings.gpencil_vertex_paint.brush'
+        brush_path = 'tool_settings.gpencil_vertex_paint.brush'
+        size_path = f'{brush_path}.size'
+        strength_path = f'{brush_path}.strength'
+        image_id = brush_path
 
         if hasattr(context.tool_settings, "gpencil_vertex_paint"):
             paint_settings = context.tool_settings.gpencil_vertex_paint
             if paint_settings and paint_settings.brush:
                 brush = paint_settings.brush
                 if hasattr(brush, "gpencil_settings") and hasattr(brush.gpencil_settings, "pen_strength"):
-                    strength_path = 'tool_settings.gpencil_vertex_paint.brush.gpencil_settings.pen_strength'
+                    strength_path = f'{brush_path}.gpencil_settings.pen_strength'
 
         # WEST
         pie.operator("object.mode_set", text="Object Mode", icon="OBJECT_DATAMODE").mode = 'OBJECT'
 
-        # EAST
-        pie.separator()
+        # EAST — open color wheel popup
+        pie.operator("cpie.brush_color_picker", text="Color Wheel", icon='COLOR').brush_path = brush_path
 
         # SOUTH
         op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
@@ -161,6 +162,19 @@ class CPIE_MT_mode_gp_vertexpaint(Menu):
         op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
         op.data_path_primary = strength_path
         op.image_id = image_id
+
+        # NW
+        pie.separator()
+        # NE — Hue + Saturation 2D drag
+        op = pie.operator("cpie.brush_color_hsv", text="Hue + Sat", icon='COLOR')
+        op.component = 'H'
+        op.brush_path = brush_path
+        # SW
+        pie.separator()
+        # SE — drag to set value
+        op = pie.operator("cpie.brush_color_hsv", text="Value", icon='COLOR')
+        op.component = 'V'
+        op.brush_path = brush_path
 
 
 class CPIE_MT_mode_gp_weightpaint(Menu):

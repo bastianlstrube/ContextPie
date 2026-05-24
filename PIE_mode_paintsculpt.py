@@ -19,8 +19,8 @@ _SQRT2_INV = 1.0 / (2.0 ** 0.5)
 # Pie auto-confirms at the slot position so event.mouse_* at invoke is on the slot,
 # not the center. We translate back along the opposite of the slot direction.
 _PIE_CENTER_OFFSET = {
-    'H': ( _SQRT2_INV, -_SQRT2_INV),  # NW slot -> center is to the lower-right
-    'S': (-_SQRT2_INV, -_SQRT2_INV),  # NE slot -> center is to the lower-left
+    'H': (-_SQRT2_INV, -_SQRT2_INV),  # NE slot -> center is to the lower-left
+    'S': (-_SQRT2_INV, -_SQRT2_INV),  # legacy / unused in pies but kept for parity
     'V': (-_SQRT2_INV,  _SQRT2_INV),  # SE slot -> center is to the upper-left
 }
 
@@ -58,7 +58,7 @@ def _draw_color_indicator(op, context):
     gpu.state.blend_set('ALPHA')
 
     # Dark outer ring for contrast
-    batch = batch_for_shader(shader, 'TRI_FAN', {"pos": _disc_verts(cx, cy, radius + 4)})
+    batch = batch_for_shader(shader, 'TRI_FAN', {"pos": _disc_verts(cx, cy, radius + 2)})
     shader.bind()
     shader.uniform_float("color", (0.0, 0.0, 0.0, 0.75))
     batch.draw(shader)
@@ -81,7 +81,7 @@ def _resolve_path(context, path):
 
 
 class CPIE_OT_brush_color_hsv(Operator):
-    """Drag horizontally to set the brush color's hue, saturation, or value"""
+    """Modal drag to adjust the brush color in HSV space"""
     bl_idname = "cpie.brush_color_hsv"
     bl_label = "Brush Color HSV"
     bl_options = {'REGISTER', 'UNDO'}
@@ -89,7 +89,7 @@ class CPIE_OT_brush_color_hsv(Operator):
     component: EnumProperty(
         name="Component",
         items=[
-            ('H', "Hue", "Adjust hue (wraps)"),
+            ('H', "Hue + Saturation", "Adjust hue (X drag) and saturation (Y drag) together"),
             ('S', "Saturation", "Adjust saturation"),
             ('V', "Value", "Adjust value"),
         ],
@@ -340,13 +340,11 @@ class CPIE_MT_mode_vertexpaint(Menu):
         op.data_path_secondary = f'{ups_path}.strength'
         op.use_secondary = f'{ups_path}.use_unified_strength'
         op.image_id = brush_path
-        # NW — drag to set hue
-        op = pie.operator("cpie.brush_color_hsv", text="Hue", icon='COLOR')
+        # NW
+        pie.separator()
+        # NE — Hue + Saturation 2D drag
+        op = pie.operator("cpie.brush_color_hsv", text="Hue + Sat", icon='COLOR')
         op.component = 'H'
-        op.brush_path = brush_path
-        # NE — drag to set saturation
-        op = pie.operator("cpie.brush_color_hsv", text="Saturation", icon='COLOR')
-        op.component = 'S'
         op.brush_path = brush_path
         # SW
         pie.separator()
@@ -365,15 +363,30 @@ class CPIE_MT_mode_weightpaint(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
+        paint_path = 'tool_settings.weight_paint'
+        brush_path = f'{paint_path}.brush'
+        ups_path = f'{paint_path}.unified_paint_settings'
+
         # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
-        # EAST
-        pie.separator()
-        box = pie.box()
-        brush = context.tool_settings.weight_paint.brush
-        capabilities = brush.weight_paint_capabilities
-
-        draw_brush_properties(box, context, brush, capabilities)
+        # EAST — drag to set brush weight (target weight value)
+        op = pie.operator("wm.radial_control", text="Brush Weight", icon='SHARPCURVE')
+        op.data_path_primary = f'{brush_path}.weight'
+        op.data_path_secondary = f'{ups_path}.weight'
+        op.use_secondary = f'{ups_path}.use_unified_weight'
+        op.image_id = brush_path
+        # SOUTH — drag to set brush size
+        op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
+        op.data_path_primary = f'{brush_path}.size'
+        op.data_path_secondary = f'{ups_path}.size'
+        op.use_secondary = f'{ups_path}.use_unified_size'
+        op.image_id = brush_path
+        # NORTH — drag to set brush strength
+        op = pie.operator("wm.radial_control", text="Brush Strength", icon='SHARPCURVE')
+        op.data_path_primary = f'{brush_path}.strength'
+        op.data_path_secondary = f'{ups_path}.strength'
+        op.use_secondary = f'{ups_path}.use_unified_strength'
+        op.image_id = brush_path
 
 
 class CPIE_MT_mode_texpaint(Menu):
@@ -390,8 +403,8 @@ class CPIE_MT_mode_texpaint(Menu):
         ups_path = f'{paint_path}.unified_paint_settings'
         # WEST
         pie.operator("object.mode_set", text="object mode", icon="OBJECT_DATAMODE")
-        # EAST
-        pie.separator()
+        # EAST — open color wheel popup
+        pie.operator("cpie.brush_color_picker", text="Color Wheel", icon='COLOR').brush_path = brush_path
         # SOUTH — drag to set brush size (LMB confirm, RMB cancel)
         op = pie.operator("wm.radial_control", text="Brush Size", icon='BRUSH_DATA')
         op.data_path_primary = f'{brush_path}.size'
@@ -404,6 +417,18 @@ class CPIE_MT_mode_texpaint(Menu):
         op.data_path_secondary = f'{ups_path}.strength'
         op.use_secondary = f'{ups_path}.use_unified_strength'
         op.image_id = brush_path
+        # NW
+        pie.separator()
+        # NE — Hue + Saturation 2D drag
+        op = pie.operator("cpie.brush_color_hsv", text="Hue + Sat", icon='COLOR')
+        op.component = 'H'
+        op.brush_path = brush_path
+        # SW
+        pie.separator()
+        # SE — drag to set value
+        op = pie.operator("cpie.brush_color_hsv", text="Value", icon='COLOR')
+        op.component = 'V'
+        op.brush_path = brush_path
 
 
 registry = [
