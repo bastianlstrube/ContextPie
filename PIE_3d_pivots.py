@@ -13,13 +13,29 @@ from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 # Helpers
 # ----------------------------------------------------------------------------
 
+_PAINT_TS_PATH = {
+    'SCULPT':        'tool_settings.sculpt',
+    'PAINT_TEXTURE': 'tool_settings.image_paint',
+    'PAINT_VERTEX':  'tool_settings.vertex_paint',
+    'PAINT_WEIGHT':  'tool_settings.weight_paint',
+}
+
+
 def _brush_path(context):
-    """Return ('tool_settings.sculpt' | 'tool_settings.image_paint', brush) for the active paint mode."""
-    if context.mode == 'SCULPT':
-        return 'tool_settings.sculpt', context.tool_settings.sculpt.brush
-    if context.mode == 'PAINT_TEXTURE':
-        return 'tool_settings.image_paint', context.tool_settings.image_paint.brush
-    return None, None
+    """Return (paint-settings path, brush) for the active paint mode, or (None, None)."""
+    ts_path = _PAINT_TS_PATH.get(context.mode)
+    if not ts_path:
+        return None, None
+    paint = getattr(context.tool_settings, ts_path.rsplit('.', 1)[-1], None)
+    return ts_path, (paint.brush if paint else None)
+
+
+def _active_paint(context):
+    """Return the active Paint settings struct for paint modes, else None."""
+    ts_path = _PAINT_TS_PATH.get(context.mode)
+    if not ts_path:
+        return None
+    return getattr(context.tool_settings, ts_path.rsplit('.', 1)[-1], None)
 
 
 def _radial(layout, text, primary, *, secondary=None, use_secondary=None,
@@ -188,9 +204,10 @@ class SUBPIE_MT_brush_symmetry(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
-        # The Paint base struct holds use_symmetry_x/y/z for both sculpt & image_paint
-        paint = (context.tool_settings.sculpt if context.mode == 'SCULPT'
-                 else context.tool_settings.image_paint)
+        # All paint modes' base struct holds use_symmetry_x/y/z
+        paint = _active_paint(context)
+        if paint is None:
+            return
 
         # WEST
         pie.prop(paint, "use_symmetry_x", text="X Mirror", toggle=True)
@@ -219,14 +236,22 @@ class SUBPIE_MT_sculpt_remesh(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
+        obj = context.object
+        mesh = obj.data if obj and obj.type == 'MESH' else None
+
         # WEST
         pie.operator("sculpt.dynamic_topology_toggle", text="Toggle Dyntopo", icon='MOD_REMESH')
         # EAST
         pie.operator("object.voxel_remesh", text="Voxel Remesh", icon='MOD_REMESH')
         # SOUTH
         pie.operator("sculpt.symmetrize", text="Symmetrize")
-        # NORTH
-        pie.separator()
+        # NORTH — drag to set voxel size for next Voxel Remesh
+        if mesh and hasattr(mesh, "remesh_voxel_size"):
+            _radial(pie, "Voxel Size",
+                    primary='object.data.remesh_voxel_size',
+                    icon='MESH_GRID')
+        else:
+            pie.separator()
         # NORTH-WEST
         pie.separator()
         # NORTH-EAST
@@ -247,6 +272,7 @@ class SUBPIE_MT_sculpt_automasking(Menu):
         pie = layout.menu_pie()
 
         sculpt = context.tool_settings.sculpt
+        brush = sculpt.brush
 
         # WEST
         pie.prop(sculpt, "use_automasking_topology", text="Topology", toggle=True)
@@ -262,8 +288,11 @@ class SUBPIE_MT_sculpt_automasking(Menu):
         pie.prop(sculpt, "use_automasking_view_normal", text="View Normal", toggle=True)
         # SOUTH-WEST
         pie.prop(sculpt, "use_automasking_boundary_face_sets", text="Face Set Boundary", toggle=True)
-        # SOUTH-EAST
-        pie.separator()
+        # SOUTH-EAST — sibling constraint: brush only affects front faces
+        if brush and hasattr(brush, "use_frontface"):
+            pie.prop(brush, "use_frontface", text="Front Face Only", toggle=True)
+        else:
+            pie.separator()
 
 
 class SUBPIE_MT_texture_paint_blend(Menu):
@@ -306,6 +335,7 @@ class SUBPIE_MT_texture_paint_options(Menu):
         pie = layout.menu_pie()
 
         ip = context.tool_settings.image_paint
+        brush = ip.brush
 
         # WEST
         pie.prop(ip, "use_occlude", text="Occlude", toggle=True)
@@ -313,12 +343,144 @@ class SUBPIE_MT_texture_paint_options(Menu):
         pie.prop(ip, "use_backface_culling", text="Backface Culling", toggle=True)
         # SOUTH
         pie.prop(ip, "use_normal_falloff", text="Normal Falloff", toggle=True)
+        # NORTH — accumulate (additive stroke building)
+        if brush and hasattr(brush, "use_accumulate"):
+            pie.prop(brush, "use_accumulate", text="Accumulate", toggle=True)
+        else:
+            pie.separator()
+        # NORTH-WEST — only paint front faces
+        if brush and hasattr(brush, "use_frontface"):
+            pie.prop(brush, "use_frontface", text="Front Face Only", toggle=True)
+        else:
+            pie.separator()
+        # NORTH-EAST
+        if hasattr(ip, "tile_x"):
+            pie.prop(ip, "tile_x", text="Tile X", toggle=True)
+        else:
+            pie.separator()
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        if hasattr(ip, "tile_y"):
+            pie.prop(ip, "tile_y", text="Tile Y", toggle=True)
+        else:
+            pie.separator()
+
+
+class SUBPIE_MT_brush_mapping(Menu):
+    bl_idname = "SUBPIE_MT_brush_mapping"
+    bl_label = "Texture Mapping"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        _, brush = _brush_path(context)
+        ts = getattr(brush, "texture_slot", None) if brush else None
+        prop = ts.bl_rna.properties.get('map_mode') if ts else None
+        if prop is None or prop.type != 'ENUM':
+            # Render an inert placeholder pie so the menu doesn't blank out.
+            for _i in range(8):
+                pie.separator()
+            return
+        available = {e.identifier for e in prop.enum_items}
+
+        def slot(value):
+            if value in available:
+                pie.prop_enum(ts, "map_mode", value=value)
+            else:
+                pie.separator()
+
+        # Mode-agnostic layout; mild cluster toward the lower hemisphere
+        # since the parent slot is S (sculpt) or SW (tex/vertex paint).
+        # WEST
+        slot('RANDOM')
+        # EAST
+        slot('STENCIL')
+        # SOUTH — primary, most common
+        slot('VIEW_PLANE')
+        # NORTH
+        slot('3D')
+        # NORTH-WEST
+        slot('AREA_PLANE')
+        # NORTH-EAST
+        pie.separator()
+        # SOUTH-WEST
+        slot('TILED')
+        # SOUTH-EAST
+        pie.separator()
+
+
+class SUBPIE_MT_vertex_paint_options(Menu):
+    bl_idname = "SUBPIE_MT_vertex_paint_options"
+    bl_label = "Vertex Paint Options"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        _, brush = _brush_path(context)
+
+        # WEST
+        if brush and hasattr(brush, "use_frontface"):
+            pie.prop(brush, "use_frontface", text="Front Face Only", toggle=True)
+        else:
+            pie.separator()
+        # EAST
+        if brush and hasattr(brush, "use_accumulate"):
+            pie.prop(brush, "use_accumulate", text="Accumulate", toggle=True)
+        else:
+            pie.separator()
+        # SOUTH
+        if brush and hasattr(brush, "use_alpha"):
+            pie.prop(brush, "use_alpha", text="Affect Alpha", toggle=True)
+        else:
+            pie.separator()
         # NORTH
         pie.separator()
         # NORTH-WEST
         pie.separator()
         # NORTH-EAST
         pie.separator()
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST
+        pie.separator()
+
+
+class SUBPIE_MT_weight_paint_options(Menu):
+    bl_idname = "SUBPIE_MT_weight_paint_options"
+    bl_label = "Weight Paint Options"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        wp = context.tool_settings.weight_paint
+        obj = context.object
+        mesh = obj.data if obj and obj.type == 'MESH' else None
+
+        # WEST
+        pie.prop(wp, "use_multipaint", text="Multi-Paint", toggle=True)
+        # EAST
+        pie.prop(wp, "use_auto_normalize", text="Auto-Normalize", toggle=True)
+        # SOUTH
+        if mesh is not None and hasattr(mesh, "use_mirror_x"):
+            pie.prop(mesh, "use_mirror_x", text="Vertex Group X-Mirror", toggle=True)
+        else:
+            pie.separator()
+        # NORTH
+        pie.prop(wp, "use_lock_relative", text="Lock Relative", toggle=True)
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        if hasattr(wp, "use_group_restrict"):
+            pie.prop(wp, "use_group_restrict", text="Restrict to Group", toggle=True)
+        else:
+            pie.separator()
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST
@@ -351,6 +513,10 @@ class VIEW3D_PIE_MT_pivots(Menu):
             self.draw_sculpt(pie, context)
         elif context.mode == 'PAINT_TEXTURE':
             self.draw_texture_paint(pie, context)
+        elif context.mode == 'PAINT_VERTEX':
+            self.draw_vertex_paint(pie, context)
+        elif context.mode == 'PAINT_WEIGHT':
+            self.draw_weight_paint(pie, context)
         elif context.mode in ('EDIT_MESH', 'EDIT_CURVE', 'EDIT_LATTICE', 'EDIT_ARMATURE'):
             self.draw_edit(pie, context)
         elif context.mode in ('OBJECT', 'POSE'):
@@ -401,8 +567,8 @@ class VIEW3D_PIE_MT_pivots(Menu):
         pie.operator("wm.call_menu_pie", text='Falloff...', icon='SMOOTHCURVE').name = SUBPIE_MT_brush_falloff.bl_idname
         # EAST
         pie.operator("wm.call_menu_pie", text='Stroke...', icon='IPO_LINEAR').name = SUBPIE_MT_brush_stroke.bl_idname
-        # SOUTH
-        pie.separator()
+        # SOUTH — texture mapping mode sub-pie
+        pie.operator("wm.call_menu_pie", text='Mapping...', icon='TEXTURE').name = SUBPIE_MT_brush_mapping.bl_idname
         # NORTH — drag to rotate texture
         _radial(pie, "Texture Angle",
                 primary=f'{brush_path}.texture_slot.angle',
@@ -413,8 +579,10 @@ class VIEW3D_PIE_MT_pivots(Menu):
         pie.operator("wm.call_menu_pie", text='Auto-Mask...', icon='MOD_MASK').name = SUBPIE_MT_sculpt_automasking.bl_idname
         # SOUTH-WEST
         pie.operator("wm.call_menu_pie", text='Remesh...', icon='MOD_REMESH').name = SUBPIE_MT_sculpt_remesh.bl_idname
-        # SOUTH-EAST
-        pie.separator()
+        # SOUTH-EAST — drag to set brush spacing
+        _radial(pie, "Spacing",
+                primary=f'{brush_path}.spacing',
+                image_id=brush_path, icon='DRIVER_DISTANCE')
 
     # --- texture paint mode tool settings ---
     def draw_texture_paint(self, pie, context):
@@ -424,8 +592,8 @@ class VIEW3D_PIE_MT_pivots(Menu):
         pie.operator("wm.call_menu_pie", text='Falloff...', icon='SMOOTHCURVE').name = SUBPIE_MT_brush_falloff.bl_idname
         # EAST
         pie.operator("wm.call_menu_pie", text='Stroke...', icon='IPO_LINEAR').name = SUBPIE_MT_brush_stroke.bl_idname
-        # SOUTH
-        pie.separator()
+        # SOUTH — brush-behavior cardinal (was at SW; promoted to S)
+        pie.operator("wm.call_menu_pie", text='Blend...', icon='IMAGE_RGB_ALPHA').name = SUBPIE_MT_texture_paint_blend.bl_idname
         # NORTH — drag to rotate texture
         _radial(pie, "Texture Angle",
                 primary=f'{brush_path}.texture_slot.angle',
@@ -434,10 +602,60 @@ class VIEW3D_PIE_MT_pivots(Menu):
         pie.operator("wm.call_menu_pie", text='Symmetry...', icon='MOD_MIRROR').name = SUBPIE_MT_brush_symmetry.bl_idname
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Options...', icon='PREFERENCES').name = SUBPIE_MT_texture_paint_options.bl_idname
-        # SOUTH-WEST
+        # SOUTH-WEST — texture mapping mode sub-pie
+        pie.operator("wm.call_menu_pie", text='Mapping...', icon='TEXTURE').name = SUBPIE_MT_brush_mapping.bl_idname
+        # SOUTH-EAST — drag to set brush spacing
+        _radial(pie, "Spacing",
+                primary=f'{brush_path}.spacing',
+                image_id=brush_path, icon='DRIVER_DISTANCE')
+
+    # --- vertex paint mode tool settings ---
+    def draw_vertex_paint(self, pie, context):
+        brush_path = 'tool_settings.vertex_paint.brush'
+
+        # WEST
+        pie.operator("wm.call_menu_pie", text='Falloff...', icon='SMOOTHCURVE').name = SUBPIE_MT_brush_falloff.bl_idname
+        # EAST
+        pie.operator("wm.call_menu_pie", text='Stroke...', icon='IPO_LINEAR').name = SUBPIE_MT_brush_stroke.bl_idname
+        # SOUTH — brush-behavior cardinal
         pie.operator("wm.call_menu_pie", text='Blend...', icon='IMAGE_RGB_ALPHA').name = SUBPIE_MT_texture_paint_blend.bl_idname
-        # SOUTH-EAST
-        pie.separator()
+        # NORTH — drag to rotate texture
+        _radial(pie, "Texture Angle",
+                primary=f'{brush_path}.texture_slot.angle',
+                image_id=brush_path, icon='DRIVER_ROTATIONAL_DIFFERENCE')
+        # NORTH-WEST
+        pie.operator("wm.call_menu_pie", text='Symmetry...', icon='MOD_MIRROR').name = SUBPIE_MT_brush_symmetry.bl_idname
+        # NORTH-EAST
+        pie.operator("wm.call_menu_pie", text='Options...', icon='PREFERENCES').name = SUBPIE_MT_vertex_paint_options.bl_idname
+        # SOUTH-WEST — texture mapping mode sub-pie
+        pie.operator("wm.call_menu_pie", text='Mapping...', icon='TEXTURE').name = SUBPIE_MT_brush_mapping.bl_idname
+        # SOUTH-EAST — drag to set brush spacing
+        _radial(pie, "Spacing",
+                primary=f'{brush_path}.spacing',
+                image_id=brush_path, icon='DRIVER_DISTANCE')
+
+    # --- weight paint mode tool settings ---
+    def draw_weight_paint(self, pie, context):
+        brush_path = 'tool_settings.weight_paint.brush'
+
+        # WEST
+        pie.operator("wm.call_menu_pie", text='Falloff...', icon='SMOOTHCURVE').name = SUBPIE_MT_brush_falloff.bl_idname
+        # EAST
+        pie.operator("wm.call_menu_pie", text='Stroke...', icon='IPO_LINEAR').name = SUBPIE_MT_brush_stroke.bl_idname
+        # SOUTH — brush-behavior cardinal
+        pie.operator("wm.call_menu_pie", text='Blend...', icon='IMAGE_RGB_ALPHA').name = SUBPIE_MT_texture_paint_blend.bl_idname
+        # NORTH — drag to set brush spacing (weight brushes have no texture)
+        _radial(pie, "Spacing",
+                primary=f'{brush_path}.spacing',
+                image_id=brush_path, icon='DRIVER_DISTANCE')
+        # NORTH-WEST
+        pie.operator("wm.call_menu_pie", text='Symmetry...', icon='MOD_MIRROR').name = SUBPIE_MT_brush_symmetry.bl_idname
+        # NORTH-EAST
+        pie.operator("wm.call_menu_pie", text='Options...', icon='PREFERENCES').name = SUBPIE_MT_weight_paint_options.bl_idname
+        # SOUTH-WEST — eyedropper-style sample of weight under cursor
+        pie.operator("paint.weight_sample", text='Sample Weight', icon='EYEDROPPER')
+        # SOUTH-EAST — smooth weights on the active vertex group
+        pie.operator("object.vertex_group_smooth", text='Smooth Weights', icon='MOD_SMOOTH')
 
 
 registry = [
@@ -449,6 +667,9 @@ registry = [
     SUBPIE_MT_sculpt_automasking,
     SUBPIE_MT_texture_paint_blend,
     SUBPIE_MT_texture_paint_options,
+    SUBPIE_MT_weight_paint_options,
+    SUBPIE_MT_brush_mapping,
+    SUBPIE_MT_vertex_paint_options,
     VIEW3D_PIE_MT_pivots,
 ]
 
