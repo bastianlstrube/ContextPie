@@ -53,7 +53,7 @@ class SUBPIE_MT_nodeSelect(Menu):
 
 class CPIE_MT_mode_node(Menu):
     bl_idname = "CPIE_MT_mode_node"
-    bl_label = "Node Navigation"
+    bl_label = "Mode Pie: Node Editor"
 
     def draw(self, context):
         layout = self.layout

@@ -35,7 +35,7 @@ class SUBPIE_MT_gp_select(Menu):
 
 class CPIE_MT_mode_gp_paint(Menu):
     bl_idname = "CPIE_MT_mode_gp_paint"
-    bl_label = "Grease Pencil Draw Options"
+    bl_label = "Mode Pie: Grease Pencil Draw"
 
     def draw(self, context):
         layout = self.layout
@@ -79,7 +79,7 @@ class CPIE_MT_mode_gp_paint(Menu):
 
 class CPIE_MT_mode_gp_sculpt(Menu):
     bl_idname = "CPIE_MT_mode_gp_sculpt"
-    bl_label = "Grease Pencil Sculpt Options"
+    bl_label = "Mode Pie: Grease Pencil Sculpt"
 
     def draw(self, context):
         layout = self.layout
@@ -127,7 +127,7 @@ class CPIE_MT_mode_gp_sculpt(Menu):
 
 class CPIE_MT_mode_gp_vertexpaint(Menu):
     bl_idname = "CPIE_MT_mode_gp_vertexpaint"
-    bl_label = "Grease Pencil Vertex Paint Options"
+    bl_label = "Mode Pie: Grease Pencil Vertex Paint"
 
     def draw(self, context):
         layout = self.layout
@@ -179,7 +179,7 @@ class CPIE_MT_mode_gp_vertexpaint(Menu):
 
 class CPIE_MT_mode_gp_weightpaint(Menu):
     bl_idname = "CPIE_MT_mode_gp_weightpaint"
-    bl_label = "Grease Pencil Weight Paint Options"
+    bl_label = "Mode Pie: Grease Pencil Weight Paint"
 
     def draw(self, context):
         layout = self.layout
@@ -217,7 +217,7 @@ class CPIE_MT_mode_gp_weightpaint(Menu):
 
 class CPIE_MT_mode_gp_edit(Menu):
     bl_idname = "CPIE_MT_mode_gp_edit"
-    bl_label = "Grease Pencil Edit Options"
+    bl_label = "Mode Pie: Grease Pencil Edit"
 
     def draw(self, context):
         layout = self.layout
@@ -261,30 +261,19 @@ registry = [
 
 def register():
     default_keymaps = bpy.context.window_manager.keyconfigs.default.keymaps
-    
-    keymap_bindings = (
+    for menu, keymap_name in (
         (CPIE_MT_mode_gp_paint, "Grease Pencil Paint Mode"),
         (CPIE_MT_mode_gp_paint, "Grease Pencil Draw Mode"),
-        (CPIE_MT_mode_gp_paint, "Grease Pencil Stroke Paint Mode"),
         (CPIE_MT_mode_gp_sculpt, "Grease Pencil Sculpt Mode"),
-        (CPIE_MT_mode_gp_sculpt, "Grease Pencil Stroke Sculpt Mode"),
         (CPIE_MT_mode_gp_vertexpaint, "Grease Pencil Vertex Paint Mode"),
-        (CPIE_MT_mode_gp_vertexpaint, "Grease Pencil Stroke Vertex Mode"),
         (CPIE_MT_mode_gp_weightpaint, "Grease Pencil Weight Paint Mode"),
-        (CPIE_MT_mode_gp_weightpaint, "Grease Pencil Stroke Weight Mode"),
         (CPIE_MT_mode_gp_edit, "Grease Pencil Edit Mode"),
-        (CPIE_MT_mode_gp_edit, "Grease Pencil Stroke Edit Mode"),
-    )
-    
-    for menu, keymap_name in keymap_bindings:
+    ):
         if keymap_name not in default_keymaps:
             continue
-        try:
-            WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
-                pie_name=menu.bl_idname,
-                hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
-                keymap_name=keymap_name,
-                on_drag=True,
-            )
-        except Exception as e:
-            print(f"Failed to register hotkey for {keymap_name}: {e}")
+        WM_OT_call_menu_pie_drag_only_cpie.register_drag_hotkey(
+            pie_name=menu.bl_idname,
+            hotkey_kwargs={'type': "RIGHTMOUSE", 'value': "PRESS", 'shift': False},
+            keymap_name=keymap_name,
+            on_drag=True,
+        )

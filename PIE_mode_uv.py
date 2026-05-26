@@ -69,7 +69,7 @@ class SUBPIE_MT_uvTools(Menu):
 
 class CPIE_MT_mode_uv(Menu):
     bl_idname = "CPIE_MT_mode_uv"
-    bl_label = "UV Mode Selection"
+    bl_label = "Mode Pie: UV Editor"
 
     def draw(self, context):
         layout = self.layout

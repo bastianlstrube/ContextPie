@@ -344,7 +344,7 @@ def draw_brush_properties(box, context, brush, capabilities):
 
 class CPIE_MT_mode_sculpt(Menu):
     bl_idname = "CPIE_MT_mode_sculpt"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Sculpt"
 
     def draw(self, context):
         layout = self.layout
@@ -386,7 +386,7 @@ class CPIE_MT_mode_sculpt(Menu):
 
 class CPIE_MT_mode_vertexpaint(Menu):
     bl_idname = "CPIE_MT_mode_vertexpaint"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Vertex Paint"
 
     def draw(self, context):
         layout = self.layout
@@ -437,7 +437,7 @@ class CPIE_MT_mode_vertexpaint(Menu):
 
 class CPIE_MT_mode_texpaint(Menu):
     bl_idname = "CPIE_MT_mode_texpaint"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Texture Paint"
 
     def draw(self, context):
         layout = self.layout
@@ -489,7 +489,7 @@ class CPIE_MT_mode_texpaint(Menu):
 
 class CPIE_MT_mode_weightpaint(Menu):
     bl_idname = "CPIE_MT_mode_weightpaint"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Weight Paint"
 
     def draw(self, context):
         layout = self.layout

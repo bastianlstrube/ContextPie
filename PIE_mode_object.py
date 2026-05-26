@@ -21,7 +21,7 @@ class SUBPIE_MT_objectSelect(Menu):
 
 class CPIE_MT_mode_object(Menu):
     bl_idname = "CPIE_MT_mode_object"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Object"
 
     def draw(self, context):
         layout = self.layout
@@ -78,7 +78,7 @@ class CPIE_MT_mode_object(Menu):
 
 class CPIE_MT_mode_lattice(Menu):
     bl_idname = "CPIE_MT_mode_lattice"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Lattice"
 
     def draw(self, context):
         layout = self.layout

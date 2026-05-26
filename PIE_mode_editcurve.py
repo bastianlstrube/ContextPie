@@ -62,7 +62,7 @@ class SUBPIE_MT_curveTypeHandles(Menu):
 
 class CPIE_MT_mode_editcurve(Menu):
     bl_idname = "CPIE_MT_mode_editcurve"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Edit Curve"
 
     def draw(self, context):
         layout = self.layout

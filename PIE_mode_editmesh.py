@@ -176,7 +176,7 @@ class SUBPIE_MT_tool_options(Menu):
 
 class CPIE_MT_mode_editmesh(Menu):
     bl_idname = "CPIE_MT_mode_editmesh"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Edit Mesh"
 
     def draw(self, context):
         layout = self.layout

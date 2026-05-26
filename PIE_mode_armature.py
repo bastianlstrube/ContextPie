@@ -32,7 +32,7 @@ class SUBPIE_MT_poseSelect(Menu):
 
 class CPIE_MT_mode_armature(Menu):
     bl_idname = "CPIE_MT_mode_armature"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Armature"
 
     def draw(self, context):
         layout = self.layout
@@ -67,7 +67,7 @@ class CPIE_MT_mode_armature(Menu):
 
 class CPIE_MT_mode_pose(Menu):
     bl_idname = "CPIE_MT_mode_pose"
-    bl_label = "Mode Selection"
+    bl_label = "Mode Pie: Pose"
 
     def draw(self, context):
         layout = self.layout
