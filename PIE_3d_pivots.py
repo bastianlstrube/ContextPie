@@ -172,27 +172,37 @@ class SUBPIE_MT_brush_stroke(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
-        _, brush = _brush_path(context)
+        ts_path, brush = _brush_path(context)
         if brush is None:
             return
 
-        # Cluster around EAST (parent slot)
-        # WEST
-        pie.separator()
-        # EAST
+        # WEST — Primary default layout stroke method
         pie.prop_enum(brush, "stroke_method", value='SPACE')
-        # SOUTH
-        pie.prop_enum(brush, "stroke_method", value='AIRBRUSH')
-        # NORTH
-        pie.prop_enum(brush, "stroke_method", value='DOTS')
-        # NORTH-WEST
-        pie.separator()
-        # NORTH-EAST
-        pie.prop_enum(brush, "stroke_method", value='DRAG_DOT')
-        # SOUTH-WEST
-        pie.separator()
-        # SOUTH-EAST
+        
+        # EAST — Modal drag adjustment for Stabilize Radius
+        _radial(pie, "Stabilize Radius",
+                primary=f'{ts_path}.brush.smooth_stroke_radius',
+                image_id=f'{ts_path}.brush', icon='BRUSH_DATA')
+        
+        # SOUTH — Anchored stroke method fallback
         pie.prop_enum(brush, "stroke_method", value='ANCHORED')
+        
+        # NORTH — Dots stroke method fallback
+        pie.prop_enum(brush, "stroke_method", value='DOTS')
+        
+        # NORTH-WEST — Drag Dot stroke method fallback
+        pie.prop_enum(brush, "stroke_method", value='DRAG_DOT')
+        
+        # NORTH-EAST — Stabilize Stroke active state switch
+        pie.prop(brush, "use_smooth_stroke", text="Stabilize Stroke", toggle=True)
+        
+        # SOUTH-WEST — Airbrush stroke method fallback
+        pie.prop_enum(brush, "stroke_method", value='AIRBRUSH')
+        
+        # SOUTH-EAST — Modal drag adjustment for Stabilize Factor
+        _radial(pie, "Stabilize Factor",
+                primary=f'{ts_path}.brush.smooth_stroke_factor',
+                image_id=f'{ts_path}.brush', icon='DRIVER_DISTANCE')
 
 
 class SUBPIE_MT_brush_symmetry(Menu):
