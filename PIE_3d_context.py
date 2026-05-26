@@ -7,7 +7,7 @@ from bpy.types import Menu
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
 # Import all draw functions at the top of the file for maximum performance
-from .PIE_3d_context_greasepencil import draw_gp_context_pie
+from .PIE_3d_context_greasepencil import draw_paint_gp, draw_sculpt_gp, draw_edit_gp
 from .PIE_3d_context_editmesh import draw_context_editmesh
 from .PIE_3d_context_editcurve import draw_context_editcurve
 from .PIE_3d_context_armature import draw_context_editarmature, draw_context_pose
@@ -19,12 +19,6 @@ from .PIE_3d_context_paintsculpt import (
     create_icons,
     release_icons
 )
-
-_GP_MODES = frozenset({
-    'PAINT_GREASE_PENCIL', 'PAINT_GPENCIL',
-    'SCULPT_GREASE_PENCIL', 'SCULPT_GPENCIL',
-    'EDIT_GREASE_PENCIL', 'EDIT_GPENCIL',
-})
 
 ###-----------------------------------------------------------------------------###
 ###                          MAIN CONTEXT PIE MENU                              ###
@@ -40,8 +34,12 @@ class VIEW3D_PIE_MT_context(Menu):
         pie = layout.menu_pie()
         mode = context.mode
 
-        if mode in _GP_MODES:
-            draw_gp_context_pie(pie, context)
+        if mode in {'PAINT_GREASE_PENCIL', 'PAINT_GPENCIL'}:
+            draw_paint_gp(pie, context)
+        elif mode in {'SCULPT_GREASE_PENCIL', 'SCULPT_GPENCIL'}:
+            draw_sculpt_gp(pie, context)
+        elif mode in {'EDIT_GREASE_PENCIL', 'EDIT_GPENCIL'}:
+            draw_edit_gp(pie, context)
         elif mode == 'EDIT_MESH':
             draw_context_editmesh(pie, context)
         elif mode == 'EDIT_CURVE':

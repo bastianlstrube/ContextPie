@@ -61,33 +61,6 @@ class SUBPIE_MT_gp_edit_delete(Menu):
         pie.separator()
 
 
-class VIEW3D_PIE_MT_gp_context(Menu):
-    bl_idname = "PIE_MT_gp_context_pie"
-    bl_label = "Grease Pencil Context Pie"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-        draw_gp_context_pie(pie, context)
-
-
-###-----------------------------------------------------------------------------###
-###          MODULE-LEVEL DRAW FUNCTIONS — called from main context pie         ###
-###-----------------------------------------------------------------------------###
-
-def draw_gp_context_pie(pie, context):
-    mode_actions = {
-        'PAINT_GREASE_PENCIL': draw_paint_gp,
-        'PAINT_GPENCIL': draw_paint_gp,
-        'SCULPT_GREASE_PENCIL': draw_sculpt_gp,
-        'SCULPT_GPENCIL': draw_sculpt_gp,
-        'EDIT_GREASE_PENCIL': draw_edit_gp,
-        'EDIT_GPENCIL': draw_edit_gp,
-    }
-    if context.mode in mode_actions:
-        mode_actions[context.mode](pie, context)
-
 
 def draw_paint_gp(pie, context):
     pie.scale_y = 1.2
@@ -222,5 +195,4 @@ def draw_gp_brush_op(layout, brush_name: str):
 registry = [
     SUBPIE_MT_gp_paint_brush_select_eraser,
     SUBPIE_MT_gp_edit_delete,
-    VIEW3D_PIE_MT_gp_context,
 ]
