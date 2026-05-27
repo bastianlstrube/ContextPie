@@ -11,7 +11,7 @@ from bpy.types import Menu
 ###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_parent(Menu):
-    bl_label = "Parent"
+    bl_label = "Parent/Link"
 
     def draw(self, context):
         layout = self.layout
@@ -25,11 +25,11 @@ class SUBPIE_MT_parent(Menu):
         # SOUTH
         pie.operator('object.make_links_data', text='Link Material').type = 'MATERIAL'
         # NORTH
-        pie.separator()
+        pie.operator("object.parent_set_advanced")
         # NORTH-WEST
-        pie.operator("object.parent_set")
+        pie.operator("object.parent_set_simple")
         # NORTH-EAST
-        pie.operator("object.parent_clear")
+        pie.operator("object.parent_clear_py").keep_transform = True
         # SOUTH-WEST
         pie.operator('object.make_links_data', text='Link Animation Data').type = 'ANIMATION'
         # SOUTH-EAST

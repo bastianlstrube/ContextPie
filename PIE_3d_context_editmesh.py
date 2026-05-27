@@ -158,9 +158,9 @@ class SUBPIE_MT_divide(Menu):
             # S
             pie.operator("mesh.rip_move")
             # N
-            pie.operator("mesh.mark_seam", text='Mark Seam').clear = False
-            # NW
             pie.operator("mesh.mark_sharp", text="Mark Sharp").clear = False
+            # NW
+            pie.operator("mesh.mark_seam", text='Mark Seam').clear = False
             # NE
             pie.operator("mesh.bevel", text='Bevel').affect = 'EDGES'
             # SW
@@ -216,18 +216,18 @@ class SUBPIE_MT_delete_vertex(Menu):
         pie = layout.menu_pie()
 
         # WEST
-        pie.operator("mesh.dissolve_verts", text="Dissolve Split Faces", icon='MOD_BEVEL').use_face_split = True
+        pie.operator("mesh.delete", text="Delete Vertices", icon='VERTEXSEL').type = 'VERT'
         # EAST
         pie.separator()
         # SOUTH
-        pie.operator("mesh.dissolve_verts", text="Dissolve Vertices", icon='SNAP_VERTEX').use_face_split = False
+        pie.operator("mesh.dissolve_verts", text="Dissolve Split Faces", icon='MOD_BEVEL').use_face_split = True
         # NORTH
         pie.separator()
         # NORTH-WEST / NORTH-EAST
         pie.separator()
         pie.separator()
         # SOUTH-WEST
-        pie.operator("mesh.delete", text="Delete Vertices", icon='VERTEXSEL').type = 'VERT'
+        pie.operator("mesh.dissolve_verts", text="Dissolve Vertices", icon='SNAP_VERTEX').use_face_split = False
         # SOUTH-EAST
         pie.separator()
 
@@ -241,19 +241,19 @@ class SUBPIE_MT_delete_edge(Menu):
         pie = layout.menu_pie()
 
         # WEST
-        pie.operator("mesh.dissolve_edges", text="Dissolve Edges", icon='SNAP_EDGE').use_verts = True
+        pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
         # EAST
         pie.operator("mesh.dissolve_limited", text="Limited Dissolve", icon='STICKY_UVS_LOC')
         # SOUTH
         pie.operator("mesh.delete_edgeloop", text="Delete Edge Loops", icon='NONE')
         # NORTH
-        pie.operator("mesh.mark_seam", text='Clear Seam').clear = True
+        pie.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
         # NORTH-WEST
         pie.operator("mesh.dissolve_edges", text="Dissolve Keep Vert", icon='MOD_CAST').use_verts = False
         # NORTH-EAST
-        pie.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
+        pie.operator("mesh.mark_seam", text='Clear Seam').clear = True
         # SOUTH-WEST
-        pie.operator("mesh.delete", text="Delete Edges", icon='EDGESEL').type = 'EDGE'
+        pie.operator("mesh.dissolve_edges", text="Dissolve Edges", icon='SNAP_EDGE').use_verts = True
         # SOUTH-EAST
         pie.separator()
 
