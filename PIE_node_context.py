@@ -811,24 +811,6 @@ class NODE_PIE_MT_context(Menu):
         # SOUTH-EAST - dynamic mode/operation picker for this node type
         pie.operator("wm.call_menu_pie", text="Change Mode...", icon='DRIVER_TRANSFORM').name = "SUBPIE_MT_node_dynamic_mode"
 
-        # Extras dropdown
-        pie.separator()
-        pie.separator()
-        dropdown = pie.column()
-        gap = dropdown.column()
-        gap.separator()
-        gap.scale_y = 8
-        dropdown_menu = dropdown.box().column()
-        dropdown_menu.scale_y = 1
-        dropdown_menu.operator("node.cpie_cycle_mode", text="Cycle Mode", icon='FILE_REFRESH')
-        if nw_loaded:
-            dropdown_menu.operator("node.nw_reset_nodes", text="Reset Node")
-            dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
-            dropdown_menu.operator("node.nw_copy_label", text="Copy Label from Active").option = 'FROM_ACTIVE'
-            dropdown_menu.operator("node.nw_clear_label", text="Clear Label").option = True
-        dropdown_menu.operator("node.hide_toggle", text="Toggle Hidden")
-        dropdown_menu.operator("node.options_toggle", text="Toggle Options")
-
     def draw_multi_nodes(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
@@ -857,22 +839,6 @@ class NODE_PIE_MT_context(Menu):
         pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
         # SOUTH-EAST - dynamic mode/operation picker for this node type
         pie.operator("wm.call_menu_pie", text="Change Mode...", icon='DRIVER_TRANSFORM').name = "SUBPIE_MT_node_dynamic_mode"
-
-        # Extras dropdown
-        pie.separator()
-        pie.separator()
-        dropdown = pie.column()
-        gap = dropdown.column()
-        gap.separator()
-        gap.scale_y = 8
-        dropdown_menu = dropdown.box().column()
-        dropdown_menu.scale_y = 1
-        dropdown_menu.operator("node.cpie_cycle_mode", text="Cycle Mode", icon='FILE_REFRESH')
-        if nw_loaded:
-            dropdown_menu.operator("node.nw_copy_settings", text="Copy Settings from Active")
-            dropdown_menu.operator("node.nw_center_nodes", text="Center Nodes")
-            dropdown_menu.operator("node.nw_reload_images", text="Reload Images")
-            dropdown_menu.operator("node.nw_bg_reset", text="Reset Backdrop")
 
 
 # ==============================================================================
