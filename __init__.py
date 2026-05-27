@@ -22,7 +22,7 @@ _delayed_loaded = False
 module_names = (
     "op_object_utils",
     "op_pie_wrappers",
-    "op_node_mode",
+    "op_node_utils",
     "hotkeys",
     "blender_studio_utils",
     "prefs",
