@@ -283,31 +283,32 @@ def draw_context_object(pie, context):
 
 
 def _draw_object_with_selection(pie, context, obj, sel):
-    # WEST & EAST (type-dependent)
-    if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
-        pie.operator("wm.call_menu_pie", text='Shade...').name = "SUBPIE_MT_shadeObject"
-        pie.operator("wm.call_menu_pie", text='Copy...').name = "SUBPIE_MT_object_copy"
-    elif obj.type == 'ARMATURE':
-        pie.prop(obj.data, "pose_position", expand=True)
-    elif obj.type == 'CAMERA':
-        op = pie.operator("wm.context_modal_mouse", text='Adjust Focal Length')
-        op.data_path_iter = "selected_editable_objects"
-        op.data_path_item = "data.lens"
-        op.header_text = "Camera Focal Length: %.1fmm"
-        op.input_scale = 0.1
-        op = pie.operator("wm.context_modal_mouse", text='Adjust Focus Distance')
-        op.data_path_iter = "selected_editable_objects"
-        op.data_path_item = "data.dof.focus_distance"
-        op.header_text = "Focus Distance: %.3f"
-        op.input_scale = 0.02
+    # === WEST & EAST (Slots 1 & 2) ===
+    if obj.type == 'ARMATURE':
+        pie.prop(obj.data, "pose_position", expand=True) # Expanded 2-item enum ('POSE' / 'REST')
     else:
-        pie.separator()
-        pie.separator()
+        # 1. WEST
+        if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
+            pie.operator("wm.call_menu_pie", text='Shade...').name = "SUBPIE_MT_shadeObject"
+        elif obj.type == 'CAMERA':
+            op = pie.operator("wm.context_modal_mouse", text='Adjust Focal Length')
+            op.data_path_iter = "selected_editable_objects"
+            op.data_path_item = "data.lens"
+            op.header_text = "Camera Focal Length: %.1fmm"
+            op.input_scale = 0.1
+        else:
+            pie.separator()
 
-    # SOUTH
+        # 2. EAST
+        if len(sel) > 1:
+            pie.operator("wm.call_menu_pie", text='Copy...').name = "SUBPIE_MT_object_copy"
+        else:
+            pie.operator("view3d.snap_selected_to_cursor", text='Loc+Orient to Cursor').use_rotation = True
+
+    # === SOUTH (Slot 3) ===
     pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
 
-    # NORTH
+    # === NORTH (Slot 4) ===
     if len(sel) > 1:
         if obj.type in {'MESH', 'CURVE'}:
             pie.operator("wm.call_menu_pie", text='Join/Bool...').name = "SUBPIE_MT_joinMeshes"
@@ -320,15 +321,26 @@ def _draw_object_with_selection(pie, context, obj, sel):
     else:
         pie.separator()
 
-    # NORTH-WEST
+    # === NORTH-WEST (Slot 5) ===
     pie.operator("wm.call_menu_pie", text='Parent/Link...').name = "SUBPIE_MT_parent"
-    # NORTH-EAST
+    
+    # === NORTH-EAST (Slot 6) ===
     pie.operator("wm.call_menu_pie", text='Convert...').name = "SUBPIE_MT_convert"
-    # SOUTH-WEST
+    
+    # === SOUTH-WEST (Slot 7) ===
     pie.operator("object.delete")
-    # SOUTH-EAST
-    pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
 
+    # === SOUTH-EAST (Slot 8) ===
+    if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
+        pie.operator("mesh.separate", text='Separate Loose').type = 'LOOSE'
+    elif obj.type == 'CAMERA':
+        op = pie.operator("wm.context_modal_mouse", text='Adjust Focus Distance')
+        op.data_path_iter = "selected_editable_objects"
+        op.data_path_item = "data.dof.focus_distance"
+        op.header_text = "Focus Distance: %.3f"
+        op.input_scale = 0.02
+    else:
+        pie.separator()
 
 def _draw_object_add_menu(pie, context):
     # WEST
