@@ -3,7 +3,18 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import bpy
-from bpy.types import Menu
+from bpy.types import Menu, Operator
+
+
+class CPIE_OT_snap_to_cursor_oriented(Operator):
+    bl_idname = "cpie.snap_to_cursor_oriented"
+    bl_label = "SnapOrient to Cursor"
+    bl_description = "Snap selected to cursor, applying cursor orientation"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        bpy.ops.view3d.snap_selected_to_cursor(use_rotation=True)
+        return {'FINISHED'}
 
 
 ###-----------------------------------------------------------------------------###
@@ -252,6 +263,7 @@ class SUBPIE_MT_add_forcefield(Menu):
 ###-----------------------------------------------------------------------------###
 
 registry = [
+    CPIE_OT_snap_to_cursor_oriented,
     SUBPIE_MT_parent,
     SUBPIE_MT_convert,
     SUBPIE_MT_joinMeshes,
@@ -303,7 +315,7 @@ def _draw_object_with_selection(pie, context, obj, sel):
         if len(sel) > 1:
             pie.operator("wm.call_menu_pie", text='Copy...').name = "SUBPIE_MT_object_copy"
         else:
-            pie.operator("view3d.snap_selected_to_cursor", text='Loc+Orient to Cursor').use_rotation = True
+            pie.operator("cpie.snap_to_cursor_oriented")
 
     # === SOUTH (Slot 3) ===
     pie.operator("wm.call_menu_pie", text='Apply...').name = "SUBPIE_MT_applyTransform"
@@ -323,10 +335,10 @@ def _draw_object_with_selection(pie, context, obj, sel):
 
     # === NORTH-WEST (Slot 5) ===
     pie.operator("wm.call_menu_pie", text='Parent/Link...').name = "SUBPIE_MT_parent"
-    
+
     # === NORTH-EAST (Slot 6) ===
     pie.operator("wm.call_menu_pie", text='Convert...').name = "SUBPIE_MT_convert"
-    
+
     # === SOUTH-WEST (Slot 7) ===
     pie.operator("object.delete")
 
