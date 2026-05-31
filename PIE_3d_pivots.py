@@ -57,6 +57,45 @@ def _radial(layout, text, primary, *, secondary=None, use_secondary=None,
 #                               OPERATORS
 # ----------------------------------------------------------------------------
 
+class CPIE_OT_snap_orient_cursor_to_selected(bpy.types.Operator):
+    """Snap cursor to selected and align its orientation to the selection"""
+    bl_idname = "cpie.snap_orient_cursor_to_selected"
+    bl_label = "SnapOrient Cursor to Selected"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.type == 'VIEW_3D'
+
+    def execute(self, context):
+        bpy.ops.view3d.snap_cursor_to_selected()
+
+        cursor = context.scene.cursor
+        cursor_loc = cursor.location.copy()
+        obj = context.active_object
+        mat_3x3 = Matrix.Identity(3)
+
+        if context.mode in {'EDIT_MESH', 'EDIT_CURVE', 'EDIT_ARMATURE', 'EDIT_LATTICE',
+                            'EDIT_GREASE_PENCIL', 'EDIT_GPENCIL'}:
+            try:
+                slot = context.scene.transform_orientation_slots[0]
+                old_type = slot.type
+                bpy.ops.transform.create_orientation(name="_TEMP_SO", use=True, overwrite=True)
+                mat_3x3 = slot.custom_orientation.matrix.copy()
+                bpy.ops.transform.delete_orientation()
+                slot.type = old_type
+            except Exception:
+                if obj:
+                    mat_3x3 = obj.matrix_world.to_3x3().normalized()
+        elif obj:
+            mat_3x3 = obj.matrix_world.to_3x3().normalized()
+
+        new_mat = mat_3x3.to_4x4()
+        new_mat.translation = cursor_loc
+        cursor.matrix = new_mat
+        return {'FINISHED'}
+
+
 class CPIE_OT_copy_gizmo_to_cursor(bpy.types.Operator):
     """Copy the current transform gizmo orientation to the 3D Cursor"""
     bl_idname = "view3d.copy_gizmo_to_cursor"
@@ -127,6 +166,38 @@ class CPIE_OT_copy_gizmo_to_cursor(bpy.types.Operator):
         
         self.report({'INFO'}, f"Copied '{orient_type}' orientation to 3D Cursor.")
         return {'FINISHED'}
+
+
+# ----------------------------------------------------------------------------
+# Sub pies — cursor orientation
+# ----------------------------------------------------------------------------
+
+class SUBPIE_MT_orient_cursor(Menu):
+    bl_idname = "SUBPIE_MT_orient_cursor"
+    bl_label = "Orient Cursor"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # Opened from NW: primary at NW, cluster N/NE/W/SW.
+        # WEST
+        pie.operator("view3d.snap_cursor_to_selected", text='Snap Cursor to Selected', icon='RESTRICT_SELECT_OFF')
+        # EAST
+        pie.separator()
+        # SOUTH
+        pie.separator()
+        # NORTH
+        pie.operator("view3d.copy_gizmo_to_cursor", text='Orient Cursor to Gizmo', icon='ORIENTATION_CURSOR')
+        # NORTH-WEST
+        pie.operator("cpie.snap_orient_cursor_to_selected", icon='ORIENTATION_CURSOR')
+        # NORTH-EAST
+        pie.operator("view3d.snap_cursor_to_active", text='Snap Cursor to Active', icon='PIVOT_ACTIVE')
+        # SOUTH-WEST
+        pie.operator("view3d.snap_cursor_to_center", text='Cursor to World Origin', icon='WORLD')
+        # SOUTH-EAST
+        pie.separator()
 
 
 # ----------------------------------------------------------------------------
@@ -594,7 +665,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
         # NORTH
         pie.operator("wm.call_menu_pie", text='Proportional...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_proportional_edt"
         # NORTH-WEST
-        pie.operator("view3d.copy_gizmo_to_cursor", text='Orient Cursor to Gizmo', icon='ORIENTATION_CURSOR')
+        pie.operator("wm.call_menu_pie", text='Orient Cursor...', icon='ORIENTATION_CURSOR').name = SUBPIE_MT_orient_cursor.bl_idname
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Set Origin...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_set_origin"
         # SOUTH-WEST
@@ -612,7 +683,7 @@ class VIEW3D_PIE_MT_pivots(Menu):
         # NORTH
         pie.operator("wm.call_menu_pie", text='Proportional...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_proportional_obj"
         # NORTH-WEST
-        pie.operator("view3d.copy_gizmo_to_cursor", text='Orient Cursor to Gizmo', icon='ORIENTATION_CURSOR')
+        pie.operator("wm.call_menu_pie", text='Orient Cursor...', icon='ORIENTATION_CURSOR').name = SUBPIE_MT_orient_cursor.bl_idname
         # NORTH-EAST
         pie.operator("wm.call_menu_pie", text='Set Origin...', icon='RIGHTARROW_THIN').name = "SUBPIE_MT_set_origin"
         # SOUTH-WEST
@@ -720,7 +791,9 @@ class VIEW3D_PIE_MT_pivots(Menu):
 
 
 registry = [
+    CPIE_OT_snap_orient_cursor_to_selected,
     CPIE_OT_copy_gizmo_to_cursor,
+    SUBPIE_MT_orient_cursor,
     SUBPIE_MT_brush_falloff,
     SUBPIE_MT_brush_stroke,
     SUBPIE_MT_brush_symmetry,
