@@ -24,31 +24,26 @@ class CPIE_OT_interactive_automerge_threshold(bpy.types.Operator):
         context.area.tag_redraw()
 
         if event.type == 'MOUSEMOVE':
-            # Calculate how far the mouse moved horizontally
             delta = event.mouse_x - self.init_mouse_x
-            
-            # Hold SHIFT for ultra-fine adjustments
             sensitivity = 0.00005 if event.shift else 0.0005
             
             # Calculate and apply new threshold (clamped to 0 minimum)
             new_threshold = self.init_threshold + (delta * sensitivity)
             context.scene.tool_settings.double_threshold = max(0.0, new_threshold)
             
-            # Print beautiful live feedback to the Blender status bar at the bottom
-            context.workspace.status_text_set(
+            # Displays live feedback clearly in the 3D Viewport Header
+            context.area.header_text_set(
                 f"AutoMerge Threshold: {context.scene.tool_settings.double_threshold:.4f}m  |  "
-                f"[L-Click] Confirm  |  [R-Click/Esc] Cancel  |  [Hold Shift] Fine-tune"
+                f"[Left-Click] Confirm  |  [Right-Click/Esc] Cancel"
             )
 
         elif event.type in {'LEFTMOUSE', 'RET', 'NUMPAD_ENTER'}:
-            # Confirm and clear status bar text
-            context.workspace.status_text_set(None)
+            context.area.header_text_set(None) # Clear header
             return {'FINISHED'}
 
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
-            # Revert to original value and clear status bar text
             context.scene.tool_settings.double_threshold = self.init_threshold
-            context.workspace.status_text_set(None)
+            context.area.header_text_set(None) # Clear header
             return {'CANCELLED'}
 
         return {'RUNNING_MODAL'}
