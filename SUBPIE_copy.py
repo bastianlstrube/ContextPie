@@ -507,14 +507,12 @@ def obIdx(ob, active, context):
 
 
 def obMod(ob, active, context):
-    for modifier in ob.modifiers:
-        # remove existing before adding new:
-        ob.modifiers.remove(modifier)
-    for old_modifier in active.modifiers.values():
-        new_modifier = ob.modifiers.new(name=old_modifier.name,
-                                        type=old_modifier.type)
-        generic_copy(old_modifier, new_modifier)
-    return('INFO', "Modifiers copied")
+    # Copy each modifier one by one using an explicit context override.
+    for mod in active.modifiers:
+        with context.temp_override(active_object=active, object=active, selected_objects=[active, ob]):
+            bpy.ops.object.modifier_copy_to_selected(modifier=mod.name)
+            
+    return ('INFO', "Modifiers appended")
 
 
 def obCollections(ob, active, context):
@@ -687,16 +685,16 @@ class CPIE_OT_object_copy_selected_modifiers(Operator):
         active = context.active_object
         selected = context.selected_objects[:]
         selected.remove(active)
+        
         for obj in selected:
             for index, flag in enumerate(self.selection):
-                if flag:
-                    old_modifier = active.modifiers[index]
-                    new_modifier = obj.modifiers.new(
-                        type=active.modifiers[index].type,
-                        name=active.modifiers[index].name
-                    )
-                    generic_copy(old_modifier, new_modifier)
-        return{'FINISHED'}
+                if flag and index < len(active.modifiers):
+                    mod = active.modifiers[index]
+                    # Direct override to append the specific checked modifier
+                    with context.temp_override(active_object=active, object=active, selected_objects=[active, obj]):
+                        bpy.ops.object.modifier_copy_to_selected(modifier=mod.name)
+                        
+        return {'FINISHED'}
 
 
 class CPIE_OT_object_copy_selected_custom_props(CopyCustomProperties, Operator):
