@@ -312,7 +312,7 @@ def _draw_vert(pie, context):
     # NORTH-EAST
     pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
     # SOUTH-WEST
-    pie.operator("wm.call_menu_pie", text="Vertices...", icon='TRASH').name = "SUBPIE_MT_delete_vertex"
+    pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_delete_vertex"
     # SOUTH-EAST
     pie.operator("transform.vert_slide", text="Slide Vertex")
 
@@ -330,7 +330,7 @@ def _draw_edge(pie, context):
     # NORTH-EAST
     pie.operator("wm.call_menu_pie", text='Divide/Mark...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
     # SOUTH-WEST
-    pie.operator("wm.call_menu_pie", text="Edges...", icon='TRASH').name = "SUBPIE_MT_delete_edge"
+    pie.operator("wm.call_menu_pie", text="Delete/Clear...", icon='TRASH').name = "SUBPIE_MT_delete_edge"
     # SOUTH-EAST
     pie.operator("transform.edge_slide", text="Slide Edge")
 
@@ -351,7 +351,7 @@ def _draw_face(pie, context):
     # NORTH-EAST
     pie.operator("wm.call_menu_pie", text='Divide/Normals...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
     # SOUTH-WEST
-    pie.operator("wm.call_menu_pie", text="Faces...", icon='TRASH').name = "SUBPIE_MT_delete_face"
+    pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_delete_face"
     # SOUTH-EAST
     pie.operator("transform.shrink_fatten")
 
