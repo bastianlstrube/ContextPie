@@ -129,7 +129,326 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
         tree.nodes.active = new_node
 
         return {'FINISHED'}
-        
+
+
+# ==============================================================================
+# MAGIC MERGE — auto-detect output socket types and route to a typed sub-pie
+# ==============================================================================
+
+# Enum-item caches, populated lazily from node bl_rna so they don't drift.
+# Module-level lists keep string refs alive across the EnumProperty callback.
+_BOOL_OPS_CACHE = []
+_MATH_OPS_CACHE = []
+_VEC_MATH_OPS_CACHE = []
+_MIX_BLEND_CACHE = []
+_GEO_OPS_CACHE = [
+    ('JOIN',       "Join Geometry", "Join all selected geometry into one stream"),
+    ('UNION',      "Union",         "Mesh Boolean union of selected meshes"),
+    ('DIFFERENCE', "Difference",    "Mesh Boolean difference (first minus rest)"),
+    ('INTERSECT',  "Intersect",     "Mesh Boolean intersection of selected meshes"),
+]
+
+
+def _pull_enum(node_cls_name, prop_name):
+    cls = getattr(bpy.types, node_cls_name, None)
+    if cls is None:
+        return []
+    prop = cls.bl_rna.properties.get(prop_name)
+    if prop is None:
+        return []
+    return [(it.identifier, it.name, it.description or "") for it in prop.enum_items]
+
+
+def _bool_op_items(self, context):
+    if not _BOOL_OPS_CACHE:
+        _BOOL_OPS_CACHE.extend(_pull_enum('FunctionNodeBooleanMath', 'operation')
+                               or [('AND', "And", "")])
+    return _BOOL_OPS_CACHE
+
+
+def _math_op_items(self, context):
+    if not _MATH_OPS_CACHE:
+        _MATH_OPS_CACHE.extend(_pull_enum('ShaderNodeMath', 'operation')
+                               or [('ADD', "Add", "")])
+    return _MATH_OPS_CACHE
+
+
+def _vec_math_op_items(self, context):
+    if not _VEC_MATH_OPS_CACHE:
+        _VEC_MATH_OPS_CACHE.extend(_pull_enum('ShaderNodeVectorMath', 'operation')
+                                   or [('ADD', "Add", "")])
+    return _VEC_MATH_OPS_CACHE
+
+
+def _mix_blend_items(self, context):
+    if not _MIX_BLEND_CACHE:
+        _MIX_BLEND_CACHE.extend(_pull_enum('ShaderNodeMix', 'blend_type')
+                                or [('MIX', "Mix", "")])
+    return _MIX_BLEND_CACHE
+
+
+def _geo_op_items(self, context):
+    return _GEO_OPS_CACHE
+
+
+def _merge_poll(context):
+    space = context.space_data
+    return (space.type == 'NODE_EDITOR'
+            and space.node_tree is not None
+            and len(context.selected_nodes) > 0)
+
+
+def _gather_terminal_outputs(selected):
+    """First non-internal, visible output socket per selected node, top-to-bottom."""
+    outs = []
+    for n in sorted(selected, key=lambda n: -n.location.y):
+        for out in n.outputs:
+            if out.hide or not out.enabled:
+                continue
+            if any(link.to_node in selected for link in out.links):
+                continue
+            outs.append(out)
+            break
+    return outs
+
+
+def _position_and_wire(context, new_node):
+    """Place new_node right of selection and link terminal outputs into its inputs.
+    If the node has a multi-input socket, fill any single inputs that precede it
+    first, then dump the rest into the multi-input."""
+    tree = context.space_data.node_tree
+    links = tree.links
+    selected = [n for n in context.selected_nodes if n != new_node]
+    if not selected:
+        return
+
+    avg_y = sum(n.location.y for n in selected) / len(selected)
+    max_x = max(n.location.x + n.width for n in selected)
+    new_node.location = (max_x + 50, avg_y)
+
+    terminal_outs = _gather_terminal_outputs(selected)
+
+    multi_in = next(
+        (inp for inp in new_node.inputs
+         if not inp.hide and inp.enabled and getattr(inp, 'is_multi_input', False)),
+        None,
+    )
+
+    out_iter = iter(terminal_outs)
+    if multi_in is not None:
+        for inp in new_node.inputs:
+            if inp.hide or not inp.enabled or inp == multi_in:
+                if inp == multi_in:
+                    break
+                continue
+            try:
+                out = next(out_iter)
+            except StopIteration:
+                break
+            try: links.new(out, inp)
+            except Exception: pass
+        for out in out_iter:
+            try: links.new(out, multi_in)
+            except Exception: pass
+    else:
+        for inp in new_node.inputs:
+            if inp.hide or not inp.enabled:
+                continue
+            try:
+                out = next(out_iter)
+            except StopIteration:
+                break
+            try: links.new(out, inp)
+            except Exception: pass
+
+    for n in selected:
+        n.select = False
+    new_node.select = True
+    tree.nodes.active = new_node
+
+
+class NODE_OT_cpie_merge_boolean(bpy.types.Operator):
+    """Spawn a Boolean Math node with the chosen operation and wire selected nodes into it"""
+    bl_idname = "node.cpie_merge_boolean"
+    bl_label = "Merge: Boolean Math"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    operation: bpy.props.EnumProperty(name="Operation", items=_bool_op_items)
+
+    @classmethod
+    def poll(cls, context):
+        return _merge_poll(context)
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        new_node = tree.nodes.new(type='FunctionNodeBooleanMath')
+        try: new_node.operation = self.operation
+        except Exception: pass
+        _position_and_wire(context, new_node)
+        return {'FINISHED'}
+
+
+class NODE_OT_cpie_merge_float(bpy.types.Operator):
+    """Spawn a Math node with the chosen operation and wire selected nodes into it"""
+    bl_idname = "node.cpie_merge_float"
+    bl_label = "Merge: Math"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    operation: bpy.props.EnumProperty(name="Operation", items=_math_op_items)
+
+    @classmethod
+    def poll(cls, context):
+        return _merge_poll(context)
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        new_node = tree.nodes.new(type='ShaderNodeMath')
+        try: new_node.operation = self.operation
+        except Exception: pass
+        _position_and_wire(context, new_node)
+        return {'FINISHED'}
+
+
+class NODE_OT_cpie_merge_vector(bpy.types.Operator):
+    """Spawn a Vector Math node with the chosen operation and wire selected nodes into it"""
+    bl_idname = "node.cpie_merge_vector"
+    bl_label = "Merge: Vector Math"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    operation: bpy.props.EnumProperty(name="Operation", items=_vec_math_op_items)
+
+    @classmethod
+    def poll(cls, context):
+        return _merge_poll(context)
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        new_node = tree.nodes.new(type='ShaderNodeVectorMath')
+        try: new_node.operation = self.operation
+        except Exception: pass
+        _position_and_wire(context, new_node)
+        return {'FINISHED'}
+
+
+class NODE_OT_cpie_merge_color(bpy.types.Operator):
+    """Spawn a Mix (Color) node with the chosen blend type and wire selected nodes into it"""
+    bl_idname = "node.cpie_merge_color"
+    bl_label = "Merge: Mix Color"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    blend_type: bpy.props.EnumProperty(name="Blend", items=_mix_blend_items)
+
+    @classmethod
+    def poll(cls, context):
+        return _merge_poll(context)
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        new_node = tree.nodes.new(type='ShaderNodeMix')
+        try: new_node.data_type = 'RGBA'
+        except Exception: pass
+        try: new_node.blend_type = self.blend_type
+        except Exception: pass
+        _position_and_wire(context, new_node)
+        return {'FINISHED'}
+
+
+class NODE_OT_cpie_merge_geometry(bpy.types.Operator):
+    """Spawn a Join Geometry or Mesh Boolean node and wire selected nodes into it"""
+    bl_idname = "node.cpie_merge_geometry"
+    bl_label = "Merge: Geometry"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    operation: bpy.props.EnumProperty(name="Operation", items=_geo_op_items)
+
+    @classmethod
+    def poll(cls, context):
+        return _merge_poll(context)
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        if self.operation == 'JOIN':
+            new_node = tree.nodes.new(type='GeometryNodeJoinGeometry')
+        else:
+            new_node = tree.nodes.new(type='GeometryNodeMeshBoolean')
+            try: new_node.operation = self.operation
+            except Exception: pass
+        _position_and_wire(context, new_node)
+        return {'FINISHED'}
+
+
+class NODE_OT_cpie_magic_merge(bpy.types.Operator):
+    """Detect the output socket types of selected nodes and open the matching merge sub-pie"""
+    bl_idname = "node.cpie_magic_merge"
+    bl_label = "Magic Merge"
+
+    @classmethod
+    def poll(cls, context):
+        return _merge_poll(context)
+
+    def execute(self, context):
+        from collections import Counter
+        selected = context.selected_nodes
+        outs = _gather_terminal_outputs(selected)
+        if not outs:
+            self.report({'WARNING'}, "No terminal output sockets to merge")
+            return {'CANCELLED'}
+
+        # Normalize int → float, treat both as VALUE
+        types = ['VALUE' if o.type == 'INT' else o.type for o in outs]
+        dominant = Counter(types).most_common(1)[0][0]
+
+        routing = {
+            'BOOLEAN':  "SUBPIE_MT_merge_boolean",
+            'VALUE':    "SUBPIE_MT_merge_float",
+            'VECTOR':   "SUBPIE_MT_merge_vector",
+            'RGBA':     "SUBPIE_MT_merge_color",
+            'GEOMETRY': "SUBPIE_MT_merge_geometry",
+        }
+        pie_name = routing.get(dominant)
+        if pie_name is None:
+            self.report({'WARNING'}, f"No merge sub-pie for socket type '{dominant}'")
+            return {'CANCELLED'}
+
+        bpy.ops.wm.call_menu_pie(name=pie_name)
+        return {'FINISHED'}
+
+
+class SUBPIE_MT_merge_boolean(Menu):
+    bl_label = "Merge: Boolean Math"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.cpie_merge_boolean", "operation")
+
+
+class SUBPIE_MT_merge_float(Menu):
+    bl_label = "Merge: Math"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.cpie_merge_float", "operation")
+
+
+class SUBPIE_MT_merge_vector(Menu):
+    bl_label = "Merge: Vector Math"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.cpie_merge_vector", "operation")
+
+
+class SUBPIE_MT_merge_color(Menu):
+    bl_label = "Merge: Mix Color"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.cpie_merge_color", "blend_type")
+
+
+class SUBPIE_MT_merge_geometry(Menu):
+    bl_label = "Merge: Geometry"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.cpie_merge_geometry", "operation")
+
+
 # ==============================================================================
 # 1. GEOMETRY NODES SUB-MENUS
 # ==============================================================================
@@ -561,12 +880,10 @@ class SUBPIE_MT_node_join(Menu):
                 # 1. WEST
                 op = pie.operator("node.nw_merge_nodes", text="Intersect", icon='SELECT_INTERSECT')
                 op.mode = 'INTERSECT'; op.merge_type = 'GEOMETRY'
-                # 2. EAST
-                op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
-                op.mode = 'ADD'; op.merge_type = 'MATH'
-                # 3. SOUTH
-                op = pie.operator("node.nw_merge_nodes", text="Math Multiply")
-                op.mode = 'MULTIPLY'; op.merge_type = 'MATH'
+                # 2. EAST - Boolean Math sub-pie (And / Or / Xor / ...)
+                pie.operator("wm.call_menu_pie", text="Boolean Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_merge_boolean"
+                # 3. SOUTH - Magic Merge: auto-detect socket type, open matching sub-pie
+                pie.operator("node.cpie_magic_merge", text="Magic Merge", icon='SHADERFX')
                 # 4. NORTH
                 op = pie.operator("node.nw_merge_nodes", text="Join Geometry", icon='MESH_DATA')
                 op.mode = 'JOIN'; op.merge_type = 'GEOMETRY'
@@ -582,8 +899,10 @@ class SUBPIE_MT_node_join(Menu):
                 pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR'
             else:
                 pie.operator("node.add_node", text="Intersect", icon='SELECT_INTERSECT').type = 'GeometryNodeMeshBoolean' # 1
-                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath' # 2
-                pie.separator() # 3
+                # 2. EAST - Boolean Math sub-pie
+                pie.operator("wm.call_menu_pie", text="Boolean Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_merge_boolean"
+                # 3. SOUTH - Magic Merge
+                pie.operator("node.cpie_magic_merge", text="Magic Merge", icon='SHADERFX')
                 pie.operator("node.add_node", text="Join Geometry", icon='MESH_DATA').type = 'GeometryNodeJoinGeometry' # 4
                 pie.operator("node.add_node", text="Mesh Boolean", icon='MOD_BOOLEAN').type = 'GeometryNodeMeshBoolean' # 5
                 pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath' # 6
@@ -847,6 +1166,17 @@ class NODE_PIE_MT_context(Menu):
 
 registry = [
     CONTEXTPIE_OT_combine_selected,
+    NODE_OT_cpie_merge_boolean,
+    NODE_OT_cpie_merge_float,
+    NODE_OT_cpie_merge_vector,
+    NODE_OT_cpie_merge_color,
+    NODE_OT_cpie_merge_geometry,
+    NODE_OT_cpie_magic_merge,
+    SUBPIE_MT_merge_boolean,
+    SUBPIE_MT_merge_float,
+    SUBPIE_MT_merge_vector,
+    SUBPIE_MT_merge_color,
+    SUBPIE_MT_merge_geometry,
     SUBPIE_MT_gn_mesh,
     SUBPIE_MT_gn_curve,
     SUBPIE_MT_gn_utilities,
