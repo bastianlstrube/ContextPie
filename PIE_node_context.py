@@ -130,6 +130,108 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
 
         return {'FINISHED'}
 
+###-----------------------------------------------------------------------------###
+###                            LINK OPERATORS                                   ###
+###-----------------------------------------------------------------------------###
+
+class NODE_OT_cpie_link_active_replace_parent(bpy.types.Operator):
+    """Link active node to selected nodes, replacing links that come from the active node's closest upstream ancestor"""
+    bl_idname = "node.cpie_link_active_replace_parent"
+    bl_label = "Intercept Parent Link"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        space = context.space_data
+        return (space.type == 'NODE_EDITOR' 
+                and space.node_tree is not None 
+                and context.active_node is not None 
+                and len(context.selected_nodes) > 1)
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        links = tree.links
+        active_node = context.active_node
+        other_selected = [n for n in context.selected_nodes if n != active_node]
+
+        if not other_selected:
+            return {'CANCELLED'}
+
+        # Step 1: Trace upstream ancestry of the active node using BFS to map distances
+        ancestry = {}  # node -> distance hierarchy steps
+        queue = [(active_node, 0)]
+        visited = {active_node}
+
+        while queue:
+            curr_node, dist = queue.pop(0)
+            for inp in curr_node.inputs:
+                if inp.is_linked and inp.enabled and not inp.hide:
+                    for link in inp.links:
+                        from_node = link.from_node
+                        if from_node not in visited:
+                            visited.add(from_node)
+                            ancestry[from_node] = dist + 1
+                            queue.append((from_node, dist + 1))
+
+        # Helper to find a type-compatible output from active_node
+        def find_compatible_output(target_input):
+            for out in active_node.outputs:
+                if out.enabled and not out.hide and out.type == target_input.type:
+                    return out
+            for out in active_node.outputs:
+                if out.enabled and not out.hide:
+                    return out
+            return None
+
+        # Step 2: Analyze and re-link selected nodes
+        for s in other_selected:
+            replaced = False
+            candidate_links = []
+
+            # Find inputs connected to any upstream ancestor of the active node
+            for inp in s.inputs:
+                if inp.is_linked and inp.enabled and not inp.hide:
+                    for link in inp.links:
+                        if link.from_node in ancestry:
+                            candidate_links.append((link, inp, ancestry[link.from_node]))
+
+            if candidate_links:
+                # Sort by closest parent ancestor (shortest step distance)
+                candidate_links.sort(key=lambda item: item[2])
+                
+                # Intercept the closest parent's link
+                link_to_replace, target_input, _ = candidate_links[0]
+                out_socket = find_compatible_output(target_input)
+                
+                if out_socket:
+                    links.remove(link_to_replace)
+                    links.new(out_socket, target_input)
+                    replaced = True
+
+            # Fallback: If no common parent chain exists, link active directly to an available input
+            if not replaced:
+                target_input = None
+                first_out = next((out for out in active_node.outputs if out.enabled and not out.hide), None)
+                if first_out:
+                    for inp in s.inputs:
+                        if inp.enabled and not inp.hide and not inp.is_linked and inp.type == first_out.type:
+                            target_input = inp
+                            break
+                    if not target_input:
+                        for inp in s.inputs:
+                            if inp.enabled and not inp.hide and not inp.is_linked:
+                                target_input = inp
+                                break
+                    if not target_input and s.inputs:
+                        target_input = next((inp for inp in s.inputs if inp.enabled and not inp.hide), None)
+                    
+                    if target_input:
+                        out_socket = find_compatible_output(target_input)
+                        if out_socket:
+                            links.new(out_socket, target_input)
+
+        return {'FINISHED'}
+
 
 # ==============================================================================
 # MAGIC MERGE — auto-detect output socket types and route to a typed sub-pie
@@ -198,24 +300,36 @@ def _merge_poll(context):
             and len(context.selected_nodes) > 0)
 
 
-def _gather_terminal_outputs(selected):
-    """First non-internal, visible output socket per selected node, top-to-bottom."""
+def _gather_terminal_outputs(selected, preferred_type=None):
+    """Gathers the best terminal output socket per selected node, top-to-bottom.
+    If a preferred_type is specified, it attempts to select a socket matching that type."""
     outs = []
     for n in sorted(selected, key=lambda n: -n.location.y):
+        node_terminals = []
         for out in n.outputs:
             if out.hide or not out.enabled:
                 continue
             if any(link.to_node in selected for link in out.links):
                 continue
-            outs.append(out)
-            break
+            node_terminals.append(out)
+        
+        if not node_terminals:
+            continue
+            
+        if preferred_type:
+            # Find a socket matching the preferred type (normalizing INT to VALUE)
+            match = next((o for o in node_terminals if ('VALUE' if o.type == 'INT' else o.type) == preferred_type), None)
+            if match:
+                outs.append(match)
+                continue
+        
+        # Fallback to the first available terminal socket if no preferred match is found
+        outs.append(node_terminals[0])
     return outs
 
 
 def _position_and_wire(context, new_node):
-    """Place new_node right of selection and link terminal outputs into its inputs.
-    If the node has a multi-input socket, fill any single inputs that precede it
-    first, then dump the rest into the multi-input."""
+    """Place new_node right of selection and link type-matched terminal outputs into its inputs."""
     tree = context.space_data.node_tree
     links = tree.links
     selected = [n for n in context.selected_nodes if n != new_node]
@@ -226,7 +340,22 @@ def _position_and_wire(context, new_node):
     max_x = max(n.location.x + n.width for n in selected)
     new_node.location = (max_x + 50, avg_y)
 
-    terminal_outs = _gather_terminal_outputs(selected)
+    # Automatically deduce the expected type for the target node to guide socket selection
+    ntype = new_node.bl_idname
+    preferred_type = None
+    if ntype == 'FunctionNodeBooleanMath':
+        preferred_type = 'BOOLEAN'
+    elif ntype == 'ShaderNodeMath':
+        preferred_type = 'VALUE'
+    elif ntype == 'ShaderNodeVectorMath':
+        preferred_type = 'VECTOR'
+    elif ntype == 'ShaderNodeMix':
+        d_type = getattr(new_node, 'data_type', 'RGBA')
+        preferred_type = d_type if d_type in ('RGBA', 'VECTOR') else 'VALUE'
+    elif ntype in ('GeometryNodeJoinGeometry', 'GeometryNodeMeshBoolean'):
+        preferred_type = 'GEOMETRY'
+
+    terminal_outs = _gather_terminal_outputs(selected, preferred_type=preferred_type)
 
     multi_in = next(
         (inp for inp in new_node.inputs
@@ -265,7 +394,6 @@ def _position_and_wire(context, new_node):
         n.select = False
     new_node.select = True
     tree.nodes.active = new_node
-
 
 class NODE_OT_cpie_merge_boolean(bpy.types.Operator):
     """Spawn a Boolean Math node with the chosen operation and wire selected nodes into it"""
@@ -389,14 +517,43 @@ class NODE_OT_cpie_magic_merge(bpy.types.Operator):
     def execute(self, context):
         from collections import Counter
         selected = context.selected_nodes
-        outs = _gather_terminal_outputs(selected)
-        if not outs:
+        
+        node_to_types = []
+        all_terminal_types = []
+        
+        # Step 1: Scan every selected node for ALL available external output types
+        for n in selected:
+            n_types = set()
+            for out in n.outputs:
+                if out.hide or not out.enabled:
+                    continue
+                if any(link.to_node in selected for link in out.links):
+                    continue
+                t = 'VALUE' if out.type == 'INT' else out.type
+                n_types.add(t)
+                all_terminal_types.append(t)
+            if n_types:
+                node_to_types.append(n_types)
+
+        if not node_to_types:
             self.report({'WARNING'}, "No terminal output sockets to merge")
             return {'CANCELLED'}
 
-        # Normalize int → float, treat both as VALUE
-        types = ['VALUE' if o.type == 'INT' else o.type for o in outs]
-        dominant = Counter(types).most_common(1)[0][0]
+        # Step 2: Find intersecting shared types across all selected nodes
+        common_types = node_to_types[0]
+        for n_types in node_to_types[1:]:
+            common_types = common_types.intersection(n_types)
+
+        if common_types:
+            if len(common_types) == 1:
+                dominant = list(common_types)[0]
+            else:
+                # Tie-breaker: If they share multiple types, pick the one with higher overall presence
+                counts = Counter([t for t in all_terminal_types if t in common_types])
+                dominant = counts.most_common(1)[0][0]
+        else:
+            # Fallback: No perfect shared type intersection, fall back to overall dominant majority vote
+            dominant = Counter(all_terminal_types).most_common(1)[0][0]
 
         routing = {
             'BOOLEAN':  "SUBPIE_MT_merge_boolean",
@@ -1153,7 +1310,7 @@ class NODE_PIE_MT_context(Menu):
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
         # NORTH-EAST
-        pie.separator()
+        pie.operator("node.cpie_link_active_replace_parent", text="Intercept Parent Link", icon='LINKED')
         # SOUTH-WEST - delete submenu
         pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
         # SOUTH-EAST - dynamic mode/operation picker for this node type
@@ -1166,6 +1323,7 @@ class NODE_PIE_MT_context(Menu):
 
 registry = [
     CONTEXTPIE_OT_combine_selected,
+    NODE_OT_cpie_link_active_replace_parent,
     NODE_OT_cpie_merge_boolean,
     NODE_OT_cpie_merge_float,
     NODE_OT_cpie_merge_vector,
