@@ -69,13 +69,13 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
         # Helper Function: Recursively trace upstream to find the channel identity (X/Y/Z/W or R/G/B/A)
         def get_logical_index(socket, depth=0):
             if depth > 5: return None # Prevent infinite loops
-            
+
             name = socket.name.upper()
             if name in ('X', 'R', 'RED'): return 0
             if name in ('Y', 'G', 'GREEN'): return 1
             if name in ('Z', 'B', 'BLUE'): return 2
             if name in ('W', 'A', 'ALPHA'): return 3
-            
+
             # If the socket name is generic (like "Value"), trace its node's inputs backward
             for inp in socket.node.inputs:
                 if inp.is_linked:
@@ -87,15 +87,15 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
         # Gather "Terminal" outputs: outputs that don't plug into another selected node
         selected_nodes.sort(key=lambda n: n.location.y, reverse=True) # Fallback sorting
         terminal_sockets = []
-        
+
         for node in selected_nodes:
             for out in node.outputs:
                 if out.hide or not out.enabled:
                     continue
-                
+
                 # Check if this output feeds internally into our selected group
                 is_internal = any((link.to_node in selected_nodes) for link in out.links)
-                
+
                 if not is_internal:
                     terminal_sockets.append(out)
 
@@ -143,9 +143,9 @@ class NODE_OT_cpie_link_active_replace_parent(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         space = context.space_data
-        return (space.type == 'NODE_EDITOR' 
-                and space.node_tree is not None 
-                and context.active_node is not None 
+        return (space.type == 'NODE_EDITOR'
+                and space.node_tree is not None
+                and context.active_node is not None
                 and len(context.selected_nodes) > 1)
 
     def execute(self, context):
@@ -198,11 +198,11 @@ class NODE_OT_cpie_link_active_replace_parent(bpy.types.Operator):
             if candidate_links:
                 # Sort by closest parent ancestor (shortest step distance)
                 candidate_links.sort(key=lambda item: item[2])
-                
+
                 # Intercept the closest parent's link
                 link_to_replace, target_input, _ = candidate_links[0]
                 out_socket = find_compatible_output(target_input)
-                
+
                 if out_socket:
                     links.remove(link_to_replace)
                     links.new(out_socket, target_input)
@@ -224,7 +224,7 @@ class NODE_OT_cpie_link_active_replace_parent(bpy.types.Operator):
                                 break
                     if not target_input and s.inputs:
                         target_input = next((inp for inp in s.inputs if inp.enabled and not inp.hide), None)
-                    
+
                     if target_input:
                         out_socket = find_compatible_output(target_input)
                         if out_socket:
@@ -249,6 +249,93 @@ _GEO_OPS_CACHE = [
     ('DIFFERENCE', "Difference",    "Mesh Boolean difference (first minus rest)"),
     ('INTERSECT',  "Intersect",     "Mesh Boolean intersection of selected meshes"),
 ]
+
+# Socket types Magic Merge can route. Each maps to its specific merge sub-pie plus a
+# label/icon for the chooser button. _MERGE_DISPLAY_ORDER also fixes the chooser order.
+_MERGE_ROUTING = {
+    'GEOMETRY': ("SUBPIE_MT_merge_geometry", "Geometry", 'MESH_DATA'),
+    'SHADER':   ("SUBPIE_MT_merge_shader",   "Shader",   'SHADING_RENDERED'),
+    'RGBA':     ("SUBPIE_MT_merge_color",    "Color",    'COLOR'),
+    'VECTOR':   ("SUBPIE_MT_merge_vector",   "Vector",   'ORIENTATION_GLOBAL'),
+    'VALUE':    ("SUBPIE_MT_merge_float",    "Math",     'CON_KINEMATIC'),
+    'BOOLEAN':  ("SUBPIE_MT_merge_boolean",  "Boolean",  'CON_KINEMATIC'),
+}
+_MERGE_DISPLAY_ORDER = list(_MERGE_ROUTING.keys())
+
+# Which merge socket types make sense per editor, since not every type has a merge node
+# in every tree (no geometry/boolean in shader, no shader/vector in the compositor, …).
+_SUPPORTED_MERGE_TYPES = {
+    'GeometryNodeTree':   {'GEOMETRY', 'RGBA', 'VECTOR', 'VALUE', 'BOOLEAN'},
+    'ShaderNodeTree':     {'SHADER', 'RGBA', 'VECTOR', 'VALUE'},
+    'CompositorNodeTree': {'RGBA', 'VALUE'},
+}
+
+# Node spawned for a numeric/colour merge, per editor. GEOMETRY/SHADER/BOOLEAN are
+# single-editor and handled directly by their own operators.
+_MERGE_NODE = {
+    'VALUE':  {'GeometryNodeTree': 'ShaderNodeMath',
+               'ShaderNodeTree':   'ShaderNodeMath',
+               'CompositorNodeTree': 'CompositorNodeMath'},
+    'VECTOR': {'GeometryNodeTree': 'ShaderNodeVectorMath',
+               'ShaderNodeTree':   'ShaderNodeVectorMath'},
+    'RGBA':   {'GeometryNodeTree': 'ShaderNodeMix',
+               'ShaderNodeTree':   'ShaderNodeMix',
+               'CompositorNodeTree': 'CompositorNodeMixRGB'},
+}
+
+# Types that don't implicitly convert: a geometry/shader merge only ever accepts a
+# geometry/shader socket, never an incidental Value/Material/etc.
+_NONCONVERTIBLE = {'GEOMETRY', 'SHADER'}
+
+
+def _spawn_merge_node(context, merge_type):
+    """Create the numeric/colour merge node appropriate to the current editor, or None
+    if that merge type has no node in this tree."""
+    tree = context.space_data.node_tree
+    bl_idname = _MERGE_NODE.get(merge_type, {}).get(context.space_data.tree_type)
+    if not bl_idname:
+        return None
+    try:
+        return tree.nodes.new(type=bl_idname)
+    except Exception:
+        return None
+
+
+def _available_merge_types(selected, tree_type):
+    """The mergeable socket types Magic Merge can offer for the current selection,
+    restricted to what the editor supports and ordered for display. Returns a list of
+    type strings (e.g. ['GEOMETRY', 'BOOLEAN']).
+
+    Rules:
+      * A node exposing exactly ONE mergeable type can only be merged that way, so such
+        "locked" types are mandatory — when present, they define the whole offering.
+        (A geometry-only node thus forces a geometry merge.)
+      * Otherwise offer the types shared by every node (intersection), so two nodes that
+        both expose Geometry and Boolean give a two-option pie.
+      * If the nodes share nothing, fall back to every type present (union), letting the
+        user pick which to combine on.
+    """
+    supported = _SUPPORTED_MERGE_TYPES.get(tree_type, set())
+    node_sets = []
+    for n in selected:
+        s = set()
+        for out in n.outputs:
+            if out.hide or not out.enabled or out.bl_idname == 'NodeSocketVirtual':
+                continue
+            if any(link.to_node in selected for link in out.links):
+                continue
+            t = 'VALUE' if out.type == 'INT' else out.type
+            if t in supported:
+                s.add(t)
+        if s:
+            node_sets.append(s)
+
+    if not node_sets:
+        return []
+
+    locked = {next(iter(s)) for s in node_sets if len(s) == 1}
+    chosen = locked or set.intersection(*node_sets) or set.union(*node_sets)
+    return [t for t in _MERGE_DISPLAY_ORDER if t in chosen]
 
 
 def _pull_enum(node_cls_name, prop_name):
@@ -300,31 +387,45 @@ def _merge_poll(context):
             and len(context.selected_nodes) > 0)
 
 
-def _gather_terminal_outputs(selected, preferred_type=None):
-    """Gathers the best terminal output socket per selected node, top-to-bottom.
-    If a preferred_type is specified, it attempts to select a socket matching that type."""
+def _gather_merge_outputs(selected, preferred_type=None):
+    """Pick one output socket per selected node to feed into the merge node, top-to-bottom.
+
+    A *terminal* socket (one not already feeding another selected node) is preferred, so
+    inserting a merge at the end of a chain wires the chain's results. But if a node's
+    only suitable output is consumed internally — e.g. a Group Input whose Geometry feeds
+    the other selected node — that socket is used anyway, rather than dropping the node or
+    grabbing an unrelated socket of the wrong type.
+    """
+    def _norm(out):
+        return 'VALUE' if out.type == 'INT' else out.type
+
+    def _pick(pool):
+        if not pool:
+            return None
+        if not preferred_type:
+            return pool[0]
+        # Prefer an exact type match (INT counts as VALUE).
+        m = next((o for o in pool if _norm(o) == preferred_type), None)
+        # Numeric/colour types convert implicitly, so for those fall back to any other
+        # convertible socket. Geometry/shader do NOT convert, so those merges only ever
+        # accept their own socket type — never an incidental Material/Value/etc.
+        if m is None and preferred_type not in _NONCONVERTIBLE:
+            m = next((o for o in pool if _norm(o) not in _NONCONVERTIBLE), None)
+        return m
+
     outs = []
     for n in sorted(selected, key=lambda n: -n.location.y):
-        node_terminals = []
-        for out in n.outputs:
-            if out.hide or not out.enabled:
-                continue
-            if any(link.to_node in selected for link in out.links):
-                continue
-            node_terminals.append(out)
-        
-        if not node_terminals:
+        usable = [o for o in n.outputs
+                  if not o.hide and o.enabled and o.bl_idname != 'NodeSocketVirtual']
+        if not usable:
             continue
-            
-        if preferred_type:
-            # Find a socket matching the preferred type (normalizing INT to VALUE)
-            match = next((o for o in node_terminals if ('VALUE' if o.type == 'INT' else o.type) == preferred_type), None)
-            if match:
-                outs.append(match)
-                continue
-        
-        # Fallback to the first available terminal socket if no preferred match is found
-        outs.append(node_terminals[0])
+        terminal = [o for o in usable
+                    if not any(link.to_node in selected for link in o.links)]
+        # Prefer a free terminal socket; otherwise accept an internally-linked one of
+        # the right type so a node like Group Input still contributes its geometry.
+        chosen = _pick(terminal) or _pick(usable)
+        if chosen is not None:
+            outs.append(chosen)
     return outs
 
 
@@ -345,17 +446,28 @@ def _position_and_wire(context, new_node):
     preferred_type = None
     if ntype == 'FunctionNodeBooleanMath':
         preferred_type = 'BOOLEAN'
-    elif ntype == 'ShaderNodeMath':
+    elif ntype in ('ShaderNodeMath', 'CompositorNodeMath'):
         preferred_type = 'VALUE'
     elif ntype == 'ShaderNodeVectorMath':
         preferred_type = 'VECTOR'
     elif ntype == 'ShaderNodeMix':
         d_type = getattr(new_node, 'data_type', 'RGBA')
         preferred_type = d_type if d_type in ('RGBA', 'VECTOR') else 'VALUE'
+    elif ntype == 'CompositorNodeMixRGB':
+        preferred_type = 'RGBA'
     elif ntype in ('GeometryNodeJoinGeometry', 'GeometryNodeMeshBoolean'):
         preferred_type = 'GEOMETRY'
+    elif ntype in ('ShaderNodeMixShader', 'ShaderNodeAddShader'):
+        preferred_type = 'SHADER'
 
-    terminal_outs = _gather_terminal_outputs(selected, preferred_type=preferred_type)
+    def _input_eligible(inp):
+        # Geometry/shader inputs must match the merge type exactly; the Mix/Add Shader
+        # Factor input (a Float) is thus skipped instead of swallowing a shader output.
+        if preferred_type in _NONCONVERTIBLE:
+            return ('VALUE' if inp.type == 'INT' else inp.type) == preferred_type
+        return True
+
+    merge_outs = _gather_merge_outputs(selected, preferred_type=preferred_type)
 
     multi_in = next(
         (inp for inp in new_node.inputs
@@ -363,12 +475,14 @@ def _position_and_wire(context, new_node):
         None,
     )
 
-    out_iter = iter(terminal_outs)
+    out_iter = iter(merge_outs)
     if multi_in is not None:
         for inp in new_node.inputs:
             if inp.hide or not inp.enabled or inp == multi_in:
                 if inp == multi_in:
                     break
+                continue
+            if not _input_eligible(inp):
                 continue
             try:
                 out = next(out_iter)
@@ -382,6 +496,8 @@ def _position_and_wire(context, new_node):
     else:
         for inp in new_node.inputs:
             if inp.hide or not inp.enabled:
+                continue
+            if not _input_eligible(inp):
                 continue
             try:
                 out = next(out_iter)
@@ -429,8 +545,10 @@ class NODE_OT_cpie_merge_float(bpy.types.Operator):
         return _merge_poll(context)
 
     def execute(self, context):
-        tree = context.space_data.node_tree
-        new_node = tree.nodes.new(type='ShaderNodeMath')
+        new_node = _spawn_merge_node(context, 'VALUE')
+        if new_node is None:
+            self.report({'WARNING'}, "Math merge not available in this editor")
+            return {'CANCELLED'}
         try: new_node.operation = self.operation
         except Exception: pass
         _position_and_wire(context, new_node)
@@ -450,8 +568,10 @@ class NODE_OT_cpie_merge_vector(bpy.types.Operator):
         return _merge_poll(context)
 
     def execute(self, context):
-        tree = context.space_data.node_tree
-        new_node = tree.nodes.new(type='ShaderNodeVectorMath')
+        new_node = _spawn_merge_node(context, 'VECTOR')
+        if new_node is None:
+            self.report({'WARNING'}, "Vector Math merge not available in this editor")
+            return {'CANCELLED'}
         try: new_node.operation = self.operation
         except Exception: pass
         _position_and_wire(context, new_node)
@@ -471,12 +591,44 @@ class NODE_OT_cpie_merge_color(bpy.types.Operator):
         return _merge_poll(context)
 
     def execute(self, context):
-        tree = context.space_data.node_tree
-        new_node = tree.nodes.new(type='ShaderNodeMix')
-        try: new_node.data_type = 'RGBA'
-        except Exception: pass
+        new_node = _spawn_merge_node(context, 'RGBA')
+        if new_node is None:
+            self.report({'WARNING'}, "Color merge not available in this editor")
+            return {'CANCELLED'}
+        # ShaderNodeMix is multi-purpose; the compositor's CompositorNodeMixRGB is not.
+        if new_node.bl_idname == 'ShaderNodeMix':
+            try: new_node.data_type = 'RGBA'
+            except Exception: pass
         try: new_node.blend_type = self.blend_type
         except Exception: pass
+        _position_and_wire(context, new_node)
+        return {'FINISHED'}
+
+
+class NODE_OT_cpie_merge_shader(bpy.types.Operator):
+    """Spawn a Mix or Add Shader node and wire selected shader outputs into it"""
+    bl_idname = "node.cpie_merge_shader"
+    bl_label = "Merge: Shader"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    operation: bpy.props.EnumProperty(
+        name="Operation",
+        items=[('MIX', "Mix Shader", "Blend the shaders with a Mix Shader node"),
+               ('ADD', "Add Shader", "Sum the shaders with an Add Shader node")],
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return _merge_poll(context)
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        bl_idname = 'ShaderNodeAddShader' if self.operation == 'ADD' else 'ShaderNodeMixShader'
+        try:
+            new_node = tree.nodes.new(type=bl_idname)
+        except Exception:
+            self.report({'WARNING'}, "Shader merge not available in this editor")
+            return {'CANCELLED'}
         _position_and_wire(context, new_node)
         return {'FINISHED'}
 
@@ -506,7 +658,8 @@ class NODE_OT_cpie_merge_geometry(bpy.types.Operator):
 
 
 class NODE_OT_cpie_magic_merge(bpy.types.Operator):
-    """Detect the output socket types of selected nodes and open the matching merge sub-pie"""
+    """Detect the mergeable output types of selected nodes. Opens a type-chooser pie
+    when more than one type is available, or goes straight to the merge pie when only one is"""
     bl_idname = "node.cpie_magic_merge"
     bl_label = "Magic Merge"
 
@@ -515,60 +668,28 @@ class NODE_OT_cpie_magic_merge(bpy.types.Operator):
         return _merge_poll(context)
 
     def execute(self, context):
-        from collections import Counter
-        selected = context.selected_nodes
-        
-        node_to_types = []
-        all_terminal_types = []
-        
-        # Step 1: Scan every selected node for ALL available external output types
-        for n in selected:
-            n_types = set()
-            for out in n.outputs:
-                if out.hide or not out.enabled:
-                    continue
-                if any(link.to_node in selected for link in out.links):
-                    continue
-                t = 'VALUE' if out.type == 'INT' else out.type
-                n_types.add(t)
-                all_terminal_types.append(t)
-            if n_types:
-                node_to_types.append(n_types)
-
-        if not node_to_types:
-            self.report({'WARNING'}, "No terminal output sockets to merge")
+        types = _available_merge_types(context.selected_nodes, context.space_data.tree_type)
+        if not types:
+            self.report({'WARNING'}, "No mergeable outputs in the selection")
             return {'CANCELLED'}
 
-        # Step 2: Find intersecting shared types across all selected nodes
-        common_types = node_to_types[0]
-        for n_types in node_to_types[1:]:
-            common_types = common_types.intersection(n_types)
-
-        if common_types:
-            if len(common_types) == 1:
-                dominant = list(common_types)[0]
-            else:
-                # Tie-breaker: If they share multiple types, pick the one with higher overall presence
-                counts = Counter([t for t in all_terminal_types if t in common_types])
-                dominant = counts.most_common(1)[0][0]
+        # One mergeable type -> jump straight to its enumerate pie; otherwise let the
+        # user pick which type to merge on via the chooser pie.
+        if len(types) == 1:
+            bpy.ops.wm.call_menu_pie(name=_MERGE_ROUTING[types[0]][0])
         else:
-            # Fallback: No perfect shared type intersection, fall back to overall dominant majority vote
-            dominant = Counter(all_terminal_types).most_common(1)[0][0]
-
-        routing = {
-            'BOOLEAN':  "SUBPIE_MT_merge_boolean",
-            'VALUE':    "SUBPIE_MT_merge_float",
-            'VECTOR':   "SUBPIE_MT_merge_vector",
-            'RGBA':     "SUBPIE_MT_merge_color",
-            'GEOMETRY': "SUBPIE_MT_merge_geometry",
-        }
-        pie_name = routing.get(dominant)
-        if pie_name is None:
-            self.report({'WARNING'}, f"No merge sub-pie for socket type '{dominant}'")
-            return {'CANCELLED'}
-
-        bpy.ops.wm.call_menu_pie(name=pie_name)
+            bpy.ops.wm.call_menu_pie(name="SUBPIE_MT_merge_chooser")
         return {'FINISHED'}
+
+
+class SUBPIE_MT_merge_chooser(Menu):
+    bl_label = "Merge Type"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        # Recomputed from the live selection so the slots always match what's mergeable.
+        for t in _available_merge_types(context.selected_nodes, context.space_data.tree_type):
+            pie_name, label, icon = _MERGE_ROUTING[t]
+            pie.operator("wm.call_menu_pie", text=label, icon=icon).name = pie_name
 
 
 class SUBPIE_MT_merge_boolean(Menu):
@@ -597,6 +718,13 @@ class SUBPIE_MT_merge_color(Menu):
     def draw(self, context):
         pie = self.layout.menu_pie()
         pie.operator_enum("node.cpie_merge_color", "blend_type")
+
+
+class SUBPIE_MT_merge_shader(Menu):
+    bl_label = "Merge: Shader"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        pie.operator_enum("node.cpie_merge_shader", "operation")
 
 
 class SUBPIE_MT_merge_geometry(Menu):
@@ -657,7 +785,7 @@ class SUBPIE_MT_gn_io(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        
+
         # 1. WEST - Object Data
         pie.operator("node.add_node", text="Object Info", icon='OBJECT_DATA').type = 'GeometryNodeObjectInfo'
         # 2. EAST - Scene Data
@@ -669,7 +797,7 @@ class SUBPIE_MT_gn_io(Menu):
         # 5. NORTH-WEST - Collection Constant
         pie.operator("node.add_node", text="Collection Info", icon='OUTLINER_COLLECTION').type = 'GeometryNodeCollectionInfo'
         # 6. NORTH-EAST - Self Reference
-        pie.operator("node.add_node", text="Self Object", icon='NODE_SEL').type = 'GeometryNodeSelfObject'        
+        pie.operator("node.add_node", text="Self Object", icon='NODE_SEL').type = 'GeometryNodeSelfObject'
         # 7. SOUTH-WEST - Integer Constant
         pie.operator("node.add_node", text="Integer", icon='LINENUMBERS_ON').type = 'FunctionNodeInputInt'
         # 8. SOUTH-EAST - Boolean Constant
@@ -740,7 +868,7 @@ class SUBPIE_MT_sh_input(Menu):
     bl_label = "Input"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        
+
         # 1. WEST
         pie.operator("node.add_node", text="Color", icon='COLOR').type = 'ShaderNodeRGB'
         # 2. EAST
@@ -845,7 +973,7 @@ class SUBPIE_MT_co_input(Menu):
     bl_label = "Input"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        
+
         # WEST
         pie.operator("node.add_node", text="Image", icon='IMAGE_DATA').type = 'CompositorNodeImage'
         # EAST
@@ -1022,122 +1150,6 @@ class SUBPIE_MT_node_delete(Menu):
 # 6. MULTI-SELECTION SUB-MENUS
 # ==============================================================================
 
-class SUBPIE_MT_node_join(Menu):
-    bl_label = "Join / Merge"
-
-    def draw(self, context):
-        pie = self.layout.menu_pie()
-        nw_loaded = "node_wrangler" in context.preferences.addons
-        tree_type = context.space_data.tree_type
-
-        # Note: Pie menus MUST contain exactly 8 items to prevent layout warnings.
-
-        if tree_type == 'GeometryNodeTree':
-            if nw_loaded:
-                # 1. WEST
-                op = pie.operator("node.nw_merge_nodes", text="Intersect", icon='SELECT_INTERSECT')
-                op.mode = 'INTERSECT'; op.merge_type = 'GEOMETRY'
-                # 2. EAST - Boolean Math sub-pie (And / Or / Xor / ...)
-                pie.operator("wm.call_menu_pie", text="Boolean Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_merge_boolean"
-                # 3. SOUTH - Magic Merge: auto-detect socket type, open matching sub-pie
-                pie.operator("node.cpie_magic_merge", text="Magic Merge", icon='SHADERFX')
-                # 4. NORTH
-                op = pie.operator("node.nw_merge_nodes", text="Join Geometry", icon='MESH_DATA')
-                op.mode = 'JOIN'; op.merge_type = 'GEOMETRY'
-                # 5. NORTH-WEST
-                op = pie.operator("node.nw_merge_nodes", text="Difference", icon='SELECT_SUBTRACT')
-                op.mode = 'DIFFERENCE'; op.merge_type = 'GEOMETRY'
-                # 6. NORTH-EAST
-                op = pie.operator("node.nw_merge_nodes", text="Union", icon='SELECT_EXTEND')
-                op.mode = 'UNION'; op.merge_type = 'GEOMETRY'
-                # 7. SOUTH-WEST - CUSTOM AUTO-COMBINE
-                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ'
-                # 8. SOUTH-EAST - CUSTOM AUTO-COMBINE
-                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR'
-            else:
-                pie.operator("node.add_node", text="Intersect", icon='SELECT_INTERSECT').type = 'GeometryNodeMeshBoolean' # 1
-                # 2. EAST - Boolean Math sub-pie
-                pie.operator("wm.call_menu_pie", text="Boolean Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_merge_boolean"
-                # 3. SOUTH - Magic Merge
-                pie.operator("node.cpie_magic_merge", text="Magic Merge", icon='SHADERFX')
-                pie.operator("node.add_node", text="Join Geometry", icon='MESH_DATA').type = 'GeometryNodeJoinGeometry' # 4
-                pie.operator("node.add_node", text="Mesh Boolean", icon='MOD_BOOLEAN').type = 'GeometryNodeMeshBoolean' # 5
-                pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath' # 6
-                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ' # 7
-                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR' # 8
-
-        elif tree_type == 'ShaderNodeTree':
-            if nw_loaded:
-                # 1. WEST
-                op = pie.operator("node.nw_merge_nodes", text="Mix Shader", icon='SHADING_RENDERED')
-                op.mode = 'MIX'; op.merge_type = 'SHADER'
-                # 2. EAST
-                op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
-                op.mode = 'ADD'; op.merge_type = 'MATH'
-                # 3. SOUTH
-                op = pie.operator("node.nw_merge_nodes", text="Math Subtract")
-                op.mode = 'SUBTRACT'; op.merge_type = 'MATH'
-                # 4. NORTH
-                op = pie.operator("node.nw_merge_nodes", text="Add Shader", icon='ADD')
-                op.mode = 'ADD'; op.merge_type = 'SHADER'
-                # 5. NORTH-WEST
-                op = pie.operator("node.nw_merge_nodes", text="Color Mix", icon='COLOR')
-                op.mode = 'MIX'; op.merge_type = 'MIX'
-                # 6. NORTH-EAST
-                op = pie.operator("node.nw_merge_nodes", text="Color Multiply")
-                op.mode = 'MULTIPLY'; op.merge_type = 'MIX'
-                # 7. SOUTH-WEST - CUSTOM AUTO-COMBINE
-                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ'
-                # 8. SOUTH-EAST - CUSTOM AUTO-COMBINE
-                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR'
-            else:
-                pie.operator("node.add_node", text="Mix Shader", icon='SHADING_RENDERED').type = 'ShaderNodeMixShader' # 1
-                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath' # 2
-                pie.separator() # 3
-                pie.operator("node.add_node", text="Add Shader", icon='ADD').type = 'ShaderNodeAddShader' # 4
-                pie.separator() # 5
-                pie.separator() # 6
-                pie.operator("node.cpie_combine_selected", text="Combine XYZ", icon='AXIS_SIDE').combine_type = 'XYZ' # 7
-                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR' # 8
-
-        elif tree_type == 'CompositorNodeTree':
-            if nw_loaded:
-                # 1. WEST
-                op = pie.operator("node.nw_merge_nodes", text="Color Mix", icon='COLOR')
-                op.mode = 'MIX'; op.merge_type = 'MIX'
-                # 2. EAST
-                op = pie.operator("node.nw_merge_nodes", text="Math Add", icon='CON_KINEMATIC')
-                op.mode = 'ADD'; op.merge_type = 'MATH'
-                # 3. SOUTH
-                op = pie.operator("node.nw_merge_nodes", text="Depth Combine", icon='MOD_ARRAY')
-                op.mode = 'MIX'; op.merge_type = 'DEPTH_COMBINE'
-                # 4. NORTH
-                op = pie.operator("node.nw_merge_nodes", text="Alpha Over", icon='IMAGE_ALPHA')
-                op.mode = 'MIX'; op.merge_type = 'ALPHAOVER'
-                # 5. NORTH-WEST
-                op = pie.operator("node.nw_merge_nodes", text="Color Add")
-                op.mode = 'ADD'; op.merge_type = 'MIX'
-                # 6. NORTH-EAST
-                op = pie.operator("node.nw_merge_nodes", text="Math Multiply")
-                op.mode = 'MULTIPLY'; op.merge_type = 'MATH'
-                # 7. SOUTH-WEST 
-                pie.separator()
-                # 8. SOUTH-EAST - CUSTOM AUTO-COMBINE
-                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR'
-            else:
-                pie.operator("node.add_node", text="Alpha Over", icon='IMAGE_ALPHA').type = 'CompositorNodeAlphaOver' # 1
-                pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'CompositorNodeMath' # 2
-                pie.separator() # 3
-                pie.operator("node.add_node", text="Mix", icon='COLOR').type = 'CompositorNodeMixRGB' # 4
-                pie.separator() # 5
-                pie.separator() # 6
-                pie.separator() # 7
-                pie.operator("node.cpie_combine_selected", text="Combine RGB", icon='COLOR').combine_type = 'COLOR' # 8
-        else:
-            pie.label(text="No merge options for this tree")
-            for _ in range(7): pie.separator()
-
-
 class SUBPIE_MT_node_duplicate(Menu):
     bl_label = "Duplicate"
 
@@ -1305,8 +1317,9 @@ class NODE_PIE_MT_context(Menu):
             pie.operator("node.translate_attach", text="Attach Nodes", icon='LINKED')
         # SOUTH - mute/unmute, consistent with single-node
         pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
-        # NORTH - merge / join (see SUBPIE_MT_node_join)
-        pie.operator("wm.call_menu_pie", text='Join / Merge...', icon='TRIA_UP').name = "SUBPIE_MT_node_join"
+        # NORTH - Magic Merge: auto-detect mergeable output types and route to the
+        # matching enumerate pie (or a type-chooser pie when several are available).
+        pie.operator("node.cpie_magic_merge", text='Join / Merge...', icon='TRIA_UP')
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
         # NORTH-EAST
@@ -1328,12 +1341,15 @@ registry = [
     NODE_OT_cpie_merge_float,
     NODE_OT_cpie_merge_vector,
     NODE_OT_cpie_merge_color,
+    NODE_OT_cpie_merge_shader,
     NODE_OT_cpie_merge_geometry,
     NODE_OT_cpie_magic_merge,
+    SUBPIE_MT_merge_chooser,
     SUBPIE_MT_merge_boolean,
     SUBPIE_MT_merge_float,
     SUBPIE_MT_merge_vector,
     SUBPIE_MT_merge_color,
+    SUBPIE_MT_merge_shader,
     SUBPIE_MT_merge_geometry,
     SUBPIE_MT_gn_mesh,
     SUBPIE_MT_gn_curve,
@@ -1361,7 +1377,6 @@ registry = [
     SUBPIE_MT_nw_batch_math,
     SUBPIE_MT_node_group,
     SUBPIE_MT_node_delete,
-    SUBPIE_MT_node_join,
     SUBPIE_MT_node_duplicate,
     NODE_PIE_MT_context,
 ]
