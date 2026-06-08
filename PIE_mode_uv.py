@@ -32,20 +32,23 @@ class SUBPIE_MT_uvSticky(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
+        ts = context.tool_settings
 
-        op = pie.operator('wm.context_set_string', text="Location", icon="STICKY_UVS_LOC")
-        op.data_path = 'tool_settings.uv_sticky_select_mode'
-        op.value = 'SHARED_LOCATION'
+        # 1. WEST
+        pie.prop_enum(ts, "uv_sticky_select_mode", value='SHARED_LOCATION', text="Location", icon="STICKY_UVS_LOC")
+        # 2. EAST
         pie.separator()
-        op = pie.operator('wm.context_set_string', text="Vertex", icon="STICKY_UVS_VERT")
-        op.data_path = 'tool_settings.uv_sticky_select_mode'
-        op.value = 'SHARED_VERTEX'
+        # 3. SOUTH
+        pie.prop_enum(ts, "uv_sticky_select_mode", value='SHARED_VERTEX', text="Vertex", icon="STICKY_UVS_VERT")
+        # 4. NORTH
         pie.separator()
+        # 5. NORTH-WEST
         pie.separator()
+        # 6. NORTH-EAST
         pie.separator()
-        op = pie.operator('wm.context_set_string', text="Disabled", icon="STICKY_UVS_DISABLE")
-        op.data_path = 'tool_settings.uv_sticky_select_mode'
-        op.value = 'DISABLED'
+        # 7. SOUTH-WEST
+        pie.prop_enum(ts, "uv_sticky_select_mode", value='DISABLED', text="Disabled", icon="STICKY_UVS_DISABLE")
+        # 8. SOUTH-EAST
         pie.separator()
 
 

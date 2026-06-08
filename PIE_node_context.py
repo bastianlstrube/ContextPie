@@ -389,29 +389,12 @@ def _merge_poll(context):
 
 def _gather_merge_outputs(selected, preferred_type=None):
     """Pick one output socket per selected node to feed into the merge node, top-to-bottom.
-
-    A *terminal* socket (one not already feeding another selected node) is preferred, so
-    inserting a merge at the end of a chain wires the chain's results. But if a node's
-    only suitable output is consumed internally — e.g. a Group Input whose Geometry feeds
-    the other selected node — that socket is used anyway, rather than dropping the node or
-    grabbing an unrelated socket of the wrong type.
+    
+    Uses a strict 5-tier priority hierarchy to ensure exact type matches are always
+    preferred over implicit type conversions or blind fallbacks.
     """
     def _norm(out):
         return 'VALUE' if out.type == 'INT' else out.type
-
-    def _pick(pool):
-        if not pool:
-            return None
-        if not preferred_type:
-            return pool[0]
-        # Prefer an exact type match (INT counts as VALUE).
-        m = next((o for o in pool if _norm(o) == preferred_type), None)
-        # Numeric/colour types convert implicitly, so for those fall back to any other
-        # convertible socket. Geometry/shader do NOT convert, so those merges only ever
-        # accept their own socket type — never an incidental Material/Value/etc.
-        if m is None and preferred_type not in _NONCONVERTIBLE:
-            m = next((o for o in pool if _norm(o) not in _NONCONVERTIBLE), None)
-        return m
 
     outs = []
     for n in sorted(selected, key=lambda n: -n.location.y):
@@ -419,13 +402,42 @@ def _gather_merge_outputs(selected, preferred_type=None):
                   if not o.hide and o.enabled and o.bl_idname != 'NodeSocketVirtual']
         if not usable:
             continue
+        
         terminal = [o for o in usable
                     if not any(link.to_node in selected for link in o.links)]
-        # Prefer a free terminal socket; otherwise accept an internally-linked one of
-        # the right type so a node like Group Input still contributes its geometry.
-        chosen = _pick(terminal) or _pick(usable)
-        if chosen is not None:
-            outs.append(chosen)
+
+        if preferred_type:
+            # Tier 1: Exact type match in completely unlinked (terminal) sockets
+            exact_terminal = next((o for o in terminal if _norm(o) == preferred_type), None)
+            if exact_terminal:
+                outs.append(exact_terminal)
+                continue
+
+            # Tier 2: Exact type match in any usable sockets (even if internally linked)
+            exact_usable = next((o for o in usable if _norm(o) == preferred_type), None)
+            if exact_usable:
+                outs.append(exact_usable)
+                continue
+
+            # Tier 3: Implicitly convertible match in unlinked (terminal) sockets
+            if preferred_type not in _NONCONVERTIBLE:
+                conv_terminal = next((o for o in terminal if _norm(o) not in _NONCONVERTIBLE), None)
+                if conv_terminal:
+                    outs.append(conv_terminal)
+                    continue
+
+                # Tier 4: Implicitly convertible match in any usable sockets
+                conv_usable = next((o for o in usable if _norm(o) not in _NONCONVERTIBLE), None)
+                if conv_usable:
+                    outs.append(conv_usable)
+                    continue
+        
+        # Tier 5: Absolute fallback (grab the top-most valid socket left)
+        if terminal:
+            outs.append(terminal[0])
+        else:
+            outs.append(usable[0])
+            
     return outs
 
 
