@@ -320,7 +320,7 @@ def _draw_edge(pie, context):
     # WEST
     pie.operator("mesh.set_knife_tool", text="Knife")
     # EAST
-    pie.operator("wm.call_menu_pie", text='Connect...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
+    pie.operator("wm.call_menu_pie", text='Connect/Rotate...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
     # SOUTH
     pie.operator("mesh.extrude_edges_move", text="Extrude Edges")
     # NORTH
@@ -354,16 +354,6 @@ def _draw_face(pie, context):
     pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_delete_face"
     # SOUTH-EAST
     pie.operator("transform.shrink_fatten")
-
-    pie.separator()
-    pie.separator()
-    dropdown = pie.column()
-    gap = dropdown.column()
-    gap.separator()
-    gap.scale_y = 8
-    menu = dropdown.box().column()
-    menu.scale_y = 1
-    menu.operator("mesh.flip_normals")
 
 
 ###-----------------------------------------------------------------------------###
