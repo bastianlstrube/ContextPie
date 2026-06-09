@@ -308,6 +308,12 @@ def _draw_object_with_selection(pie, context, obj, sel):
             op.data_path_item = "data.lens"
             op.header_text = "Camera Focal Length: %.1fmm"
             op.input_scale = 0.1
+        elif obj.type == 'EMPTY':
+            op = pie.operator("wm.context_modal_mouse", text="Adjust Display Size")
+            op.data_path_iter = "selected_editable_objects"
+            op.data_path_item = "empty_display_size"
+            op.header_text = "Empty Display Size: %.3f"
+            op.input_scale = 0.01
         else:
             pie.separator()
 

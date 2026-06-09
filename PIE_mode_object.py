@@ -42,34 +42,32 @@ class CPIE_MT_mode_object(Menu):
         elif obj and sel and obj.type in {'CURVE', 'SURFACE', 'LATTICE', 'FONT'}:
             # WEST EAST
             pie.operator_enum("OBJECT_OT_mode_set", "mode")
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
+            pie.separator() # SOUTH 
+            pie.separator() # NORTH
+            pie.separator() # NW
+            pie.separator() # NE
             # SOUTH WEST
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             # SOUTH EAST
             pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
 
         elif obj and sel and obj.type == 'ARMATURE':
-            # WEST
-            pie.operator_enum("OBJECT_OT_mode_set", "mode")
-            # EAST
-            pie.separator()
-            pie.separator()
-            pie.separator()
+            pie.operator_enum("OBJECT_OT_mode_set", "mode") # WEST
+            pie.separator() # EAST
+            pie.separator() # SOUTH
+            pie.separator() # NORTH
             # SOUTH WEST
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             # SOUTH EAST
             pie.operator("wm.call_menu_pie", text='Select...').name = "SUBPIE_MT_objectSelect"
 
-        elif obj and sel and obj.type == 'EMPTY':
-            # WEST EAST SOUTH NORTH
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
-            pie.separator()
+        elif obj and sel and obj.type in {'EMPTY', 'EMPTY'}: 
+            pie.separator() # WEST
+            pie.separator() # EAST 
+            pie.separator() # SOUTH 
+            pie.separator() # NORTH
+            pie.separator() # NW
+            pie.separator() # NE
             # SOUTH WEST
             pie.menu("VIEW3D_MT_object_context_menu", text="Object Menu")
             # SOUTH EAST
