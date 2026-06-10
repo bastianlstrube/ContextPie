@@ -83,7 +83,7 @@ class SUBPIE_MT_connect(Menu):
 
         # WEST
         if is_edge_mode:
-            pie.operator("mesh.edge_rotate", text="Rotate CW").use_ccw = False
+            pie.operator("mesh.edge_rotate", text="Rotate Clockwise").use_ccw = False
         else:
             pie.separator()
         # EAST

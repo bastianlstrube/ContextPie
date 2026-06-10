@@ -57,7 +57,7 @@ class CURVE_OT_clear_radius(bpy.types.Operator):
 ###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_smoothCurve(Menu):
-    bl_label = "Smooth"
+    bl_label = "Connect/Smooth"
 
     def draw(self, context):
         layout = self.layout
@@ -75,7 +75,7 @@ class SUBPIE_MT_smoothCurve(Menu):
         # NORTH-WEST
         pie.operator("curve.smooth_weight")
         # NORTH-EAST
-        pie.separator()
+        pie.operator("curve.make_segment")
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST
@@ -127,11 +127,11 @@ def draw_context_editcurve(pie, context):
     # WEST
     pie.operator("transform.transform", text='Radius').mode = 'CURVE_SHRINKFATTEN'
     # EAST
-    pie.operator("wm.call_menu_pie", text='Smooth...').name = "SUBPIE_MT_smoothCurve"
+    pie.operator("wm.call_menu_pie", text='Connect/Smooth...').name = "SUBPIE_MT_smoothCurve"
     # SOUTH
     pie.operator("curve.extrude_move")
     # NORTH
-    pie.operator("curve.make_segment")
+    pie.operator("curvetools.remove_doubles")
     # NORTH-WEST
     pie.operator("transform.tilt")
     # NORTH-EAST
