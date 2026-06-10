@@ -8,6 +8,23 @@ from bpy.types import Menu
 from .op_pie_wrappers import WM_OT_call_menu_pie_drag_only_cpie
 
 
+# ==============================================================================
+# ADD-NODE HELPER — shared by every category sub-pie
+# ==============================================================================
+# When _ADD_CONNECT_MODE is on, the category sub-pies are being browsed through the
+# single-node "Add Connect" pie, so their leaves spawn a node *and* wire the active
+# node into it. Otherwise (the no-selection add pies) they just drop a bare node.
+# The flag is reset every time the main context pie is drawn (see NODE_PIE_MT_context).
+_ADD_CONNECT_MODE = False
+
+
+def _add_node_op(pie, text, node_type, icon='NONE'):
+    """Emit an add-node button, routed to the connect operator while in Add Connect mode."""
+    if _ADD_CONNECT_MODE:
+        pie.operator("node.cpie_add_connect", text=text, icon=icon).node_type = node_type
+    else:
+        pie.operator("node.add_node", text=text, icon=icon).type = node_type
+
 
 class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
     """Combine the first outputs of selected nodes into a Combine XYZ or Combine Color node"""
@@ -230,6 +247,109 @@ class NODE_OT_cpie_link_active_replace_parent(bpy.types.Operator):
                         if out_socket:
                             links.new(out_socket, target_input)
 
+        return {'FINISHED'}
+
+
+# ==============================================================================
+# ADD CONNECT — spawn a node from the add pies and wire the active node into it
+# ==============================================================================
+
+def _best_connect(source, new_node, links):
+    """Link the active node's most reasonable output into the new node's matching input.
+
+    Prefers an exact socket-type match (favouring the new node's first/primary input),
+    then an implicitly-convertible match, then falls back to first-output -> first-input.
+    Returns True if a link was made.
+    """
+    def _norm(s):
+        return 'VALUE' if s.type == 'INT' else s.type
+
+    src_outs = [o for o in source.outputs
+                if not o.hide and o.enabled and o.bl_idname != 'NodeSocketVirtual']
+    dst_ins = [i for i in new_node.inputs
+               if not i.hide and i.enabled and i.bl_idname != 'NodeSocketVirtual']
+    if not src_outs or not dst_ins:
+        return False
+
+    # Tier 1: exact type match, prioritising the new node's primary (top-most) inputs.
+    for inp in dst_ins:
+        for out in src_outs:
+            if _norm(out) == _norm(inp):
+                links.new(out, inp)
+                return True
+
+    # Tier 2: implicitly-convertible match (skip geometry/shader, which never convert).
+    for inp in dst_ins:
+        if _norm(inp) in _NONCONVERTIBLE:
+            continue
+        for out in src_outs:
+            if _norm(out) in _NONCONVERTIBLE:
+                continue
+            links.new(out, inp)
+            return True
+
+    # Tier 3: blind fallback — primary output into primary input.
+    links.new(src_outs[0], dst_ins[0])
+    return True
+
+
+class NODE_OT_cpie_add_connect(bpy.types.Operator):
+    """Add a node and wire the active node's most reasonable output into it"""
+    bl_idname = "node.cpie_add_connect"
+    bl_label = "Add & Connect Node"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    node_type: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        space = context.space_data
+        return (space.type == 'NODE_EDITOR'
+                and space.node_tree is not None
+                and (context.active_node is not None or len(context.selected_nodes) > 0))
+
+    def execute(self, context):
+        tree = context.space_data.node_tree
+        source = context.active_node
+        if source is None:
+            sel = context.selected_nodes
+            source = sel[0] if sel else None
+        if source is None or not self.node_type:
+            return {'CANCELLED'}
+
+        try:
+            new_node = tree.nodes.new(type=self.node_type)
+        except Exception:
+            self.report({'WARNING'}, "Could not add node of type %s" % self.node_type)
+            return {'CANCELLED'}
+
+        # Drop the new node just to the right of the source, vertically aligned.
+        new_node.location = (source.location.x + source.width + 50, source.location.y)
+        _best_connect(source, new_node, tree.links)
+
+        for n in context.selected_nodes:
+            n.select = False
+        new_node.select = True
+        tree.nodes.active = new_node
+        return {'FINISHED'}
+
+
+class NODE_OT_cpie_add_connect_start(bpy.types.Operator):
+    """Open the add-node pie; the chosen node will be wired to the active node"""
+    bl_idname = "node.cpie_add_connect_start"
+    bl_label = "Add Connect"
+
+    @classmethod
+    def poll(cls, context):
+        space = context.space_data
+        return (space.type == 'NODE_EDITOR'
+                and space.node_tree is not None
+                and (context.active_node is not None or len(context.selected_nodes) > 0))
+
+    def execute(self, context):
+        global _ADD_CONNECT_MODE
+        _ADD_CONNECT_MODE = True
+        bpy.ops.wm.call_menu_pie(name="SUBPIE_MT_add_connect")
         return {'FINISHED'}
 
 
@@ -755,42 +875,42 @@ class SUBPIE_MT_gn_mesh(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Cube", icon='MESH_CUBE').type = 'GeometryNodeMeshCube'
-        pie.operator("node.add_node", text="Circle", icon='MESH_CIRCLE').type = 'GeometryNodeMeshCircle'
-        pie.operator("node.add_node", text="Cylinder", icon='MESH_CYLINDER').type = 'GeometryNodeMeshCylinder'
-        pie.operator("node.add_node", text="UV Sphere", icon='MESH_UVSPHERE').type = 'GeometryNodeMeshUVSphere'
-        pie.operator("node.add_node", text="Extrude Mesh", icon='MESH_DATA').type = 'GeometryNodeExtrudeMesh'
-        pie.operator("node.add_node", text="Subdivide Mesh", icon='MESH_DATA').type = 'GeometryNodeSubdivideMesh'
-        pie.operator("node.add_node", text="Flip Faces", icon='MESH_DATA').type = 'GeometryNodeFlipFaces'
-        pie.operator("node.add_node", text="Mesh to Curve", icon='CURVE_DATA').type = 'GeometryNodeMeshToCurve'
+        _add_node_op(pie, "Cube", 'GeometryNodeMeshCube', 'MESH_CUBE')
+        _add_node_op(pie, "Circle", 'GeometryNodeMeshCircle', 'MESH_CIRCLE')
+        _add_node_op(pie, "Cylinder", 'GeometryNodeMeshCylinder', 'MESH_CYLINDER')
+        _add_node_op(pie, "UV Sphere", 'GeometryNodeMeshUVSphere', 'MESH_UVSPHERE')
+        _add_node_op(pie, "Extrude Mesh", 'GeometryNodeExtrudeMesh', 'MESH_DATA')
+        _add_node_op(pie, "Subdivide Mesh", 'GeometryNodeSubdivideMesh', 'MESH_DATA')
+        _add_node_op(pie, "Flip Faces", 'GeometryNodeFlipFaces', 'MESH_DATA')
+        _add_node_op(pie, "Mesh to Curve", 'GeometryNodeMeshToCurve', 'CURVE_DATA')
 
 class SUBPIE_MT_gn_curve(Menu):
     bl_label = "Curve Nodes"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Bezier Segment", icon='CURVE_BEZCURVE').type = 'GeometryNodeCurvePrimitiveBezierSegment'
-        pie.operator("node.add_node", text="Curve Circle", icon='CURVE_BEZCIRCLE').type = 'GeometryNodeCurvePrimitiveCircle'
-        pie.operator("node.add_node", text="Curve Line", icon='CURVE_PATH').type = 'GeometryNodeCurvePrimitiveLine'
-        pie.operator("node.add_node", text="Resample Curve", icon='CURVE_DATA').type = 'GeometryNodeResampleCurve'
-        pie.operator("node.add_node", text="Trim Curve", icon='CURVE_DATA').type = 'GeometryNodeTrimCurve'
-        pie.operator("node.add_node", text="Fill Curve", icon='MESH_DATA').type = 'GeometryNodeFillCurve'
-        pie.operator("node.add_node", text="Curve to Mesh", icon='MESH_DATA').type = 'GeometryNodeCurveToMesh'
-        pie.operator("node.add_node", text="Curve to Points", icon='PARTICLE_DATA').type = 'GeometryNodeCurveToPoints'
+        _add_node_op(pie, "Bezier Segment", 'GeometryNodeCurvePrimitiveBezierSegment', 'CURVE_BEZCURVE')
+        _add_node_op(pie, "Curve Circle", 'GeometryNodeCurvePrimitiveCircle', 'CURVE_BEZCIRCLE')
+        _add_node_op(pie, "Curve Line", 'GeometryNodeCurvePrimitiveLine', 'CURVE_PATH')
+        _add_node_op(pie, "Resample Curve", 'GeometryNodeResampleCurve', 'CURVE_DATA')
+        _add_node_op(pie, "Trim Curve", 'GeometryNodeTrimCurve', 'CURVE_DATA')
+        _add_node_op(pie, "Fill Curve", 'GeometryNodeFillCurve', 'MESH_DATA')
+        _add_node_op(pie, "Curve to Mesh", 'GeometryNodeCurveToMesh', 'MESH_DATA')
+        _add_node_op(pie, "Curve to Points", 'GeometryNodeCurveToPoints', 'PARTICLE_DATA')
 
 class SUBPIE_MT_gn_utilities(Menu):
     bl_label = "Utilities & Math"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath'
-        pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath'
-        pie.operator("node.add_node", text="Boolean Math", icon='CON_KINEMATIC').type = 'FunctionNodeBooleanMath'
-        pie.operator("node.add_node", text="Random Value", icon='RNDCURVE').type = 'FunctionNodeRandomValue'
-        pie.operator("node.add_node", text="Color Ramp", icon='COLOR').type = 'ShaderNodeValToRGB'
-        pie.operator("node.add_node", text="Float Curve", icon='CURVE_DATA').type = 'ShaderNodeFloatCurve'
-        pie.operator("node.add_node", text="Switch", icon='ARROW_LEFTRIGHT').type = 'GeometryNodeSwitch'
-        pie.operator("node.add_node", text="Map Range", icon='ARROW_LEFTRIGHT').type = 'ShaderNodeMapRange'
+        _add_node_op(pie, "Math", 'ShaderNodeMath', 'CON_KINEMATIC')
+        _add_node_op(pie, "Vector Math", 'ShaderNodeVectorMath', 'CON_KINEMATIC')
+        _add_node_op(pie, "Boolean Math", 'FunctionNodeBooleanMath', 'CON_KINEMATIC')
+        _add_node_op(pie, "Random Value", 'FunctionNodeRandomValue', 'RNDCURVE')
+        _add_node_op(pie, "Color Ramp", 'ShaderNodeValToRGB', 'COLOR')
+        _add_node_op(pie, "Float Curve", 'ShaderNodeFloatCurve', 'CURVE_DATA')
+        _add_node_op(pie, "Switch", 'GeometryNodeSwitch', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Map Range", 'ShaderNodeMapRange', 'ARROW_LEFTRIGHT')
 
 class SUBPIE_MT_gn_io(Menu):
     bl_label = "Input & Output"
@@ -799,77 +919,77 @@ class SUBPIE_MT_gn_io(Menu):
         pie = self.layout.menu_pie()
 
         # 1. WEST - Object Data
-        pie.operator("node.add_node", text="Object Info", icon='OBJECT_DATA').type = 'GeometryNodeObjectInfo'
+        _add_node_op(pie, "Object Info", 'GeometryNodeObjectInfo', 'OBJECT_DATA')
         # 2. EAST - Scene Data
-        pie.operator("node.add_node", text="Scene Time", icon='TIME').type = 'GeometryNodeInputSceneTime'
+        _add_node_op(pie, "Scene Time", 'GeometryNodeInputSceneTime', 'TIME')
         # 3. SOUTH - Basic Constant
-        pie.operator("node.add_node", text="Value", icon='PROPERTIES').type = 'ShaderNodeValue'
+        _add_node_op(pie, "Value", 'ShaderNodeValue', 'PROPERTIES')
         # 4. NORTH - Material Constant
-        pie.operator("node.add_node", text="Material", icon='MATERIAL').type = 'GeometryNodeInputMaterial'
+        _add_node_op(pie, "Material", 'GeometryNodeInputMaterial', 'MATERIAL')
         # 5. NORTH-WEST - Collection Constant
-        pie.operator("node.add_node", text="Collection Info", icon='OUTLINER_COLLECTION').type = 'GeometryNodeCollectionInfo'
+        _add_node_op(pie, "Collection Info", 'GeometryNodeCollectionInfo', 'OUTLINER_COLLECTION')
         # 6. NORTH-EAST - Self Reference
-        pie.operator("node.add_node", text="Self Object", icon='NODE_SEL').type = 'GeometryNodeSelfObject'
+        _add_node_op(pie, "Self Object", 'GeometryNodeSelfObject', 'NODE_SEL')
         # 7. SOUTH-WEST - Integer Constant
-        pie.operator("node.add_node", text="Integer", icon='LINENUMBERS_ON').type = 'FunctionNodeInputInt'
+        _add_node_op(pie, "Integer", 'FunctionNodeInputInt', 'LINENUMBERS_ON')
         # 8. SOUTH-EAST - Boolean Constant
-        pie.operator("node.add_node", text="Boolean", icon='CHECKBOX_HLT').type = 'FunctionNodeInputBool'
+        _add_node_op(pie, "Boolean", 'FunctionNodeInputBool', 'CHECKBOX_HLT')
 
 class SUBPIE_MT_gn_geometry_instances(Menu):
     bl_label = "Geometry & Instances"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Join Geometry").type = 'GeometryNodeJoinGeometry'
-        pie.operator("node.add_node", text="Transform", icon='ORIENTATION_GLOBAL').type = 'GeometryNodeTransform'
-        pie.operator("node.add_node", text="Set Position", icon='SNAP_GRID').type = 'GeometryNodeSetPosition'
-        pie.operator("node.add_node", text="Instance on Points", icon='PARTICLE_DATA').type = 'GeometryNodeInstanceOnPoints'
-        pie.operator("node.add_node", text="Realize Instances", icon='OUTLINER_OB_GROUP_INSTANCE').type = 'GeometryNodeRealizeInstances'
-        pie.operator("node.add_node", text="Separate Geometry", icon='MESH_DATA').type = 'GeometryNodeSeparateGeometry'
-        pie.operator("node.add_node", text="Delete Geometry", icon='CANCEL').type = 'GeometryNodeDeleteGeometry'
-        pie.operator("node.add_node", text="Geometry to Instance", icon='OUTLINER_OB_GROUP_INSTANCE').type = 'GeometryNodeGeometryToInstance'
+        _add_node_op(pie, "Join Geometry", 'GeometryNodeJoinGeometry')
+        _add_node_op(pie, "Transform", 'GeometryNodeTransform', 'ORIENTATION_GLOBAL')
+        _add_node_op(pie, "Set Position", 'GeometryNodeSetPosition', 'SNAP_GRID')
+        _add_node_op(pie, "Instance on Points", 'GeometryNodeInstanceOnPoints', 'PARTICLE_DATA')
+        _add_node_op(pie, "Realize Instances", 'GeometryNodeRealizeInstances', 'OUTLINER_OB_GROUP_INSTANCE')
+        _add_node_op(pie, "Separate Geometry", 'GeometryNodeSeparateGeometry', 'MESH_DATA')
+        _add_node_op(pie, "Delete Geometry", 'GeometryNodeDeleteGeometry', 'CANCEL')
+        _add_node_op(pie, "Geometry to Instance", 'GeometryNodeGeometryToInstance', 'OUTLINER_OB_GROUP_INSTANCE')
 
 class SUBPIE_MT_gn_attributes(Menu):
     bl_label = "Attributes & Textures"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Named Attribute", icon='SPREADSHEET').type = 'GeometryNodeInputNamedAttribute'
-        pie.operator("node.add_node", text="Store Named Attribute", icon='SPREADSHEET').type = 'GeometryNodeStoreNamedAttribute'
-        pie.operator("node.add_node", text="Capture Attribute", icon='SPREADSHEET').type = 'GeometryNodeCaptureAttribute'
-        pie.operator("node.add_node", text="Noise Texture", icon='TEXTURE').type = 'ShaderNodeTexNoise'
-        pie.operator("node.add_node", text="Voronoi Texture", icon='TEXTURE').type = 'ShaderNodeTexVoronoi'
-        pie.operator("node.add_node", text="Gradient Texture", icon='TEXTURE').type = 'ShaderNodeTexGradient'
-        pie.operator("node.add_node", text="Blur Attribute", icon='MOD_SMOOTH').type = 'GeometryNodeBlurAttribute'
-        pie.operator("node.add_node", text="Sample Index", icon='SPREADSHEET').type = 'GeometryNodeSampleIndex'
+        _add_node_op(pie, "Named Attribute", 'GeometryNodeInputNamedAttribute', 'SPREADSHEET')
+        _add_node_op(pie, "Store Named Attribute", 'GeometryNodeStoreNamedAttribute', 'SPREADSHEET')
+        _add_node_op(pie, "Capture Attribute", 'GeometryNodeCaptureAttribute', 'SPREADSHEET')
+        _add_node_op(pie, "Noise Texture", 'ShaderNodeTexNoise', 'TEXTURE')
+        _add_node_op(pie, "Voronoi Texture", 'ShaderNodeTexVoronoi', 'TEXTURE')
+        _add_node_op(pie, "Gradient Texture", 'ShaderNodeTexGradient', 'TEXTURE')
+        _add_node_op(pie, "Blur Attribute", 'GeometryNodeBlurAttribute', 'MOD_SMOOTH')
+        _add_node_op(pie, "Sample Index", 'GeometryNodeSampleIndex', 'SPREADSHEET')
 
 class SUBPIE_MT_gn_points_volumes(Menu):
     bl_label = "Points & Volumes"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Distribute Points on Faces", icon='PARTICLE_DATA').type = 'GeometryNodeDistributePointsOnFaces'
-        pie.operator("node.add_node", text="Points", icon='PARTICLE_DATA').type = 'GeometryNodePoints'
-        pie.operator("node.add_node", text="Points to Volume", icon='VOLUME_DATA').type = 'GeometryNodePointsToVolume'
-        pie.operator("node.add_node", text="Volume to Mesh", icon='MESH_DATA').type = 'GeometryNodeVolumeToMesh'
-        pie.operator("node.add_node", text="Points to Vertices", icon='VERTEXSEL').type = 'GeometryNodePointsToVertices'
-        pie.operator("node.add_node", text="Distribute Points in Volume", icon='PARTICLE_DATA').type = 'GeometryNodeDistributePointsInVolume'
-        pie.operator("node.add_node", text="Volume Cube", icon='VOLUME_DATA').type = 'GeometryNodeVolumeCube'
-        pie.operator("node.add_node", text="Set Point Radius", icon='PARTICLE_DATA').type = 'GeometryNodeSetPointRadius'
+        _add_node_op(pie, "Distribute Points on Faces", 'GeometryNodeDistributePointsOnFaces', 'PARTICLE_DATA')
+        _add_node_op(pie, "Points", 'GeometryNodePoints', 'PARTICLE_DATA')
+        _add_node_op(pie, "Points to Volume", 'GeometryNodePointsToVolume', 'VOLUME_DATA')
+        _add_node_op(pie, "Volume to Mesh", 'GeometryNodeVolumeToMesh', 'MESH_DATA')
+        _add_node_op(pie, "Points to Vertices", 'GeometryNodePointsToVertices', 'VERTEXSEL')
+        _add_node_op(pie, "Distribute Points in Volume", 'GeometryNodeDistributePointsInVolume', 'PARTICLE_DATA')
+        _add_node_op(pie, "Volume Cube", 'GeometryNodeVolumeCube', 'VOLUME_DATA')
+        _add_node_op(pie, "Set Point Radius", 'GeometryNodeSetPointRadius', 'PARTICLE_DATA')
 
 class SUBPIE_MT_gn_materials(Menu):
     bl_label = "Materials & UV"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Set Material", icon='MATERIAL').type = 'GeometryNodeSetMaterial'
-        pie.operator("node.add_node", text="Replace Material", icon='MATERIAL').type = 'GeometryNodeReplaceMaterial'
-        pie.operator("node.add_node", text="Material Selection", icon='MATERIAL').type = 'GeometryNodeMaterialSelection'
-        pie.operator("node.add_node", text="Set Material Index", icon='MATERIAL').type = 'GeometryNodeSetMaterialIndex'
-        pie.operator("node.add_node", text="Input Material", icon='MATERIAL').type = 'GeometryNodeInputMaterial'
-        pie.operator("node.add_node", text="Set Shade Smooth", icon='SHADING_RENDERED').type = 'GeometryNodeSetShadeSmooth'
-        pie.operator("node.add_node", text="UV Unwrap", icon='UV').type = 'GeometryNodeUVUnwrap'
-        pie.operator("node.add_node", text="UV Pack Islands", icon='UV').type = 'GeometryNodeUVPackIslands'
+        _add_node_op(pie, "Set Material", 'GeometryNodeSetMaterial', 'MATERIAL')
+        _add_node_op(pie, "Replace Material", 'GeometryNodeReplaceMaterial', 'MATERIAL')
+        _add_node_op(pie, "Material Selection", 'GeometryNodeMaterialSelection', 'MATERIAL')
+        _add_node_op(pie, "Set Material Index", 'GeometryNodeSetMaterialIndex', 'MATERIAL')
+        _add_node_op(pie, "Input Material", 'GeometryNodeInputMaterial', 'MATERIAL')
+        _add_node_op(pie, "Set Shade Smooth", 'GeometryNodeSetShadeSmooth', 'SHADING_RENDERED')
+        _add_node_op(pie, "UV Unwrap", 'GeometryNodeUVUnwrap', 'UV')
+        _add_node_op(pie, "UV Pack Islands", 'GeometryNodeUVPackIslands', 'UV')
 
 
 # ==============================================================================
@@ -882,99 +1002,112 @@ class SUBPIE_MT_sh_input(Menu):
         pie = self.layout.menu_pie()
 
         # 1. WEST
-        pie.operator("node.add_node", text="Color", icon='COLOR').type = 'ShaderNodeRGB'
+        _add_node_op(pie, "Color", 'ShaderNodeRGB', 'COLOR')
         # 2. EAST
-        pie.operator("node.add_node", text="Value", icon='PROPERTIES').type = 'ShaderNodeValue'
+        _add_node_op(pie, "Value", 'ShaderNodeValue', 'PROPERTIES')
         # 3. SOUTH
-        pie.operator("node.add_node", text="Attribute", icon='SPREADSHEET').type = 'ShaderNodeAttribute'
+        _add_node_op(pie, "Attribute", 'ShaderNodeAttribute', 'SPREADSHEET')
         # 4. NORTH
-        pie.operator("node.add_node", text="Object Info", icon='OBJECT_DATA').type = 'ShaderNodeObjectInfo'
+        _add_node_op(pie, "Object Info", 'ShaderNodeObjectInfo', 'OBJECT_DATA')
         # 5. NORTH-WEST
-        pie.operator("node.add_node", text="Geometry", icon='MESH_DATA').type = 'ShaderNodeNewGeometry'
+        _add_node_op(pie, "Geometry", 'ShaderNodeNewGeometry', 'MESH_DATA')
         # 6. NORTH-EAST
-        pie.operator("node.add_node", text="UV Map", icon='UV').type = 'ShaderNodeUVMap'
+        _add_node_op(pie, "UV Map", 'ShaderNodeUVMap', 'UV')
         # 7. SOUTH-WEST
-        pie.operator("node.add_node", text="Camera Data", icon='CAMERA_DATA').type = 'ShaderNodeCameraData'
+        _add_node_op(pie, "Camera Data", 'ShaderNodeCameraData', 'CAMERA_DATA')
         # 8. SOUTH-EAST
-        pie.operator("node.add_node", text="Ambient Occlusion", icon='NODE_SEL').type = 'ShaderNodeAmbientOcclusion'
+        _add_node_op(pie, "Ambient Occlusion", 'ShaderNodeAmbientOcclusion', 'NODE_SEL')
 
 class SUBPIE_MT_sh_output(Menu):
     bl_label = "Output"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Material Output", icon='MATERIAL').type = 'ShaderNodeOutputMaterial'
-        pie.operator("node.add_node", text="Light Output", icon='LIGHT').type = 'ShaderNodeOutputLight'
-        pie.operator("node.add_node", text="World Output", icon='WORLD').type = 'ShaderNodeOutputWorld'
-        pie.operator("node.add_node", text="AOV Output", icon='RENDER_RESULT').type = 'ShaderNodeOutputAOV'
-        pie.operator("node.add_node", text="Line Style Output", icon='STROKE').type = 'ShaderNodeOutputLineStyle'
-        pie.operator("node.add_node", text="Background", icon='WORLD').type = 'ShaderNodeBackground'
-        pie.operator("node.add_node", text="Holdout", icon='SHADING_WIRE').type = 'ShaderNodeHoldout'
-        pie.operator("node.add_node", text="Emission", icon='LIGHT').type = 'ShaderNodeEmission'
+        _add_node_op(pie, "Material Output", 'ShaderNodeOutputMaterial', 'MATERIAL')
+        _add_node_op(pie, "Light Output", 'ShaderNodeOutputLight', 'LIGHT')
+        _add_node_op(pie, "World Output", 'ShaderNodeOutputWorld', 'WORLD')
+        _add_node_op(pie, "AOV Output", 'ShaderNodeOutputAOV', 'RENDER_RESULT')
+        _add_node_op(pie, "Line Style Output", 'ShaderNodeOutputLineStyle', 'STROKE')
+        _add_node_op(pie, "Background", 'ShaderNodeBackground', 'WORLD')
+        _add_node_op(pie, "Holdout", 'ShaderNodeHoldout', 'SHADING_WIRE')
+        _add_node_op(pie, "Emission", 'ShaderNodeEmission', 'LIGHT')
 
 class SUBPIE_MT_sh_shader(Menu):
     bl_label = "Shader"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Principled BSDF", icon='SHADING_RENDERED').type = 'ShaderNodeBsdfPrincipled'
-        pie.operator("node.add_node", text="Emission", icon='LIGHT').type = 'ShaderNodeEmission'
-        pie.operator("node.add_node", text="Mix Shader", icon='ARROW_LEFTRIGHT').type = 'ShaderNodeMixShader'
-        pie.operator("node.add_node", text="Transparent BSDF", icon='SHADING_WIRE').type = 'ShaderNodeBsdfTransparent'
-        pie.operator("node.add_node", text="Glass BSDF", icon='SHADING_RENDERED').type = 'ShaderNodeBsdfGlass'
-        pie.operator("node.add_node", text="Volume Scatter", icon='VOLUME_DATA').type = 'ShaderNodeVolumeScatter'
-        pie.operator("node.add_node", text="Glossy BSDF", icon='SHADING_RENDERED').type = 'ShaderNodeBsdfGlossy'
-        pie.operator("node.add_node", text="Principled Volume", icon='VOLUME_DATA').type = 'ShaderNodeVolumePrincipled'
+        _add_node_op(pie, "Principled BSDF", 'ShaderNodeBsdfPrincipled', 'SHADING_RENDERED')
+        _add_node_op(pie, "Emission", 'ShaderNodeEmission', 'LIGHT')
+        _add_node_op(pie, "Mix Shader", 'ShaderNodeMixShader', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Transparent BSDF", 'ShaderNodeBsdfTransparent', 'SHADING_WIRE')
+        _add_node_op(pie, "Glass BSDF", 'ShaderNodeBsdfGlass', 'SHADING_RENDERED')
+        _add_node_op(pie, "Volume Scatter", 'ShaderNodeVolumeScatter', 'VOLUME_DATA')
+        _add_node_op(pie, "Glossy BSDF", 'ShaderNodeBsdfGlossy', 'SHADING_RENDERED')
+        _add_node_op(pie, "Principled Volume", 'ShaderNodeVolumePrincipled', 'VOLUME_DATA')
 
 class SUBPIE_MT_sh_texture(Menu):
     bl_label = "Texture"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Image Texture", icon='IMAGE_DATA').type = 'ShaderNodeTexImage'
-        pie.operator("node.add_node", text="Noise Texture", icon='TEXTURE').type = 'ShaderNodeTexNoise'
-        pie.operator("node.add_node", text="Voronoi Texture", icon='TEXTURE').type = 'ShaderNodeTexVoronoi'
-        pie.operator("node.add_node", text="Gradient Texture", icon='TEXTURE').type = 'ShaderNodeTexGradient'
-        pie.operator("node.add_node", text="Wave Texture", icon='TEXTURE').type = 'ShaderNodeTexWave'
-        pie.operator("node.add_node", text="Sky Texture", icon='LIGHT_SUN').type = 'ShaderNodeTexSky'
-        pie.operator("node.add_node", text="Checker Texture", icon='TEXTURE').type = 'ShaderNodeTexChecker'
-        pie.operator("node.add_node", text="Magic Texture", icon='TEXTURE').type = 'ShaderNodeTexMagic'
+        _add_node_op(pie, "Image Texture", 'ShaderNodeTexImage', 'IMAGE_DATA')
+        _add_node_op(pie, "Noise Texture", 'ShaderNodeTexNoise', 'TEXTURE')
+        _add_node_op(pie, "Voronoi Texture", 'ShaderNodeTexVoronoi', 'TEXTURE')
+        _add_node_op(pie, "Gradient Texture", 'ShaderNodeTexGradient', 'TEXTURE')
+        _add_node_op(pie, "Wave Texture", 'ShaderNodeTexWave', 'TEXTURE')
+        _add_node_op(pie, "Sky Texture", 'ShaderNodeTexSky', 'LIGHT_SUN')
+        _add_node_op(pie, "Checker Texture", 'ShaderNodeTexChecker', 'TEXTURE')
+        _add_node_op(pie, "Magic Texture", 'ShaderNodeTexMagic', 'TEXTURE')
 
 class SUBPIE_MT_sh_color(Menu):
     bl_label = "Color"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Color Ramp", icon='COLOR').type = 'ShaderNodeValToRGB'
-        pie.operator("node.add_node", text="Mix Color", icon='COLOR').type = 'ShaderNodeMix'
-        pie.operator("node.add_node", text="RGB Curves", icon='CURVE_DATA').type = 'ShaderNodeRGBCurve'
-        pie.operator("node.add_node", text="Hue/Saturation", icon='COLOR').type = 'ShaderNodeHueSaturation'
-        pie.operator("node.add_node", text="Invert Color", icon='COLOR').type = 'ShaderNodeInvert'
-        pie.operator("node.add_node", text="Bright/Contrast", icon='COLORSET_10_VEC').type = 'ShaderNodeBrightContrast'
-        pie.operator("node.add_node", text="Gamma", icon='COLOR').type = 'ShaderNodeGamma'
-        pie.operator("node.add_node", text="Light Falloff", icon='LIGHT').type = 'ShaderNodeLightFalloff'
+        _add_node_op(pie, "Color Ramp", 'ShaderNodeValToRGB', 'COLOR')
+        _add_node_op(pie, "Mix Color", 'ShaderNodeMix', 'COLOR')
+        _add_node_op(pie, "RGB Curves", 'ShaderNodeRGBCurve', 'CURVE_DATA')
+        _add_node_op(pie, "Hue/Saturation", 'ShaderNodeHueSaturation', 'COLOR')
+        _add_node_op(pie, "Invert Color", 'ShaderNodeInvert', 'COLOR')
+        _add_node_op(pie, "Bright/Contrast", 'ShaderNodeBrightContrast', 'COLORSET_10_VEC')
+        _add_node_op(pie, "Gamma", 'ShaderNodeGamma', 'COLOR')
+        _add_node_op(pie, "Light Falloff", 'ShaderNodeLightFalloff', 'LIGHT')
 
 class SUBPIE_MT_sh_vector(Menu):
     bl_label = "Vector"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Mapping", icon='ORIENTATION_GLOBAL').type = 'ShaderNodeMapping'
-        pie.operator("node.add_node", text="Bump", icon='FORCE_TEXTURE').type = 'ShaderNodeBump'
-        pie.operator("node.add_node", text="Displacement", icon='FORCE_TEXTURE').type = 'ShaderNodeDisplacement'
-        pie.operator("node.add_node", text="Normal Map", icon='NORMALS_FACE').type = 'ShaderNodeNormalMap'
-        pie.operator("node.add_node", text="Vector Math", icon='CON_KINEMATIC').type = 'ShaderNodeVectorMath'
-        pie.operator("node.add_node", text="Vector Displacement", icon='FORCE_TEXTURE').type = 'ShaderNodeVectorDisplacement'
-        pie.operator("node.add_node", text="Vector Curves", icon='CURVE_DATA').type = 'ShaderNodeVectorCurve'
-        pie.operator("node.add_node", text="Vector Transform", icon='ORIENTATION_GLOBAL').type = 'ShaderNodeVectorTransform'
+        _add_node_op(pie, "Mapping", 'ShaderNodeMapping', 'ORIENTATION_GLOBAL')
+        _add_node_op(pie, "Bump", 'ShaderNodeBump', 'FORCE_TEXTURE')
+        _add_node_op(pie, "Displacement", 'ShaderNodeDisplacement', 'FORCE_TEXTURE')
+        _add_node_op(pie, "Normal Map", 'ShaderNodeNormalMap', 'NORMALS_FACE')
+        _add_node_op(pie, "Vector Math", 'ShaderNodeVectorMath', 'CON_KINEMATIC')
+        _add_node_op(pie, "Vector Displacement", 'ShaderNodeVectorDisplacement', 'FORCE_TEXTURE')
+        _add_node_op(pie, "Vector Curves", 'ShaderNodeVectorCurve', 'CURVE_DATA')
+        _add_node_op(pie, "Vector Transform", 'ShaderNodeVectorTransform', 'ORIENTATION_GLOBAL')
+
+class SUBPIE_MT_sh_value(Menu):
+    bl_label = "Value"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        _add_node_op(pie, "Value", 'ShaderNodeValue', 'PROPERTIES')
+        _add_node_op(pie, "Math", 'ShaderNodeMath', 'CON_KINEMATIC')
+        _add_node_op(pie, "Map Range", 'ShaderNodeMapRange', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Clamp", 'ShaderNodeClamp', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Float Curve", 'ShaderNodeFloatCurve', 'CURVE_DATA')
+        _add_node_op(pie, "RGB to BW", 'ShaderNodeRGBToBW', 'COLOR')
+        _add_node_op(pie, "Fresnel", 'ShaderNodeFresnel', 'NODE_SEL')
+        _add_node_op(pie, "Layer Weight", 'ShaderNodeLayerWeight', 'NODE_SEL')
 
 class SUBPIE_MT_sh_converter(Menu):
     bl_label = "Converter"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'ShaderNodeMath'
-        pie.operator("node.add_node", text="Map Range", icon='ARROW_LEFTRIGHT').type = 'ShaderNodeMapRange'
-        pie.operator("node.add_node", text="Separate Color", icon='COLOR').type = 'ShaderNodeSeparateColor'
-        pie.operator("node.add_node", text="Combine Color", icon='COLOR').type = 'ShaderNodeCombineColor'
-        pie.operator("node.add_node", text="Separate XYZ", icon='AXIS_SIDE').type = 'ShaderNodeSeparateXYZ'
-        pie.operator("node.add_node", text="Combine XYZ", icon='AXIS_SIDE').type = 'ShaderNodeCombineXYZ'
-        pie.operator("node.add_node", text="Clamp", icon='ARROW_LEFTRIGHT').type = 'ShaderNodeClamp'
-        pie.operator("node.add_node", text="Blackbody", icon='LIGHT').type = 'ShaderNodeBlackbody'
+        _add_node_op(pie, "Math", 'ShaderNodeMath', 'CON_KINEMATIC')
+        _add_node_op(pie, "Map Range", 'ShaderNodeMapRange', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Separate Color", 'ShaderNodeSeparateColor', 'COLOR')
+        _add_node_op(pie, "Combine Color", 'ShaderNodeCombineColor', 'COLOR')
+        _add_node_op(pie, "Separate XYZ", 'ShaderNodeSeparateXYZ', 'AXIS_SIDE')
+        _add_node_op(pie, "Combine XYZ", 'ShaderNodeCombineXYZ', 'AXIS_SIDE')
+        _add_node_op(pie, "Clamp", 'ShaderNodeClamp', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Blackbody", 'ShaderNodeBlackbody', 'LIGHT')
 
 
 # ==============================================================================
@@ -987,30 +1120,30 @@ class SUBPIE_MT_co_input(Menu):
         pie = self.layout.menu_pie()
 
         # WEST
-        pie.operator("node.add_node", text="Image", icon='IMAGE_DATA').type = 'CompositorNodeImage'
+        _add_node_op(pie, "Image", 'CompositorNodeImage', 'IMAGE_DATA')
         # EAST
-        pie.operator("node.add_node", text="Render Layers", icon='RENDERLAYERS').type = 'CompositorNodeRLayers'
+        _add_node_op(pie, "Render Layers", 'CompositorNodeRLayers', 'RENDERLAYERS')
         # SOUTH
-        pie.operator("node.add_node", text="Value", icon='PROPERTIES').type = 'CompositorNodeValue'
+        _add_node_op(pie, "Value", 'CompositorNodeValue', 'PROPERTIES')
         # NORTH
-        pie.operator("node.add_node", text="Time", icon='TIME').type = 'CompositorNodeTime'
+        _add_node_op(pie, "Time", 'CompositorNodeTime', 'TIME')
         # NORTH-WEST
-        pie.operator("node.add_node", text="Movie Clip", icon='TRACKER').type = 'CompositorNodeMovieClip'
+        _add_node_op(pie, "Movie Clip", 'CompositorNodeMovieClip', 'TRACKER')
         # NORTH-EAST
-        pie.operator("node.add_node", text="RGB", icon='COLOR').type = 'CompositorNodeRGB'
+        _add_node_op(pie, "RGB", 'CompositorNodeRGB', 'COLOR')
         # SOUTH-WEST
-        pie.operator("node.add_node", text="Mask", icon='MOD_MASK').type = 'CompositorNodeMask'
+        _add_node_op(pie, "Mask", 'CompositorNodeMask', 'MOD_MASK')
         # SOUTH-EAST
-        pie.operator("node.add_node", text="Track Position", icon='TRACKER').type = 'CompositorNodeTrackPos'
+        _add_node_op(pie, "Track Position", 'CompositorNodeTrackPos', 'TRACKER')
 
 class SUBPIE_MT_co_output(Menu):
     bl_label = "Output"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Composite", icon='RENDER_RESULT').type = 'CompositorNodeComposite'
-        pie.operator("node.add_node", text="Viewer", icon='HIDE_ON').type = 'CompositorNodeViewer'
-        pie.operator("node.add_node", text="File Output", icon='FILE_IMAGE').type = 'CompositorNodeOutputFile'
-        pie.operator("node.add_node", text="Split Viewer", icon='HIDE_ON').type = 'CompositorNodeSplitViewer'
+        _add_node_op(pie, "Composite", 'CompositorNodeComposite', 'RENDER_RESULT')
+        _add_node_op(pie, "Viewer", 'CompositorNodeViewer', 'HIDE_ON')
+        _add_node_op(pie, "File Output", 'CompositorNodeOutputFile', 'FILE_IMAGE')
+        _add_node_op(pie, "Split Viewer", 'CompositorNodeSplitViewer', 'HIDE_ON')
         pie.separator()
         pie.separator()
         pie.separator()
@@ -1020,66 +1153,66 @@ class SUBPIE_MT_co_color(Menu):
     bl_label = "Color"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Mix", icon='COLOR').type = 'CompositorNodeMixRGB'
-        pie.operator("node.add_node", text="Alpha Over", icon='IMAGE_ALPHA').type = 'CompositorNodeAlphaOver'
-        pie.operator("node.add_node", text="Color Balance", icon='COLOR').type = 'CompositorNodeColorBalance'
-        pie.operator("node.add_node", text="Color Ramp", icon='COLOR').type = 'CompositorNodeValToRGB'
-        pie.operator("node.add_node", text="Hue Saturation Value", icon='COLOR').type = 'CompositorNodeHueSat'
-        pie.operator("node.add_node", text="RGB Curves", icon='CURVE_DATA').type = 'CompositorNodeCurveRGB'
-        pie.operator("node.add_node", text="Bright/Contrast", icon='COLORSET_10_VEC').type = 'CompositorNodeBrightContrast'
-        pie.operator("node.add_node", text="Gamma", icon='COLOR').type = 'CompositorNodeGamma'
+        _add_node_op(pie, "Mix", 'CompositorNodeMixRGB', 'COLOR')
+        _add_node_op(pie, "Alpha Over", 'CompositorNodeAlphaOver', 'IMAGE_ALPHA')
+        _add_node_op(pie, "Color Balance", 'CompositorNodeColorBalance', 'COLOR')
+        _add_node_op(pie, "Color Ramp", 'CompositorNodeValToRGB', 'COLOR')
+        _add_node_op(pie, "Hue Saturation Value", 'CompositorNodeHueSat', 'COLOR')
+        _add_node_op(pie, "RGB Curves", 'CompositorNodeCurveRGB', 'CURVE_DATA')
+        _add_node_op(pie, "Bright/Contrast", 'CompositorNodeBrightContrast', 'COLORSET_10_VEC')
+        _add_node_op(pie, "Gamma", 'CompositorNodeGamma', 'COLOR')
 
 class SUBPIE_MT_co_filter(Menu):
     bl_label = "Filter"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Blur", icon='MOD_SMOOTH').type = 'CompositorNodeBlur'
-        pie.operator("node.add_node", text="Glare", icon='LIGHT_SUN').type = 'CompositorNodeGlare'
-        pie.operator("node.add_node", text="Directional Blur", icon='MOD_SMOOTH').type = 'CompositorNodeDBlur'
-        pie.operator("node.add_node", text="Sun Beams", icon='LIGHT_SUN').type = 'CompositorNodeSunBeams'
-        pie.operator("node.add_node", text="Pixelate", icon='TEXTURE').type = 'CompositorNodePixelate'
-        pie.operator("node.add_node", text="Despeckle", icon='MOD_SMOOTH').type = 'CompositorNodeDespeckle'
-        pie.operator("node.add_node", text="Filter", icon='FILTER').type = 'CompositorNodeFilter'
-        pie.operator("node.add_node", text="Bokeh Blur", icon='IMAGE_DATA').type = 'CompositorNodeBokehBlur'
+        _add_node_op(pie, "Blur", 'CompositorNodeBlur', 'MOD_SMOOTH')
+        _add_node_op(pie, "Glare", 'CompositorNodeGlare', 'LIGHT_SUN')
+        _add_node_op(pie, "Directional Blur", 'CompositorNodeDBlur', 'MOD_SMOOTH')
+        _add_node_op(pie, "Sun Beams", 'CompositorNodeSunBeams', 'LIGHT_SUN')
+        _add_node_op(pie, "Pixelate", 'CompositorNodePixelate', 'TEXTURE')
+        _add_node_op(pie, "Despeckle", 'CompositorNodeDespeckle', 'MOD_SMOOTH')
+        _add_node_op(pie, "Filter", 'CompositorNodeFilter', 'FILTER')
+        _add_node_op(pie, "Bokeh Blur", 'CompositorNodeBokehBlur', 'IMAGE_DATA')
 
 class SUBPIE_MT_co_transform(Menu):
     bl_label = "Transform"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Transform", icon='ORIENTATION_GLOBAL').type = 'CompositorNodeTransform'
-        pie.operator("node.add_node", text="Translate", icon='NODE').type = 'CompositorNodeTranslate'
-        pie.operator("node.add_node", text="Scale", icon='NODE').type = 'CompositorNodeScale'
-        pie.operator("node.add_node", text="Rotate", icon='NODE').type = 'CompositorNodeRotate'
-        pie.operator("node.add_node", text="Flip", icon='NODE').type = 'CompositorNodeFlip'
-        pie.operator("node.add_node", text="Crop", icon='FULLSCREEN_EXIT').type = 'CompositorNodeCrop'
-        pie.operator("node.add_node", text="Movie Distortion", icon='TRACKER').type = 'CompositorNodeMovieDistortion'
-        pie.operator("node.add_node", text="Corner Pin", icon='NODE').type = 'CompositorNodeCornerPin'
+        _add_node_op(pie, "Transform", 'CompositorNodeTransform', 'ORIENTATION_GLOBAL')
+        _add_node_op(pie, "Translate", 'CompositorNodeTranslate', 'NODE')
+        _add_node_op(pie, "Scale", 'CompositorNodeScale', 'NODE')
+        _add_node_op(pie, "Rotate", 'CompositorNodeRotate', 'NODE')
+        _add_node_op(pie, "Flip", 'CompositorNodeFlip', 'NODE')
+        _add_node_op(pie, "Crop", 'CompositorNodeCrop', 'FULLSCREEN_EXIT')
+        _add_node_op(pie, "Movie Distortion", 'CompositorNodeMovieDistortion', 'TRACKER')
+        _add_node_op(pie, "Corner Pin", 'CompositorNodeCornerPin', 'NODE')
 
 class SUBPIE_MT_co_matte(Menu):
     bl_label = "Matte & Mask"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Cryptomatte", icon='RESTRICT_COLOR_OFF').type = 'CompositorNodeCryptomatteV2'
-        pie.operator("node.add_node", text="Keying", icon='IMAGE_ALPHA').type = 'CompositorNodeKeying'
-        pie.operator("node.add_node", text="Color Key", icon='IMAGE_ALPHA').type = 'CompositorNodeColorMatte'
-        pie.operator("node.add_node", text="Box Mask", icon='MOD_MASK').type = 'CompositorNodeBoxMask'
-        pie.operator("node.add_node", text="Ellipse Mask", icon='MOD_MASK').type = 'CompositorNodeEllipseMask'
-        pie.operator("node.add_node", text="Luminance Key", icon='IMAGE_ALPHA').type = 'CompositorNodeLumaMatte'
-        pie.operator("node.add_node", text="Chroma Key", icon='IMAGE_ALPHA').type = 'CompositorNodeChromaMatte'
-        pie.operator("node.add_node", text="Difference Key", icon='IMAGE_ALPHA').type = 'CompositorNodeDiffMatte'
+        _add_node_op(pie, "Cryptomatte", 'CompositorNodeCryptomatteV2', 'RESTRICT_COLOR_OFF')
+        _add_node_op(pie, "Keying", 'CompositorNodeKeying', 'IMAGE_ALPHA')
+        _add_node_op(pie, "Color Key", 'CompositorNodeColorMatte', 'IMAGE_ALPHA')
+        _add_node_op(pie, "Box Mask", 'CompositorNodeBoxMask', 'MOD_MASK')
+        _add_node_op(pie, "Ellipse Mask", 'CompositorNodeEllipseMask', 'MOD_MASK')
+        _add_node_op(pie, "Luminance Key", 'CompositorNodeLumaMatte', 'IMAGE_ALPHA')
+        _add_node_op(pie, "Chroma Key", 'CompositorNodeChromaMatte', 'IMAGE_ALPHA')
+        _add_node_op(pie, "Difference Key", 'CompositorNodeDiffMatte', 'IMAGE_ALPHA')
 
 class SUBPIE_MT_co_converter(Menu):
     bl_label = "Converter"
     def draw(self, context):
         pie = self.layout.menu_pie()
-        pie.operator("node.add_node", text="Math", icon='CON_KINEMATIC').type = 'CompositorNodeMath'
-        pie.operator("node.add_node", text="Set Alpha", icon='IMAGE_ALPHA').type = 'CompositorNodeSetAlpha'
-        pie.operator("node.add_node", text="ID Mask", icon='MOD_MASK').type = 'CompositorNodeIDMask'
-        pie.operator("node.add_node", text="RGB to BW", icon='COLOR').type = 'CompositorNodeRGBToBW'
-        pie.operator("node.add_node", text="Separate Color", icon='COLOR').type = 'CompositorNodeSeparateColor'
-        pie.operator("node.add_node", text="Combine Color", icon='COLOR').type = 'CompositorNodeCombineColor'
-        pie.operator("node.add_node", text="Alpha Convert", icon='IMAGE_ALPHA').type = 'CompositorNodePremulKey'
-        pie.operator("node.add_node", text="Normalize", icon='NORMALIZE_FCURVES').type = 'CompositorNodeNormalize'
+        _add_node_op(pie, "Math", 'CompositorNodeMath', 'CON_KINEMATIC')
+        _add_node_op(pie, "Set Alpha", 'CompositorNodeSetAlpha', 'IMAGE_ALPHA')
+        _add_node_op(pie, "ID Mask", 'CompositorNodeIDMask', 'MOD_MASK')
+        _add_node_op(pie, "RGB to BW", 'CompositorNodeRGBToBW', 'COLOR')
+        _add_node_op(pie, "Separate Color", 'CompositorNodeSeparateColor', 'COLOR')
+        _add_node_op(pie, "Combine Color", 'CompositorNodeCombineColor', 'COLOR')
+        _add_node_op(pie, "Alpha Convert", 'CompositorNodePremulKey', 'IMAGE_ALPHA')
+        _add_node_op(pie, "Normalize", 'CompositorNodeNormalize', 'NORMALIZE_FCURVES')
 
 
 # ==============================================================================
@@ -1115,7 +1248,7 @@ class SUBPIE_MT_node_group(Menu):
         # WEST
         pie.separator()
         # EAST - adjacent to SE
-        pie.operator("node.add_node", text="Group Input", icon='FORWARD').type = 'NodeGroupInput'
+        _add_node_op(pie, "Group Input", 'NodeGroupInput', 'FORWARD')
         # SOUTH
         pie.separator()
         # NORTH
@@ -1127,7 +1260,7 @@ class SUBPIE_MT_node_group(Menu):
         # SOUTH-WEST
         pie.separator()
         # SOUTH-EAST - primary
-        pie.operator("node.add_node", text="Group Output", icon='BACK').type = 'NodeGroupOutput'
+        _add_node_op(pie, "Group Output", 'NodeGroupOutput', 'BACK')
 
 
 class SUBPIE_MT_node_delete(Menu):
@@ -1187,7 +1320,82 @@ class SUBPIE_MT_node_duplicate(Menu):
 
 
 # ==============================================================================
-# 7. MAIN CONTEXT MENU
+# 7. ADD-NODE CATEGORY CHOOSERS (shared by the no-selection pies and Add Connect)
+# ==============================================================================
+
+def _cats_geo(pie):
+    # WEST
+    pie.operator("wm.call_menu_pie", text="Mesh Nodes...", icon='MESH_DATA').name = "SUBPIE_MT_gn_mesh"
+    # EAST
+    pie.operator("wm.call_menu_pie", text="Curve Nodes...", icon='CURVE_DATA').name = "SUBPIE_MT_gn_curve"
+    # SOUTH
+    pie.operator("wm.call_menu_pie", text="Utilities & Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_gn_utilities"
+    # NORTH
+    pie.operator("wm.call_menu_pie", text="Input & Output...", icon='NODETREE').name = "SUBPIE_MT_gn_io"
+    # NORTH-WEST
+    pie.operator("wm.call_menu_pie", text="Geometry & Instances...", icon='GROUP_VERTEX').name = "SUBPIE_MT_gn_geometry_instances"
+    # NORTH-EAST
+    pie.operator("wm.call_menu_pie", text="Attributes & Textures...", icon='SPREADSHEET').name = "SUBPIE_MT_gn_attributes"
+    # SOUTH-WEST
+    pie.operator("wm.call_menu_pie", text="Points & Volumes...", icon='PARTICLE_DATA').name = "SUBPIE_MT_gn_points_volumes"
+    # SOUTH-EAST
+    pie.operator("wm.call_menu_pie", text="Materials & UV...", icon='MATERIAL').name = "SUBPIE_MT_gn_materials"
+
+
+def _cats_shader(pie):
+    # WEST
+    pie.operator("wm.call_menu_pie", text="Texture...", icon='TEXTURE').name = "SUBPIE_MT_sh_texture"
+    # EAST
+    pie.operator("wm.call_menu_pie", text="Color...", icon='COLOR').name = "SUBPIE_MT_sh_color"
+    # SOUTH
+    pie.operator("wm.call_menu_pie", text="Converter...", icon='CON_KINEMATIC').name = "SUBPIE_MT_sh_converter"
+    # NORTH
+    pie.operator("wm.call_menu_pie", text="Input...", icon='FORWARD').name = "SUBPIE_MT_sh_input"
+    # NORTH-WEST
+    pie.operator("wm.call_menu_pie", text="Shader...", icon='SHADING_RENDERED').name = "SUBPIE_MT_sh_shader"
+    # NORTH-EAST
+    pie.operator("wm.call_menu_pie", text="Output...", icon='BACK').name = "SUBPIE_MT_sh_output"
+    # SOUTH-WEST
+    pie.operator("wm.call_menu_pie", text="Vector...", icon='ORIENTATION_GLOBAL').name = "SUBPIE_MT_sh_vector"
+    # SOUTH-EAST
+    pie.operator("wm.call_menu_pie", text="Value...", icon='PROPERTIES').name = "SUBPIE_MT_sh_value"
+
+
+def _cats_comp(pie):
+    # WEST
+    pie.operator("wm.call_menu_pie", text="Filter...", icon='MOD_SMOOTH').name = "SUBPIE_MT_co_filter"
+    # EAST
+    pie.operator("wm.call_menu_pie", text="Color...", icon='COLOR').name = "SUBPIE_MT_co_color"
+    # SOUTH
+    pie.operator("wm.call_menu_pie", text="Converter...", icon='CON_KINEMATIC').name = "SUBPIE_MT_co_converter"
+    # NORTH
+    pie.operator("wm.call_menu_pie", text="Input...", icon='FORWARD').name = "SUBPIE_MT_co_input"
+    # NORTH-WEST
+    pie.operator("wm.call_menu_pie", text="Transform...", icon='ORIENTATION_GLOBAL').name = "SUBPIE_MT_co_transform"
+    # NORTH-EAST
+    pie.operator("wm.call_menu_pie", text="Output...", icon='BACK').name = "SUBPIE_MT_co_output"
+    # SOUTH-WEST
+    pie.operator("wm.call_menu_pie", text="Matte & Mask...", icon='IMAGE_ALPHA').name = "SUBPIE_MT_co_matte"
+    # SOUTH-EAST
+    pie.operator("wm.call_menu_pie", text="Group...", icon='NODETREE').name = "SUBPIE_MT_node_group"
+
+
+class SUBPIE_MT_add_connect(Menu):
+    bl_label = "Add & Connect"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        tree_type = context.space_data.tree_type
+        if tree_type == 'GeometryNodeTree':
+            _cats_geo(pie)
+        elif tree_type == 'ShaderNodeTree':
+            _cats_shader(pie)
+        elif tree_type == 'CompositorNodeTree':
+            _cats_comp(pie)
+
+
+# ==============================================================================
+# 8. MAIN CONTEXT MENU
 # ==============================================================================
 
 class NODE_PIE_MT_context(Menu):
@@ -1195,6 +1403,11 @@ class NODE_PIE_MT_context(Menu):
     bl_label = "Node Context Pie"
 
     def draw(self, context):
+        # Reaching the main pie ends any in-progress Add Connect browse, so the category
+        # sub-pies fall back to plain add-node behaviour.
+        global _ADD_CONNECT_MODE
+        _ADD_CONNECT_MODE = False
+
         layout = self.layout
         layout.operator_context = 'INVOKE_DEFAULT'
         pie = layout.menu_pie()
@@ -1223,58 +1436,13 @@ class NODE_PIE_MT_context(Menu):
     # --- ADD NODE PIES (no selection) ---
 
     def draw_no_nodes_geo(self, pie, context):
-        # WEST
-        pie.operator("wm.call_menu_pie", text="Mesh Nodes...", icon='MESH_DATA').name = "SUBPIE_MT_gn_mesh"
-        # EAST
-        pie.operator("wm.call_menu_pie", text="Curve Nodes...", icon='CURVE_DATA').name = "SUBPIE_MT_gn_curve"
-        # SOUTH
-        pie.operator("wm.call_menu_pie", text="Utilities & Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_gn_utilities"
-        # NORTH
-        pie.operator("wm.call_menu_pie", text="Input & Output...", icon='NODETREE').name = "SUBPIE_MT_gn_io"
-        # NORTH-WEST
-        pie.operator("wm.call_menu_pie", text="Geometry & Instances...", icon='GROUP_VERTEX').name = "SUBPIE_MT_gn_geometry_instances"
-        # NORTH-EAST
-        pie.operator("wm.call_menu_pie", text="Attributes & Textures...", icon='SPREADSHEET').name = "SUBPIE_MT_gn_attributes"
-        # SOUTH-WEST
-        pie.operator("wm.call_menu_pie", text="Points & Volumes...", icon='PARTICLE_DATA').name = "SUBPIE_MT_gn_points_volumes"
-        # SOUTH-EAST
-        pie.operator("wm.call_menu_pie", text="Materials & UV...", icon='MATERIAL').name = "SUBPIE_MT_gn_materials"
+        _cats_geo(pie)
 
     def draw_no_nodes_shader(self, pie, context):
-        # WEST
-        pie.operator("wm.call_menu_pie", text="Texture...", icon='TEXTURE').name = "SUBPIE_MT_sh_texture"
-        # EAST
-        pie.operator("wm.call_menu_pie", text="Color...", icon='COLOR').name = "SUBPIE_MT_sh_color"
-        # SOUTH
-        pie.operator("wm.call_menu_pie", text="Converter...", icon='CON_KINEMATIC').name = "SUBPIE_MT_sh_converter"
-        # NORTH
-        pie.operator("wm.call_menu_pie", text="Input...", icon='FORWARD').name = "SUBPIE_MT_sh_input"
-        # NORTH-WEST
-        pie.operator("wm.call_menu_pie", text="Shader...", icon='SHADING_RENDERED').name = "SUBPIE_MT_sh_shader"
-        # NORTH-EAST
-        pie.operator("wm.call_menu_pie", text="Output...", icon='BACK').name = "SUBPIE_MT_sh_output"
-        # SOUTH-WEST
-        pie.operator("wm.call_menu_pie", text="Vector...", icon='ORIENTATION_GLOBAL').name = "SUBPIE_MT_sh_vector"
-        # SOUTH-EAST
-        pie.operator("wm.call_menu_pie", text="Group...", icon='NODETREE').name = "SUBPIE_MT_node_group"
+        _cats_shader(pie)
 
     def draw_no_nodes_comp(self, pie, context):
-        # WEST
-        pie.operator("wm.call_menu_pie", text="Filter...", icon='MOD_SMOOTH').name = "SUBPIE_MT_co_filter"
-        # EAST
-        pie.operator("wm.call_menu_pie", text="Color...", icon='COLOR').name = "SUBPIE_MT_co_color"
-        # SOUTH
-        pie.operator("wm.call_menu_pie", text="Converter...", icon='CON_KINEMATIC').name = "SUBPIE_MT_co_converter"
-        # NORTH
-        pie.operator("wm.call_menu_pie", text="Input...", icon='FORWARD').name = "SUBPIE_MT_co_input"
-        # NORTH-WEST
-        pie.operator("wm.call_menu_pie", text="Transform...", icon='ORIENTATION_GLOBAL').name = "SUBPIE_MT_co_transform"
-        # NORTH-EAST
-        pie.operator("wm.call_menu_pie", text="Output...", icon='BACK').name = "SUBPIE_MT_co_output"
-        # SOUTH-WEST
-        pie.operator("wm.call_menu_pie", text="Matte & Mask...", icon='IMAGE_ALPHA').name = "SUBPIE_MT_co_matte"
-        # SOUTH-EAST
-        pie.operator("wm.call_menu_pie", text="Group...", icon='NODETREE').name = "SUBPIE_MT_node_group"
+        _cats_comp(pie)
 
     # --- SELECTION PIES ---
 
@@ -1293,12 +1461,8 @@ class NODE_PIE_MT_context(Menu):
             pie.separator()
         # SOUTH
         pie.operator("node.mute_toggle", text="Mute / Unmute", icon='HIDE_OFF')
-        # NORTH - link to viewer (geo/comp only)
-        tree_type = context.space_data.tree_type if context.space_data.node_tree else None
-        if tree_type in ('GeometryNodeTree', 'CompositorNodeTree'):
-            pie.operator("node.link_viewer", text="Link to Viewer", icon='HIDE_OFF')
-        else:
-            pie.separator()
+        # NORTH - add a node from the category pies and wire this node's best output into it
+        pie.operator("node.cpie_add_connect_start", text="Add Connect...", icon='ADD')
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
         # NORTH-EAST - add reroute nodes to all outputs (NW)
@@ -1343,12 +1507,14 @@ class NODE_PIE_MT_context(Menu):
 
 
 # ==============================================================================
-# 8. REGISTRATION
+# 9. REGISTRATION
 # ==============================================================================
 
 registry = [
     CONTEXTPIE_OT_combine_selected,
     NODE_OT_cpie_link_active_replace_parent,
+    NODE_OT_cpie_add_connect,
+    NODE_OT_cpie_add_connect_start,
     NODE_OT_cpie_merge_boolean,
     NODE_OT_cpie_merge_float,
     NODE_OT_cpie_merge_vector,
@@ -1377,6 +1543,7 @@ registry = [
     SUBPIE_MT_sh_texture,
     SUBPIE_MT_sh_color,
     SUBPIE_MT_sh_vector,
+    SUBPIE_MT_sh_value,
     SUBPIE_MT_sh_converter,
     SUBPIE_MT_co_input,
     SUBPIE_MT_co_output,
@@ -1390,6 +1557,7 @@ registry = [
     SUBPIE_MT_node_group,
     SUBPIE_MT_node_delete,
     SUBPIE_MT_node_duplicate,
+    SUBPIE_MT_add_connect,
     NODE_PIE_MT_context,
 ]
 
