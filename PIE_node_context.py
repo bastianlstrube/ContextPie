@@ -103,18 +103,7 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
 
         # Gather "Terminal" outputs: outputs that don't plug into another selected node
         selected_nodes.sort(key=lambda n: n.location.y, reverse=True) # Fallback sorting
-        terminal_sockets = []
-
-        for node in selected_nodes:
-            for out in node.outputs:
-                if out.hide or not out.enabled:
-                    continue
-
-                # Check if this output feeds internally into our selected group
-                is_internal = any((link.to_node in selected_nodes) for link in out.links)
-
-                if not is_internal:
-                    terminal_sockets.append(out)
+        terminal_sockets = _terminal_outputs(selected_nodes)
 
         # Setup target slots (Combine XYZ has 3, Combine Color has 4)
         num_slots = min(len(new_node.inputs), 4)
@@ -458,6 +447,26 @@ def _available_merge_types(selected, tree_type):
     return [t for t in _MERGE_DISPLAY_ORDER if t in chosen]
 
 
+def _terminal_outputs(selected):
+    """The selected nodes' outputs that don't feed back into the selection, i.e. the
+    sockets a merge/combine should consume. Order follows `selected`."""
+    sockets = []
+    for node in selected:
+        for out in node.outputs:
+            if out.hide or not out.enabled:
+                continue
+            if any(link.to_node in selected for link in out.links):
+                continue
+            sockets.append(out)
+    return sockets
+
+
+def _terminal_scalar_count(selected):
+    """How many terminal outputs are scalar (Value/Int) — the count of channels a
+    Combine XYZ / Combine Color node could pack from this selection."""
+    return sum(1 for s in _terminal_outputs(selected) if s.type in ('VALUE', 'INT'))
+
+
 def _pull_enum(node_cls_name, prop_name):
     cls = getattr(bpy.types, node_cls_name, None)
     if cls is None:
@@ -790,8 +799,9 @@ class NODE_OT_cpie_merge_geometry(bpy.types.Operator):
 
 
 class NODE_OT_cpie_magic_merge(bpy.types.Operator):
-    """Detect the mergeable output types of selected nodes. Opens a type-chooser pie
-    when more than one type is available, or goes straight to the merge pie when only one is"""
+    """Detect the mergeable output types of selected nodes. Opens a chooser pie when
+    more than one option is available (multiple merge types, or a Combine XYZ/Color
+    alternative), or goes straight to the merge pie when only one is"""
     bl_idname = "node.cpie_magic_merge"
     bl_label = "Magic Merge"
 
@@ -800,14 +810,21 @@ class NODE_OT_cpie_magic_merge(bpy.types.Operator):
         return _merge_poll(context)
 
     def execute(self, context):
-        types = _available_merge_types(context.selected_nodes, context.space_data.tree_type)
+        selected = context.selected_nodes
+        tree_type = context.space_data.tree_type
+        types = _available_merge_types(selected, tree_type)
         if not types:
             self.report({'WARNING'}, "No mergeable outputs in the selection")
             return {'CANCELLED'}
 
-        # One mergeable type -> jump straight to its enumerate pie; otherwise let the
-        # user pick which type to merge on via the chooser pie.
-        if len(types) == 1:
+        # 2+ scalar outputs in an editor with Combine nodes means the chooser has a
+        # Combine XYZ/Color option to offer beyond the plain same-type merge.
+        can_combine = (_terminal_scalar_count(selected) >= 2
+                       and tree_type in ('GeometryNodeTree', 'ShaderNodeTree', 'CompositorNodeTree'))
+
+        # A single mergeable type with no combine alternative -> jump straight to its
+        # enumerate pie; otherwise let the user pick (merge type or Combine) in the chooser.
+        if len(types) == 1 and not can_combine:
             bpy.ops.wm.call_menu_pie(name=_MERGE_ROUTING[types[0]][0])
         else:
             bpy.ops.wm.call_menu_pie(name="SUBPIE_MT_merge_chooser")
@@ -818,10 +835,22 @@ class SUBPIE_MT_merge_chooser(Menu):
     bl_label = "Merge Type"
     def draw(self, context):
         pie = self.layout.menu_pie()
+        selected = context.selected_nodes
+        tree_type = context.space_data.tree_type
         # Recomputed from the live selection so the slots always match what's mergeable.
-        for t in _available_merge_types(context.selected_nodes, context.space_data.tree_type):
+        for t in _available_merge_types(selected, tree_type):
             pie_name, label, icon = _MERGE_ROUTING[t]
             pie.operator("wm.call_menu_pie", text=label, icon=icon).name = pie_name
+
+        # With two or more terminal scalar outputs, also offer packing them into a
+        # Combine XYZ / Combine Color node instead of a same-type merge.
+        if _terminal_scalar_count(selected) >= 2:
+            if tree_type in ('GeometryNodeTree', 'ShaderNodeTree'):
+                pie.operator("node.cpie_combine_selected", text="Combine XYZ",
+                             icon='ORIENTATION_GLOBAL').combine_type = 'XYZ'
+            if tree_type in ('GeometryNodeTree', 'ShaderNodeTree', 'CompositorNodeTree'):
+                pie.operator("node.cpie_combine_selected", text="Combine Color",
+                             icon='COLOR').combine_type = 'COLOR'
 
 
 class SUBPIE_MT_merge_boolean(Menu):
@@ -935,19 +964,19 @@ class SUBPIE_MT_gn_io(Menu):
         # 8. SOUTH-EAST - Boolean Constant
         _add_node_op(pie, "Boolean", 'FunctionNodeInputBool', 'CHECKBOX_HLT')
 
-class SUBPIE_MT_gn_geometry_instances(Menu):
-    bl_label = "Geometry & Instances"
+class SUBPIE_MT_gn_geometry_points(Menu):
+    bl_label = "Geometry & Points"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        _add_node_op(pie, "Join Geometry", 'GeometryNodeJoinGeometry')
         _add_node_op(pie, "Transform", 'GeometryNodeTransform', 'ORIENTATION_GLOBAL')
         _add_node_op(pie, "Set Position", 'GeometryNodeSetPosition', 'SNAP_GRID')
+        _add_node_op(pie, "Join Geometry", 'GeometryNodeJoinGeometry')
         _add_node_op(pie, "Instance on Points", 'GeometryNodeInstanceOnPoints', 'PARTICLE_DATA')
         _add_node_op(pie, "Realize Instances", 'GeometryNodeRealizeInstances', 'OUTLINER_OB_GROUP_INSTANCE')
         _add_node_op(pie, "Separate Geometry", 'GeometryNodeSeparateGeometry', 'MESH_DATA')
         _add_node_op(pie, "Delete Geometry", 'GeometryNodeDeleteGeometry', 'CANCEL')
-        _add_node_op(pie, "Geometry to Instance", 'GeometryNodeGeometryToInstance', 'OUTLINER_OB_GROUP_INSTANCE')
+        _add_node_op(pie, "Distribute Points on Faces", 'GeometryNodeDistributePointsOnFaces', 'PARTICLE_DATA')
 
 class SUBPIE_MT_gn_attributes(Menu):
     bl_label = "Attributes & Textures"
@@ -963,19 +992,27 @@ class SUBPIE_MT_gn_attributes(Menu):
         _add_node_op(pie, "Blur Attribute", 'GeometryNodeBlurAttribute', 'MOD_SMOOTH')
         _add_node_op(pie, "Sample Index", 'GeometryNodeSampleIndex', 'SPREADSHEET')
 
-class SUBPIE_MT_gn_points_volumes(Menu):
-    bl_label = "Points & Volumes"
+class SUBPIE_MT_gn_converter(Menu):
+    bl_label = "Converter"
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        _add_node_op(pie, "Distribute Points on Faces", 'GeometryNodeDistributePointsOnFaces', 'PARTICLE_DATA')
-        _add_node_op(pie, "Points", 'GeometryNodePoints', 'PARTICLE_DATA')
-        _add_node_op(pie, "Points to Volume", 'GeometryNodePointsToVolume', 'VOLUME_DATA')
+        # WEST
+        _add_node_op(pie, "Mesh to Volume", 'GeometryNodeMeshToVolume', 'VOLUME_DATA')
+        # EAST
         _add_node_op(pie, "Volume to Mesh", 'GeometryNodeVolumeToMesh', 'MESH_DATA')
+        # SOUTH
+        _add_node_op(pie, "Mesh to Points", 'GeometryNodeMeshToPoints', 'PARTICLE_DATA')
+        # NORTH
+        _add_node_op(pie, "Mesh to Curve", 'GeometryNodeMeshToCurve', 'CURVE_DATA')
+        # NORTH-WEST
+        _add_node_op(pie, "Curve to Mesh", 'GeometryNodeCurveToMesh', 'MESH_DATA')
+        # NORTH-EAST
+        _add_node_op(pie, "Curve to Points", 'GeometryNodeCurveToPoints', 'PARTICLE_DATA')
+        # SOUTH-WEST
         _add_node_op(pie, "Points to Vertices", 'GeometryNodePointsToVertices', 'VERTEXSEL')
-        _add_node_op(pie, "Distribute Points in Volume", 'GeometryNodeDistributePointsInVolume', 'PARTICLE_DATA')
-        _add_node_op(pie, "Volume Cube", 'GeometryNodeVolumeCube', 'VOLUME_DATA')
-        _add_node_op(pie, "Set Point Radius", 'GeometryNodeSetPointRadius', 'PARTICLE_DATA')
+        # SOUTH-EAST
+        _add_node_op(pie, "Points to Volume", 'GeometryNodePointsToVolume', 'VOLUME_DATA')
 
 class SUBPIE_MT_gn_materials(Menu):
     bl_label = "Materials & UV"
@@ -1214,6 +1251,19 @@ class SUBPIE_MT_co_converter(Menu):
         _add_node_op(pie, "Alpha Convert", 'CompositorNodePremulKey', 'IMAGE_ALPHA')
         _add_node_op(pie, "Normalize", 'CompositorNodeNormalize', 'NORMALIZE_FCURVES')
 
+class SUBPIE_MT_co_vector(Menu):
+    bl_label = "Vector"
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        _add_node_op(pie, "Map Range", 'CompositorNodeMapRange', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Normalize", 'CompositorNodeNormalize', 'NORMALIZE_FCURVES')
+        _add_node_op(pie, "Map Value", 'CompositorNodeMapValue', 'ARROW_LEFTRIGHT')
+        _add_node_op(pie, "Normal", 'CompositorNodeNormal', 'NORMALS_FACE')
+        _add_node_op(pie, "Vector Curves", 'CompositorNodeCurveVec', 'CURVE_DATA')
+        _add_node_op(pie, "Lens Distortion", 'CompositorNodeLensdist', 'DRIVER_DISTANCE')
+        _add_node_op(pie, "Defocus", 'CompositorNodeDefocus', 'CAMERA_DATA')
+        _add_node_op(pie, "Displace", 'CompositorNodeDisplace', 'MOD_DISPLACE')
+
 
 # ==============================================================================
 # 4. BATCH CHANGE SUB-MENUS (Node Wrangler)
@@ -1238,29 +1288,6 @@ class SUBPIE_MT_nw_batch_math(Menu):
 # ==============================================================================
 # 5. SHARED UTILITY SUB-MENUS
 # ==============================================================================
-
-class SUBPIE_MT_node_group(Menu):
-    bl_label = "Group"
-
-    def draw(self, context):
-        pie = self.layout.menu_pie()
-        # Opened from SE: cluster at SE/E, separators elsewhere.
-        # WEST
-        pie.separator()
-        # EAST - adjacent to SE
-        _add_node_op(pie, "Group Input", 'NodeGroupInput', 'FORWARD')
-        # SOUTH
-        pie.separator()
-        # NORTH
-        pie.separator()
-        # NORTH-WEST
-        pie.separator()
-        # NORTH-EAST
-        pie.separator()
-        # SOUTH-WEST
-        pie.separator()
-        # SOUTH-EAST - primary
-        _add_node_op(pie, "Group Output", 'NodeGroupOutput', 'BACK')
 
 
 class SUBPIE_MT_node_delete(Menu):
@@ -1328,16 +1355,16 @@ def _cats_geo(pie):
     pie.operator("wm.call_menu_pie", text="Mesh Nodes...", icon='MESH_DATA').name = "SUBPIE_MT_gn_mesh"
     # EAST
     pie.operator("wm.call_menu_pie", text="Curve Nodes...", icon='CURVE_DATA').name = "SUBPIE_MT_gn_curve"
-    # SOUTH
-    pie.operator("wm.call_menu_pie", text="Utilities & Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_gn_utilities"
+    # SOUTH - Converter, aligned with Shader/Compositor's South
+    pie.operator("wm.call_menu_pie", text="Converter...", icon='CON_KINEMATIC').name = "SUBPIE_MT_gn_converter"
     # NORTH
     pie.operator("wm.call_menu_pie", text="Input & Output...", icon='NODETREE').name = "SUBPIE_MT_gn_io"
     # NORTH-WEST
-    pie.operator("wm.call_menu_pie", text="Geometry & Instances...", icon='GROUP_VERTEX').name = "SUBPIE_MT_gn_geometry_instances"
+    pie.operator("wm.call_menu_pie", text="Geometry & Points...", icon='GROUP_VERTEX').name = "SUBPIE_MT_gn_geometry_points"
     # NORTH-EAST
     pie.operator("wm.call_menu_pie", text="Attributes & Textures...", icon='SPREADSHEET').name = "SUBPIE_MT_gn_attributes"
     # SOUTH-WEST
-    pie.operator("wm.call_menu_pie", text="Points & Volumes...", icon='PARTICLE_DATA').name = "SUBPIE_MT_gn_points_volumes"
+    pie.operator("wm.call_menu_pie", text="Utilities & Math...", icon='CON_KINEMATIC').name = "SUBPIE_MT_gn_utilities"
     # SOUTH-EAST
     pie.operator("wm.call_menu_pie", text="Materials & UV...", icon='MATERIAL').name = "SUBPIE_MT_gn_materials"
 
@@ -1377,7 +1404,165 @@ def _cats_comp(pie):
     # SOUTH-WEST
     pie.operator("wm.call_menu_pie", text="Matte & Mask...", icon='IMAGE_ALPHA').name = "SUBPIE_MT_co_matte"
     # SOUTH-EAST
-    pie.operator("wm.call_menu_pie", text="Group...", icon='NODETREE').name = "SUBPIE_MT_node_group"
+    pie.operator("wm.call_menu_pie", text="Vector...", icon='ORIENTATION_GLOBAL').name = "SUBPIE_MT_co_vector"
+
+
+# ------------------------------------------------------------------------------
+# Context-aware Add Connect: per-editor maps of "what commonly consumes a socket of
+# this type". Keyed by output socket .type (INT folded to VALUE). Tailors the single-
+# node Add Connect pie to the active node's outputs; wiring is still done by
+# _best_connect, which matches the chosen node's input to the right source output.
+# ------------------------------------------------------------------------------
+
+_CONNECT_GEO = {
+    'GEOMETRY': [
+        ("Set Position", 'GeometryNodeSetPosition', 'SNAP_GRID'),
+        ("Transform", 'GeometryNodeTransform', 'ORIENTATION_GLOBAL'),
+        ("Join Geometry", 'GeometryNodeJoinGeometry', 'NONE'),
+        ("Instance on Points", 'GeometryNodeInstanceOnPoints', 'PARTICLE_DATA'),
+        ("Extrude Mesh", 'GeometryNodeExtrudeMesh', 'MESH_DATA'),
+        ("Merge by Distance", 'GeometryNodeMergeByDistance', 'AUTOMERGE_ON'),
+        ("Realize Instances", 'GeometryNodeRealizeInstances', 'OUTLINER_OB_GROUP_INSTANCE'),
+        ("Set Material", 'GeometryNodeSetMaterial', 'MATERIAL'),
+    ],
+    'VALUE': [
+        ("Math", 'ShaderNodeMath', 'CON_KINEMATIC'),
+        ("Map Range", 'ShaderNodeMapRange', 'ARROW_LEFTRIGHT'),
+        ("Mix", 'ShaderNodeMix', 'COLOR'),
+        ("Compare", 'FunctionNodeCompare', 'CON_KINEMATIC'),
+        ("Float Curve", 'ShaderNodeFloatCurve', 'CURVE_DATA'),
+    ],
+    'VECTOR': [
+        ("Vector Math", 'ShaderNodeVectorMath', 'CON_KINEMATIC'),
+        ("Separate XYZ", 'ShaderNodeSeparateXYZ', 'AXIS_SIDE'),
+        ("Set Position", 'GeometryNodeSetPosition', 'SNAP_GRID'),
+        ("Transform", 'GeometryNodeTransform', 'ORIENTATION_GLOBAL'),
+    ],
+    'RGBA': [
+        ("Mix Color", 'ShaderNodeMix', 'COLOR'),
+        ("Color Ramp", 'ShaderNodeValToRGB', 'COLOR'),
+        ("Separate Color", 'FunctionNodeSeparateColor', 'COLOR'),
+    ],
+    'BOOLEAN': [
+        ("Boolean Math", 'FunctionNodeBooleanMath', 'CON_KINEMATIC'),
+        ("Switch", 'GeometryNodeSwitch', 'ARROW_LEFTRIGHT'),
+        ("Separate Geometry", 'GeometryNodeSeparateGeometry', 'MESH_DATA'),
+        ("Delete Geometry", 'GeometryNodeDeleteGeometry', 'CANCEL'),
+    ],
+    'ROTATION': [
+        ("Rotate Instances", 'GeometryNodeRotateInstances', 'DRIVER_ROTATIONAL_DIFFERENCE'),
+        ("Rotate Rotation", 'FunctionNodeRotateRotation', 'DRIVER_ROTATIONAL_DIFFERENCE'),
+    ],
+}
+
+_CONNECT_SHADER = {
+    'SHADER': [
+        ("Mix Shader", 'ShaderNodeMixShader', 'ARROW_LEFTRIGHT'),
+        ("Add Shader", 'ShaderNodeAddShader', 'ADD'),
+        ("Material Output", 'ShaderNodeOutputMaterial', 'MATERIAL'),
+    ],
+    'RGBA': [
+        ("Principled BSDF", 'ShaderNodeBsdfPrincipled', 'SHADING_RENDERED'),
+        ("Mix Color", 'ShaderNodeMix', 'COLOR'),
+        ("Color Ramp", 'ShaderNodeValToRGB', 'COLOR'),
+        ("Hue/Saturation", 'ShaderNodeHueSaturation', 'COLOR'),
+        ("Invert Color", 'ShaderNodeInvert', 'COLOR'),
+        ("RGB Curves", 'ShaderNodeRGBCurve', 'CURVE_DATA'),
+        ("Emission", 'ShaderNodeEmission', 'LIGHT'),
+    ],
+    'VALUE': [
+        ("Math", 'ShaderNodeMath', 'CON_KINEMATIC'),
+        ("Map Range", 'ShaderNodeMapRange', 'ARROW_LEFTRIGHT'),
+        ("Color Ramp", 'ShaderNodeValToRGB', 'COLOR'),
+        ("Clamp", 'ShaderNodeClamp', 'ARROW_LEFTRIGHT'),
+        ("Float Curve", 'ShaderNodeFloatCurve', 'CURVE_DATA'),
+    ],
+    'VECTOR': [
+        ("Vector Math", 'ShaderNodeVectorMath', 'CON_KINEMATIC'),
+        ("Mapping", 'ShaderNodeMapping', 'ORIENTATION_GLOBAL'),
+        ("Bump", 'ShaderNodeBump', 'FORCE_TEXTURE'),
+        ("Normal Map", 'ShaderNodeNormalMap', 'NORMALS_FACE'),
+        ("Displacement", 'ShaderNodeDisplacement', 'FORCE_TEXTURE'),
+    ],
+}
+
+_CONNECT_COMP = {
+    'RGBA': [
+        ("Mix", 'CompositorNodeMixRGB', 'COLOR'),
+        ("Alpha Over", 'CompositorNodeAlphaOver', 'IMAGE_ALPHA'),
+        ("Color Balance", 'CompositorNodeColorBalance', 'COLOR'),
+        ("Hue Saturation Value", 'CompositorNodeHueSat', 'COLOR'),
+        ("RGB Curves", 'CompositorNodeCurveRGB', 'CURVE_DATA'),
+        ("Blur", 'CompositorNodeBlur', 'MOD_SMOOTH'),
+        ("Glare", 'CompositorNodeGlare', 'LIGHT_SUN'),
+        ("Viewer", 'CompositorNodeViewer', 'HIDE_OFF'),
+    ],
+    'VALUE': [
+        ("Math", 'CompositorNodeMath', 'CON_KINEMATIC'),
+        ("Map Range", 'CompositorNodeMapRange', 'ARROW_LEFTRIGHT'),
+        ("Set Alpha", 'CompositorNodeSetAlpha', 'IMAGE_ALPHA'),
+        ("Color Ramp", 'CompositorNodeValToRGB', 'COLOR'),
+    ],
+    'VECTOR': [
+        ("Normalize", 'CompositorNodeNormalize', 'NORMALIZE_FCURVES'),
+        ("Vector Curves", 'CompositorNodeCurveVec', 'CURVE_DATA'),
+    ],
+}
+
+_CONNECT_MAPS = {
+    'GeometryNodeTree': _CONNECT_GEO,
+    'ShaderNodeTree': _CONNECT_SHADER,
+    'CompositorNodeTree': _CONNECT_COMP,
+}
+
+
+def _source_output_types(source):
+    """Distinct output socket types of `source`, in socket order, INT folded to VALUE."""
+    seen = []
+    for out in source.outputs:
+        if out.hide or not out.enabled or out.bl_idname == 'NodeSocketVirtual':
+            continue
+        t = 'VALUE' if out.type == 'INT' else out.type
+        if t not in seen:
+            seen.append(t)
+    return seen
+
+
+def _draw_full_browse(pie, tree_type):
+    if tree_type == 'GeometryNodeTree':
+        _cats_geo(pie)
+    elif tree_type == 'ShaderNodeTree':
+        _cats_shader(pie)
+    elif tree_type == 'CompositorNodeTree':
+        _cats_comp(pie)
+
+
+def _draw_context_connect(pie, context, source):
+    """Add-Connect pie tailored to `source`'s output types: the per-type consumer lists
+    unioned in socket order (primary output first) and deduped, capped to 7 slots plus an
+    All Categories... fallback. Falls through to the full browse when nothing matches."""
+    tree_type = context.space_data.tree_type
+    cmap = _CONNECT_MAPS.get(tree_type)
+
+    items = []
+    if source is not None and cmap is not None:
+        seen_ids = set()
+        for t in _source_output_types(source):
+            for label, node_type, icon in cmap.get(t, ()):
+                if node_type not in seen_ids:
+                    seen_ids.add(node_type)
+                    items.append((label, node_type, icon))
+
+    # No tailored matches (no source, unknown editor, or only exotic socket types) ->
+    # show the full category browse as-is.
+    if not items:
+        _draw_full_browse(pie, tree_type)
+        return
+
+    for label, node_type, icon in items[:7]:
+        _add_node_op(pie, label, node_type, icon)
+    # Escape hatch: the full category browse, still in connect mode so leaves wire.
+    pie.operator("wm.call_menu_pie", text="All Categories...", icon='ADD').name = "SUBPIE_MT_add_connect_all"
 
 
 class SUBPIE_MT_add_connect(Menu):
@@ -1385,13 +1570,19 @@ class SUBPIE_MT_add_connect(Menu):
 
     def draw(self, context):
         pie = self.layout.menu_pie()
-        tree_type = context.space_data.tree_type
-        if tree_type == 'GeometryNodeTree':
-            _cats_geo(pie)
-        elif tree_type == 'ShaderNodeTree':
-            _cats_shader(pie)
-        elif tree_type == 'CompositorNodeTree':
-            _cats_comp(pie)
+        # Same source the operator wires from: active node, else first selected.
+        source = context.active_node
+        if source is None and context.selected_nodes:
+            source = context.selected_nodes[0]
+        _draw_context_connect(pie, context, source)
+
+
+class SUBPIE_MT_add_connect_all(Menu):
+    bl_label = "Add & Connect — All Categories"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        _draw_full_browse(pie, context.space_data.tree_type)
 
 
 # ==============================================================================
@@ -1533,9 +1724,9 @@ registry = [
     SUBPIE_MT_gn_curve,
     SUBPIE_MT_gn_utilities,
     SUBPIE_MT_gn_io,
-    SUBPIE_MT_gn_geometry_instances,
+    SUBPIE_MT_gn_geometry_points,
     SUBPIE_MT_gn_attributes,
-    SUBPIE_MT_gn_points_volumes,
+    SUBPIE_MT_gn_converter,
     SUBPIE_MT_gn_materials,
     SUBPIE_MT_sh_input,
     SUBPIE_MT_sh_output,
@@ -1552,12 +1743,13 @@ registry = [
     SUBPIE_MT_co_transform,
     SUBPIE_MT_co_matte,
     SUBPIE_MT_co_converter,
+    SUBPIE_MT_co_vector,
     SUBPIE_MT_nw_batch_blend,
     SUBPIE_MT_nw_batch_math,
-    SUBPIE_MT_node_group,
     SUBPIE_MT_node_delete,
     SUBPIE_MT_node_duplicate,
     SUBPIE_MT_add_connect,
+    SUBPIE_MT_add_connect_all,
     NODE_PIE_MT_context,
 ]
 
