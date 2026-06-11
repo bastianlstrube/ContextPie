@@ -84,6 +84,8 @@ class SUBPIE_MT_connect(Menu):
         # WEST
         if is_edge_mode:
             pie.operator("mesh.edge_rotate", text="Rotate Clockwise").use_ccw = False
+        elif is_vert_mode:
+            pie.operator("mesh.vertices_smooth", text="Smooth Vertices").factor = 0.5
         else:
             pie.separator()
         # EAST
@@ -99,6 +101,8 @@ class SUBPIE_MT_connect(Menu):
         # SOUTH-WEST
         if is_edge_mode:
             pie.operator("mesh.edge_rotate", text="Rotate CCW").use_ccw = True
+        elif is_vert_mode:
+            pie.operator("transform.shrink_fatten")
         else:
             pie.separator()
         # SOUTH-EAST
@@ -302,7 +306,7 @@ def _draw_vert(pie, context):
     # WEST
     pie.operator("mesh.set_knife_tool", text="Knife")
     # EAST
-    pie.operator("wm.call_menu_pie", text='Connect...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
+    pie.operator("wm.call_menu_pie", text='Connect/Smooth...', icon="TRIA_RIGHT").name = "SUBPIE_MT_connect"
     # SOUTH
     pie.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
     # NORTH
