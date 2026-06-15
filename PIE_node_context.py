@@ -136,6 +136,107 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+###-----------------------------------------------------------------------------###
+###                          Delete Add Reroute                                 ###
+###-----------------------------------------------------------------------------###
+
+class NODE_OT_delete_add_reroute(bpy.types.Operator):
+    """Delete the active node and insert a reroute node precisely at the active output socket"""
+    bl_idname = "node.delete_add_reroute"
+    bl_label = "Delete Add Reroute"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        space = context.space_data
+        return space and space.type == 'NODE_EDITOR' and space.edit_tree and context.active_node
+
+    def execute(self, context):
+        node_tree = context.space_data.edit_tree
+        node = context.active_node
+        
+        if node.type == 'REROUTE':
+            self.report({'INFO'}, "Selected node is already a reroute.")
+            return {'CANCELLED'}
+        
+        # Cache links and parent frame data
+        incoming = [l for l in node_tree.links if l.to_node == node]
+        outgoing = [l for l in node_tree.links if l.from_node == node]
+        parent_frame = node.parent
+        loc = node.location.copy()
+        
+        width = node.dimensions.x
+        height = node.dimensions.y
+        
+        # Fallback dimensions if Blender hasn't fully drawn the node yet
+        if width == 0:  width = 140
+        if height == 0: height = 100
+        
+        # 1. Align X to the exact right edge of the node (where output sockets live)
+        loc.x += width - 14
+        
+        # 2. Align Y to the specific output socket being replaced
+        if outgoing:
+            try:
+                outputs_list = list(node.outputs)
+                # Sort outgoing links to reliably pick the top-most *connected* output socket
+                outgoing.sort(key=lambda l: outputs_list.index(l.from_socket))
+                primary_socket = outgoing[0].from_socket
+                socket_index = outputs_list.index(primary_socket)
+            except ValueError:
+                socket_index = 0
+            
+            if node.hide:
+                # If the node is hidden/collapsed, all sockets pack into the vertical center
+                loc.y -= 18
+            else:
+                # Standard Blender node UI metrics calculation:
+                # Header height is roughly 34px, each consecutive socket down adds 22px
+                loc.y -= (34 + (socket_index * 22))
+        else:
+            # Fallback if nothing was hooked to outputs: drop it at vertical center
+            loc.y -= height / 2
+        
+        # Determine the primary incoming source socket to bridge from
+        src_socket = None
+        if incoming:
+            try:
+                inputs_list = list(node.inputs)
+                incoming.sort(key=lambda l: inputs_list.index(l.to_socket))
+            except ValueError:
+                pass
+            src_socket = incoming[0].from_socket
+        
+        # Collect all destination sockets
+        dst_sockets = [l.to_socket for l in outgoing]
+        
+        # Remove the old node
+        node_tree.nodes.remove(node)
+        
+        # Create the new universal Reroute node
+        reroute = node_tree.nodes.new('NodeReroute')
+        
+        # Maintain frame attachment
+        if parent_frame:
+            reroute.parent = parent_frame
+            
+        reroute.location = loc
+        
+        # Reconnect the lines
+        if src_socket:
+            node_tree.links.new(src_socket, reroute.inputs[0])
+            
+        for dst in dst_sockets:
+            node_tree.links.new(reroute.outputs[0], dst)
+            
+        # Keep the new reroute active and selected
+        reroute.select = True
+        node_tree.nodes.active = reroute
+        
+        return {'FINISHED'}
+
+
 ###-----------------------------------------------------------------------------###
 ###                            LINK OPERATORS                                   ###
 ###-----------------------------------------------------------------------------###
@@ -1315,7 +1416,7 @@ class SUBPIE_MT_node_delete(Menu):
         # SOUTH-WEST - primary
         pie.operator("node.delete_reconnect", text="Delete & Reconnect", icon='X')
         # SOUTH-EAST
-        pie.separator()
+        pie.operator("node.delete_add_reroute", text="Delete Add Reroute", icon='LAYER_ACTIVE')
 
 
 # ==============================================================================
@@ -1703,6 +1804,7 @@ class NODE_PIE_MT_context(Menu):
 
 registry = [
     CONTEXTPIE_OT_combine_selected,
+    NODE_OT_delete_add_reroute,
     NODE_OT_cpie_link_active_replace_parent,
     NODE_OT_cpie_add_connect,
     NODE_OT_cpie_add_connect_start,
