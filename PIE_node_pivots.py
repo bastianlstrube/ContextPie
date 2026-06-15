@@ -37,16 +37,13 @@ class NODE_PIE_MT_pivots(Menu):
             pie.operator("node.nw_swap_links", text="Swap Links", icon='FILE_REFRESH')
         else:
             pie.separator()
-        # SOUTH-WEST - drag from node to node to connect interactively (NW)
-        if nw_loaded:
-            pie.operator("node.nw_lazy_connect", text="Lazy Connect", icon='DRIVER').with_menu = True
-        else:
-            pie.separator()
-        # SOUTH-EAST - drag from node to node to insert a mix node (NW)
-        if nw_loaded:
-            pie.operator("node.nw_lazy_mix", text="Lazy Mix", icon='NODE')
-        else:
-            pie.separator()
+        # SOUTH-WEST - empty: Lazy Connect (node.nw_lazy_connect) is a click-drag modal
+        # that finalizes on mouse release, so it can't be launched from a pie slot (the
+        # release that picks the slot ends it instantly). Use NW's native Alt+RMB drag.
+        pie.separator()
+        # SOUTH-EAST - empty: Lazy Mix has the same modal-on-release limitation; use NW's
+        # native Alt+Shift+RMB drag instead.
+        pie.separator()
 
 
 # ==============================================================================
