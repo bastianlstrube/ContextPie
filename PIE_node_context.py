@@ -77,6 +77,12 @@ class CONTEXTPIE_OT_combine_selected(bpy.types.Operator):
         # Spawn the node
         new_node = nodes.new(type=target_type)
 
+        # Maintain frame attachment if nodes are inside a frame
+        active_node = context.active_node
+        parent_frame = active_node.parent if (active_node in selected_nodes) else selected_nodes[0].parent
+        if parent_frame:
+            new_node.parent = parent_frame
+
         # Position it to the right of the selected block
         avg_x = sum(n.location.x for n in selected_nodes) / len(selected_nodes)
         avg_y = sum(n.location.y for n in selected_nodes) / len(selected_nodes)
