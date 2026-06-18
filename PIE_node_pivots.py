@@ -37,13 +37,19 @@ class NODE_PIE_MT_pivots(Menu):
             pie.operator("node.nw_swap_links", text="Swap Links", icon='FILE_REFRESH')
         else:
             pie.separator()
-        # SOUTH-WEST - empty: Lazy Connect (node.nw_lazy_connect) is a click-drag modal
-        # that finalizes on mouse release, so it can't be launched from a pie slot (the
-        # release that picks the slot ends it instantly). Use NW's native Alt+RMB drag.
-        pie.separator()
-        # SOUTH-EAST - empty: Lazy Mix has the same modal-on-release limitation; use NW's
-        # native Alt+Shift+RMB drag instead.
-        pie.separator()
+        # SOUTH-WEST - detach only the outputs of selected nodes (NW), clustered with
+        # Detach All Links (S) and Cut Links (W). (Lazy Connect can't live in a pie slot:
+        # it's a click-drag modal that ends on the release that picks the slot — use NW's
+        # native Alt+RMB drag instead.)
+        if nw_loaded:
+            pie.operator("node.nw_detach_outputs", text="Detach Outputs", icon='UNLINKED')
+        else:
+            pie.separator()
+        # SOUTH-EAST - add reroute nodes to all outputs (NW), clustered with Add Reroute (E)
+        if nw_loaded:
+            pie.operator("node.nw_add_reroutes", text="Add Reroutes", icon='NODE').option = 'ALL'
+        else:
+            pie.separator()
 
 
 # ==============================================================================
