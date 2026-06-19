@@ -48,7 +48,35 @@ class SUBPIE_MT_nodeSelect(Menu):
 
 
 # ==============================================================================
-# 2. MAIN NODE MODE PIE
+# 2. LABELS & SETTINGS SUB-MENU (Node Wrangler)
+# ==============================================================================
+
+class SUBPIE_MT_nw_labels_settings(Menu):
+    bl_label = "Labels & Settings"
+
+    def draw(self, context):
+        pie = self.layout.menu_pie()
+        # Opened from NORTH-EAST: cluster items at NE/N/E/NW/SE, separators at W/S/SW.
+        # WEST
+        pie.separator()
+        # EAST
+        pie.operator("node.nw_reload_images", text="Reload Images", icon='FILE_REFRESH')
+        # SOUTH
+        pie.separator()
+        # NORTH
+        pie.operator("node.nw_modify_label", text="Modify Label", icon='SORTALPHA')
+        # NORTH-WEST
+        pie.operator("node.nw_copy_settings", text="Copy Settings", icon='COPYDOWN')
+        # NORTH-EAST - primary (occupies Align Nodes' former mode-pie slot)
+        pie.operator("node.nw_align_nodes", text="Align Nodes", icon='ALIGN_JUSTIFY')
+        # SOUTH-WEST
+        pie.separator()
+        # SOUTH-EAST - clear the label off selected nodes (option=True targets selection)
+        pie.operator("node.nw_clear_label", text="Clear Label", icon='X').option = True
+
+
+# ==============================================================================
+# 3. MAIN NODE MODE PIE
 # ==============================================================================
 
 class CPIE_MT_mode_node(Menu):
@@ -76,9 +104,9 @@ class CPIE_MT_mode_node(Menu):
         pie.operator("node.group_edit", text="Enter Group", icon='NODETREE').exit = False
         # NORTH-WEST - move selection inside an existing group
         pie.operator("node.group_insert", text="Insert into Group", icon='NODETREE')
-        # NORTH-EAST - align selected nodes
+        # NORTH-EAST - Node Wrangler labels, settings & align utilities submenu
         if nw_loaded:
-            pie.operator("node.nw_align_nodes", text="Align Nodes", icon='ALIGN_JUSTIFY')
+            pie.operator("wm.call_menu_pie", text="Labels & Settings...", icon='ALIGN_JUSTIFY').name = "SUBPIE_MT_nw_labels_settings"
         else:
             pie.separator()
         # SOUTH-WEST - wrap selected nodes in a frame
@@ -103,11 +131,12 @@ class CPIE_MT_mode_node(Menu):
 
 
 # ==============================================================================
-# 3. REGISTRATION
+# 4. REGISTRATION
 # ==============================================================================
 
 registry = [
     SUBPIE_MT_nodeSelect,
+    SUBPIE_MT_nw_labels_settings,
     CPIE_MT_mode_node,
 ]
 

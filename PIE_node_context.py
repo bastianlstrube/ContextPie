@@ -1757,11 +1757,8 @@ class NODE_PIE_MT_context(Menu):
     def draw_single_node(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        # WEST - detach only outputs, keep inputs (NW)
-        if nw_loaded:
-            pie.operator("node.nw_detach_outputs", text="Detach Outputs", icon='UNLINKED')
-        else:
-            pie.separator()
+        # WEST - empty (Labels & Settings submenu now lives in the RMB mode pie)
+        pie.separator()
         # EAST - link to output (NW)
         if nw_loaded:
             pie.operator("node.nw_link_out", text="Link to Output", icon='DRIVER')
@@ -1773,11 +1770,8 @@ class NODE_PIE_MT_context(Menu):
         pie.operator("node.cpie_add_connect_start", text="Add Connect...", icon='ADD')
         # NORTH-WEST
         pie.operator("wm.call_menu_pie", text="Duplicate...", icon='DUPLICATE').name = "SUBPIE_MT_node_duplicate"
-        # NORTH-EAST - add reroute nodes to all outputs (NW)
-        if nw_loaded:
-            pie.operator("node.nw_add_reroutes", text="Add Reroutes", icon='NODE').option = 'ALL'
-        else:
-            pie.separator()
+        # NORTH-EAST - link the active node to a Viewer node
+        pie.operator("node.link_viewer", text="Link to Viewer", icon='HIDE_OFF')
         # SOUTH-WEST - delete submenu
         pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_node_delete"
         # SOUTH-EAST - dynamic mode/operation picker for this node type
@@ -1786,11 +1780,8 @@ class NODE_PIE_MT_context(Menu):
     def draw_multi_nodes(self, pie, context):
         nw_loaded = "node_wrangler" in context.preferences.addons
 
-        # WEST - detach only outputs, keep inputs (NW)
-        if nw_loaded:
-            pie.operator("node.nw_detach_outputs", text="Detach Outputs", icon='UNLINKED')
-        else:
-            pie.separator()
+        # WEST - empty (Labels & Settings submenu now lives in the RMB mode pie)
+        pie.separator()
         # EAST - link active node to all other selected (NW) or attach
         if nw_loaded:
             op = pie.operator("node.nw_link_active_to_selected", text="Link Active to Selected", icon='LINKED')
