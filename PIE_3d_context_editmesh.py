@@ -39,7 +39,7 @@ class SetLoopCutTool(bpy.types.Operator):
 
 
 ###-----------------------------------------------------------------------------###
-###                            MERGE / CONNECT / DIVIDE                         ###
+###                            MERGE / CONNECT / EXTRUDE                        ###
 ###-----------------------------------------------------------------------------###
 
 class SUBPIE_MT_merge(Menu):
@@ -109,78 +109,6 @@ class SUBPIE_MT_connect(Menu):
         pie.operator("mesh.fill", text="Fill Loop")
 
 
-class SUBPIE_MT_edit_mesh_looptools(Menu):
-    bl_label = "LoopTools"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        pie.operator("mesh.looptools_gstretch")
-        pie.operator("mesh.looptools_bridge", text="Bridge").loft = False
-        pie.operator("mesh.looptools_circle")
-        pie.operator("mesh.looptools_flatten")
-        pie.operator("mesh.looptools_curve")
-        pie.operator("mesh.looptools_bridge", text="Loft").loft = True
-        pie.operator("mesh.looptools_relax")
-        pie.operator("mesh.looptools_space")
-
-
-class SUBPIE_MT_divide(Menu):
-    bl_label = "Divide"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        pie = layout.menu_pie()
-
-        is_vert_mode, is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
-
-        if is_vert_mode:
-            # W
-            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
-            # E
-            pie.operator("mesh.subdivide", text='Subdivide')
-            # S
-            pie.operator("mesh.rip_move")
-            # N
-            pie.operator("mesh.poke")
-            # NW
-            pie.separator()
-            # NE
-            pie.operator("mesh.bevel", text='Bevel').affect = 'VERTICES'
-            # SW
-            pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
-            # SE
-            pie.separator()
-        elif is_edge_mode:
-            # W
-            pie.operator("transform.edge_bevelweight")
-            # E
-            pie.operator("mesh.subdivide", text='Subdivide')
-            # S
-            pie.operator("mesh.rip_move")
-            # N
-            pie.operator("mesh.mark_sharp", text="Mark Sharp").clear = False
-            # NW
-            pie.operator("mesh.mark_seam", text='Mark Seam').clear = False
-            # NE
-            pie.operator("mesh.bevel", text='Bevel').affect = 'EDGES'
-            # SW
-            pie.operator("transform.edge_crease")
-            # SE
-            pie.operator("mesh.edge_split")
-        elif is_face_mode:
-            pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
-            pie.operator("mesh.flip_normals")
-            pie.operator("mesh.rip_move")
-            pie.operator("mesh.poke")
-            pie.operator("mesh.bisect")
-            pie.operator("mesh.subdivide", text='Subdivide')
-            pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
-            pie.operator("mesh.split")
-
 class SUBPIE_MT_extrudeFaces(Menu):
     bl_label = "Extrude Faces"
 
@@ -205,6 +133,107 @@ class SUBPIE_MT_extrudeFaces(Menu):
         pie.operator("wm.tool_set_by_id", text="Extrude To Cursor Tool").name = "builtin.extrude_to_cursor"
         # SOUTH-EAST
         pie.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude")
+
+
+class SUBPIE_MT_edit_mesh_looptools(Menu):
+    bl_label = "LoopTools"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        pie.operator("mesh.looptools_gstretch")
+        pie.operator("mesh.looptools_bridge", text="Bridge").loft = False
+        pie.operator("mesh.looptools_circle")
+        pie.operator("mesh.looptools_flatten")
+        pie.operator("mesh.looptools_curve")
+        pie.operator("mesh.looptools_bridge", text="Loft").loft = True
+        pie.operator("mesh.looptools_relax")
+        pie.operator("mesh.looptools_space")
+
+
+###-----------------------------------------------------------------------------###
+###                             DIVIDE SUB PIE MENUS                            ###
+###-----------------------------------------------------------------------------###
+
+class SUBPIE_MT_divide_vertex(Menu):
+    bl_label = "Divide Vertices"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+        # EAST
+        pie.operator("mesh.subdivide", text='Subdivide')
+        # SOUTH
+        pie.operator("mesh.rip_move")
+        # NORTH
+        pie.operator("mesh.poke")
+        # NORTH-WEST
+        pie.separator()
+        # NORTH-EAST
+        pie.operator("mesh.bevel", text='Bevel').affect = 'VERTICES'
+        # SOUTH-WEST
+        pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+        # SOUTH-EAST
+        pie.separator()
+
+
+class SUBPIE_MT_divide_edge(Menu):
+    bl_label = "Divide Edges"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("transform.edge_bevelweight", icon='EDGE_BEVEL')
+        # EAST
+        pie.operator("mesh.subdivide", text='Subdivide')
+        # SOUTH
+        pie.operator("mesh.rip_move")
+        # NORTH
+        pie.operator("mesh.mark_sharp", text="Mark Sharp", icon='EDGE_SHARP').clear = False
+        # NORTH-WEST
+        pie.operator("mesh.mark_seam", text='Mark Seam', icon='EDGE_SEAM').clear = False
+        # NORTH-EAST
+        pie.operator("mesh.bevel", text='Bevel').affect = 'EDGES'
+        # SOUTH-WEST
+        pie.operator("transform.edge_crease", icon='EDGE_CREASE')
+        # SOUTH-EAST
+        pie.operator("mesh.edge_split")
+
+
+class SUBPIE_MT_divide_face(Menu):
+    bl_label = "Divide Faces"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        pie = layout.menu_pie()
+
+        # WEST
+        pie.operator("mesh.quads_convert_to_tris", text='Triangulate')
+        # EAST
+        pie.operator("mesh.flip_normals")
+        # SOUTH
+        pie.operator("mesh.rip_move")
+        # NORTH
+        pie.operator("mesh.poke")
+        # NORTH-WEST
+        pie.operator("mesh.bisect")
+        # NORTH-EAST
+        pie.operator("mesh.subdivide", text='Subdivide')
+        # SOUTH-WEST
+        pie.operator("mesh.tris_convert_to_quads", text='Tris to Quads')
+        # SOUTH-EAST
+        pie.operator("mesh.split")
+
 
 
 ###-----------------------------------------------------------------------------###
@@ -314,7 +343,7 @@ def _draw_vert(pie, context):
     # NORTH-WEST
     pie.operator("mesh.set_loopcut_tool", text="Insert Loop")
     # NORTH-EAST
-    pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
+    pie.operator("wm.call_menu_pie", text='Divide...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide_vertex"
     # SOUTH-WEST
     pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_delete_vertex"
     # SOUTH-EAST
@@ -332,7 +361,7 @@ def _draw_edge(pie, context):
     # NORTH-WEST
     pie.operator("mesh.set_loopcut_tool", text="Insert Loop")
     # NORTH-EAST
-    pie.operator("wm.call_menu_pie", text='Divide/Mark...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
+    pie.operator("wm.call_menu_pie", text='Divide/Mark...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide_edge"
     # SOUTH-WEST
     pie.operator("wm.call_menu_pie", text="Delete/Clear...", icon='TRASH').name = "SUBPIE_MT_delete_edge"
     # SOUTH-EAST
@@ -353,7 +382,7 @@ def _draw_face(pie, context):
     # NORTH-WEST
     pie.operator("mesh.set_loopcut_tool", text="Insert Loop")
     # NORTH-EAST
-    pie.operator("wm.call_menu_pie", text='Divide/Normals...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide"
+    pie.operator("wm.call_menu_pie", text='Divide/Normals...', icon="TRIA_RIGHT").name = "SUBPIE_MT_divide_face"
     # SOUTH-WEST
     pie.operator("wm.call_menu_pie", text="Delete...", icon='TRASH').name = "SUBPIE_MT_delete_face"
     # SOUTH-EAST
@@ -369,7 +398,9 @@ registry = [
     SetLoopCutTool,
     SUBPIE_MT_merge,
     SUBPIE_MT_connect,
-    SUBPIE_MT_divide,
+    SUBPIE_MT_divide_face,
+    SUBPIE_MT_divide_edge,
+    SUBPIE_MT_divide_vertex,
     SUBPIE_MT_extrudeFaces,
     SUBPIE_MT_delete_vertex,
     SUBPIE_MT_delete_edge,

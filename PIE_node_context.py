@@ -419,6 +419,10 @@ class NODE_OT_cpie_add_connect(bpy.types.Operator):
             self.report({'WARNING'}, "Could not add node of type %s" % self.node_type)
             return {'CANCELLED'}
 
+        # Maintain frame attachment if the source node is inside a frame
+        if source.parent:
+            new_node.parent = source.parent
+
         # Drop the new node just to the right of the source, vertically aligned.
         new_node.location = (source.location.x + source.width + 50, source.location.y)
         _best_connect(source, new_node, tree.links)
@@ -684,6 +688,12 @@ def _position_and_wire(context, new_node):
     selected = [n for n in context.selected_nodes if n != new_node]
     if not selected:
         return
+
+    # Maintain frame attachment if nodes are inside a frame
+    active_node = context.active_node
+    parent_frame = active_node.parent if (active_node in selected) else selected[0].parent
+    if parent_frame:
+        new_node.parent = parent_frame
 
     avg_y = sum(n.location.y for n in selected) / len(selected)
     max_x = max(n.location.x + n.width for n in selected)

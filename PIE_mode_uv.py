@@ -15,13 +15,21 @@ class SUBPIE_MT_uvSelect(Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         pie = layout.menu_pie()
 
+        # WEST
         pie.separator()
+        # EAST
         pie.operator("uv.select_pinned", text="Pinned")
+        # SOUTH
         pie.operator("uv.select_overlap", text="Overlap")
+        # NORTH
+        pie.operator("uv.select_all", text="All").action = 'SELECT'
+        # NW
+        pie.operator("uv.select_all", text="Invert").action = 'INVERT'
+        # NE
         pie.separator()
+        # SW
         pie.separator()
-        pie.separator()
-        pie.separator()
+        # SE
         pie.operator("uv.select_linked", text="Island")
 
 
